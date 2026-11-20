@@ -30,6 +30,7 @@ import { Config } from "@/config/config"
 import { ConfigMarkdown } from "@/config/markdown"
 import { SessionSummary } from "./summary"
 import { NamedError } from "@opencode-ai/core/util/error"
+import { userEnv } from "@opencode-ai/core/util/user-env"
 import { SessionProcessor } from "./processor"
 import { Tool } from "@/tool/tool"
 import { Permission } from "@/permission"
@@ -559,7 +560,7 @@ const layer = Layer.effect(
               const cmd = ChildProcess.make(sh, args, {
                 cwd,
                 extendEnv: true,
-                env: { ...shellEnv.env, TERM: "dumb" },
+                env: { ...userEnv(), ...shellEnv.env, TERM: "dumb" },
                 stdin: "ignore",
                 forceKillAfter: "3 seconds",
               })

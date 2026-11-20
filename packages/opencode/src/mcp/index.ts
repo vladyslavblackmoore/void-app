@@ -18,6 +18,7 @@ import {
 import { Config } from "@/config/config"
 import { ConfigMCPV1 } from "@opencode-ai/core/v1/config/mcp"
 import { NamedError } from "@opencode-ai/core/util/error"
+import { userEnv } from "@opencode-ai/core/util/user-env"
 import { InstallationVersion } from "@opencode-ai/core/installation/version"
 import { withTimeout } from "@/util/timeout"
 import { FSUtil } from "@opencode-ai/core/fs-util"
@@ -350,7 +351,7 @@ const layer = Layer.effect(
         args,
         cwd,
         env: {
-          ...process.env,
+          ...userEnv(),
           ...(cmd === "opencode" ? { BUN_BE_BUN: "1" } : {}),
           ...mcp.environment,
         },
