@@ -2,7 +2,15 @@ import { existsSync } from "node:fs"
 import { mkdir, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 
-export async function seedAgents(configDir: string, agents: Array<{ name: string; content: string }>) {
+const STAMP = "agents-seeded"
+
+export async function seedAgents(
+  configDir: string,
+  userDataDir: string,
+  agents: Array<{ name: string; content: string }>,
+) {
+  const stamp = join(userDataDir, STAMP)
+  if (existsSync(stamp)) return
   await mkdir(join(configDir, "agents"), { recursive: true })
   await Promise.all(
     agents
@@ -13,6 +21,8 @@ export async function seedAgents(configDir: string, agents: Array<{ name: string
     join(configDir, "config.json"),
     JSON.stringify({ $schema: "https://opencode.ai/config.json", default_agent: "main" }, null, 2),
   )
+  await mkdir(userDataDir, { recursive: true })
+  await create(stamp, new Date().toISOString())
 }
 
 function create(file: string, content: string) {

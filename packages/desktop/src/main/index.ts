@@ -356,10 +356,14 @@ const main = Effect.gen(function* () {
     logger.log("sidecar connection started", { version: SIDECAR_VERSION })
 
     yield* Effect.promise(() =>
-      seedAgents(join(process.env.XDG_CONFIG_HOME ?? join(homedir(), ".config", "void"), "opencode"), [
-        { name: "main", content: mainAgent },
-        { name: "worker", content: workerAgent },
-      ]).catch((error) => logger.warn("failed to seed agents", error)),
+      seedAgents(
+        join(process.env.XDG_CONFIG_HOME ?? join(homedir(), ".config", "void"), "opencode"),
+        app.getPath("userData"),
+        [
+          { name: "main", content: mainAgent },
+          { name: "worker", content: workerAgent },
+        ],
+      ).catch((error) => logger.warn("failed to seed agents", error)),
     )
 
     ensureLoopbackNoProxy()
