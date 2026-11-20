@@ -1,4 +1,5 @@
-import { dirname, join } from "node:path"
+import { homedir } from "node:os"
+import { basename, dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { app, utilityProcess } from "electron"
 import type { Details } from "electron"
@@ -49,10 +50,17 @@ export function preferAppEnv(userDataPath: string) {
     OPENCODE_EXPERIMENTAL_ICON_DISCOVERY: "true",
     OPENCODE_EXPERIMENTAL_FILEWATCHER: "true",
     OPENCODE_CLIENT: "desktop",
-    OPENCODE_DB: shellEnv?.OPENCODE_DB ?? process.env.OPENCODE_DB ?? "void.db",
+    XDG_DATA_HOME: voidHome(shellEnv?.XDG_DATA_HOME ?? process.env.XDG_DATA_HOME, ".local", "share"),
+    XDG_CONFIG_HOME: voidHome(shellEnv?.XDG_CONFIG_HOME ?? process.env.XDG_CONFIG_HOME, ".config"),
+    XDG_CACHE_HOME: voidHome(shellEnv?.XDG_CACHE_HOME ?? process.env.XDG_CACHE_HOME, ".cache"),
     XDG_STATE_HOME: process.env.XDG_STATE_HOME ?? userDataPath,
   })
   return shellEnv
+}
+
+function voidHome(base: string | undefined, ...fallback: string[]) {
+  const dir = base || join(homedir(), ...fallback)
+  return basename(dir) === "void" ? dir : join(dir, "void")
 }
 
 export async function spawnLocalServer(
