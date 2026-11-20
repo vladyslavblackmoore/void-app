@@ -1,5 +1,4 @@
-import { homedir } from "node:os"
-import { basename, dirname, join } from "node:path"
+import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { app, utilityProcess } from "electron"
 import type { Details } from "electron"
@@ -7,6 +6,7 @@ import { getLogger } from "./logging"
 import { getUserShell, loadShellEnv } from "./shell-env"
 import { getStore } from "./store"
 import { DEFAULT_SERVER_URL_KEY } from "./store-keys"
+import { USER_XDG, voidAppEnv } from "./void-home"
 
 export type HealthCheck = { wait: Promise<void> }
 
@@ -42,25 +42,18 @@ export function setDefaultServerUrl(url: string | null) {
   getStore().delete(DEFAULT_SERVER_URL_KEY)
 }
 
-export function preferAppEnv(userDataPath: string) {
+export function preferAppEnv(root: string) {
   const shell = process.platform === "win32" ? null : getUserShell()
   const shellEnv = shell ? loadShellEnv(shell, getLogger()) : null
+  const user = Object.fromEntries(USER_XDG.map((key) => [key, shellEnv?.[key] ?? process.env[key]]))
   Object.assign(process.env, {
     ...shellEnv,
     OPENCODE_EXPERIMENTAL_ICON_DISCOVERY: "true",
     OPENCODE_EXPERIMENTAL_FILEWATCHER: "true",
     OPENCODE_CLIENT: "desktop",
-    XDG_DATA_HOME: voidHome(shellEnv?.XDG_DATA_HOME ?? process.env.XDG_DATA_HOME, ".local", "share"),
-    XDG_CONFIG_HOME: voidHome(shellEnv?.XDG_CONFIG_HOME ?? process.env.XDG_CONFIG_HOME, ".config"),
-    XDG_CACHE_HOME: voidHome(shellEnv?.XDG_CACHE_HOME ?? process.env.XDG_CACHE_HOME, ".cache"),
-    XDG_STATE_HOME: process.env.XDG_STATE_HOME ?? userDataPath,
+    ...voidAppEnv(root, user),
   })
   return shellEnv
-}
-
-function voidHome(base: string | undefined, ...fallback: string[]) {
-  const dir = base || join(homedir(), ...fallback)
-  return basename(dir) === "void" ? dir : join(dir, "void")
 }
 
 export async function spawnLocalServer(
