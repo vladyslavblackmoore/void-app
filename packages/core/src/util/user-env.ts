@@ -1,7 +1,9 @@
 const KEY = "VOID_USER_ENV"
+const SERVER_SECRETS = ["OPENCODE_SERVER_PASSWORD", "OPENCODE_SERVER_USERNAME"]
 
 export function userEnv(env: NodeJS.ProcessEnv = process.env, inherited: NodeJS.ProcessEnv = process.env) {
   const result: NodeJS.ProcessEnv = { ...env }
+  for (const name of SERVER_SECRETS) result[name] = undefined
   const recorded = env[KEY]
   if (recorded === undefined) return result
   result[KEY] = undefined
