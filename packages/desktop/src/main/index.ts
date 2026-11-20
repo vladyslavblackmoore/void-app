@@ -11,7 +11,10 @@ import { app, BrowserWindow } from "electron"
 import { Deferred, Effect, Fiber } from "effect"
 import contextMenu from "electron-context-menu"
 
+import mainAgent from "../../resources/agents/main.md?raw"
+import workerAgent from "../../resources/agents/worker.md?raw"
 import type { ServerReadyData } from "../preload/types"
+import { seedAgents } from "./agents"
 import { checkAppExists, resolveAppPath } from "./apps"
 import { CHANNEL } from "./constants"
 import { registerIpcHandlers, sendDeepLinks, sendMenuCommand } from "./ipc"
@@ -351,6 +354,13 @@ const main = Effect.gen(function* () {
 
   const loadingTask = yield* Effect.gen(function* () {
     logger.log("sidecar connection started", { version: SIDECAR_VERSION })
+
+    yield* Effect.promise(() =>
+      seedAgents(join(process.env.XDG_CONFIG_HOME ?? join(homedir(), ".config", "void"), "opencode"), [
+        { name: "main", content: mainAgent },
+        { name: "worker", content: workerAgent },
+      ]).catch((error) => logger.warn("failed to seed agents", error)),
+    )
 
     ensureLoopbackNoProxy()
     useEnvProxy()
