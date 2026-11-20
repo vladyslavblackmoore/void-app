@@ -1,4 +1,5 @@
 import type { ChildProcessWithoutNullStreams } from "child_process"
+import { userEnv } from "@opencode-ai/core/util/user-env"
 import { Process } from "@/util/process"
 
 type Child = Process.Child & ChildProcessWithoutNullStreams
@@ -10,6 +11,7 @@ export function spawn(cmd: string, argsOrOpts?: string[] | Process.Options, opts
   const cfg = Array.isArray(argsOrOpts) ? opts : argsOrOpts
   const proc = Process.spawn([cmd, ...args], {
     ...cfg,
+    env: userEnv({ ...process.env, ...cfg?.env }),
     stdin: "pipe",
     stdout: "pipe",
     stderr: "pipe",

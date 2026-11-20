@@ -21,6 +21,7 @@ import { ChildProcess } from "effect/unstable/process"
 import { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner"
 import { ShellPrompt, type Parameters } from "./shell/prompt"
 import { BashArity } from "@/permission/arity"
+import { userEnv } from "@opencode-ai/core/util/user-env"
 
 export { Parameters } from "./shell/prompt"
 
@@ -420,7 +421,7 @@ export const ShellTool = Tool.define(
         { env: {} },
       )
       return {
-        ...process.env,
+        ...userEnv(),
         ...extra.env,
       }
     })

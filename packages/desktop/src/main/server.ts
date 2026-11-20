@@ -42,18 +42,22 @@ export function setDefaultServerUrl(url: string | null) {
   getStore().delete(DEFAULT_SERVER_URL_KEY)
 }
 
+const USER_XDG = ["XDG_DATA_HOME", "XDG_CONFIG_HOME", "XDG_CACHE_HOME", "XDG_STATE_HOME"]
+
 export function preferAppEnv(userDataPath: string) {
   const shell = process.platform === "win32" ? null : getUserShell()
   const shellEnv = shell ? loadShellEnv(shell, getLogger()) : null
+  const user = new Map(USER_XDG.map((key) => [key, shellEnv?.[key] ?? process.env[key]]))
   Object.assign(process.env, {
     ...shellEnv,
     OPENCODE_EXPERIMENTAL_ICON_DISCOVERY: "true",
     OPENCODE_EXPERIMENTAL_FILEWATCHER: "true",
     OPENCODE_CLIENT: "desktop",
-    XDG_DATA_HOME: voidHome(shellEnv?.XDG_DATA_HOME ?? process.env.XDG_DATA_HOME, ".local", "share"),
-    XDG_CONFIG_HOME: voidHome(shellEnv?.XDG_CONFIG_HOME ?? process.env.XDG_CONFIG_HOME, ".config"),
-    XDG_CACHE_HOME: voidHome(shellEnv?.XDG_CACHE_HOME ?? process.env.XDG_CACHE_HOME, ".cache"),
+    XDG_DATA_HOME: voidHome(user.get("XDG_DATA_HOME"), ".local", "share"),
+    XDG_CONFIG_HOME: voidHome(user.get("XDG_CONFIG_HOME"), ".config"),
+    XDG_CACHE_HOME: voidHome(user.get("XDG_CACHE_HOME"), ".cache"),
     XDG_STATE_HOME: process.env.XDG_STATE_HOME ?? userDataPath,
+    VOID_USER_ENV: JSON.stringify(Object.fromEntries([...user].map(([key, value]) => [key, value || null]))),
   })
   return shellEnv
 }
