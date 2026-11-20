@@ -50,6 +50,7 @@ import { registerWslIpcHandlers } from "./wsl/ipc"
 import { spawnWslSidecar } from "./wsl/sidecar"
 import { cleanupStoreFiles } from "./store-cleanup"
 import { startBackgroundCli } from "./background-cli"
+import { VOID_HOME, voidAppEnv, voidUserData } from "./void-home"
 import { setNativeTranslations } from "./native-translations"
 
 const APP_NAMES: Record<string, string> = {
@@ -144,7 +145,7 @@ const main = Effect.gen(function* () {
   app.setAppUserModelId(appId)
   app.setPath(
     "userData",
-    onboardingTestRoot ? join(onboardingTestRoot, "desktop") : join(app.getPath("appData"), appId),
+    onboardingTestRoot ? join(onboardingTestRoot, "desktop") : voidUserData(app.isPackaged),
   )
   if (onboardingTestRoot) app.setPath("sessionData", join(onboardingTestRoot, "session"))
   initializeOldLayoutEligibility(app.getPath("userData"))
@@ -205,7 +206,7 @@ const main = Effect.gen(function* () {
     return
   }
 
-  const shellEnv = preferAppEnv(app.getPath("userData"))
+  const shellEnv = preferAppEnv(onboardingTestRoot ?? VOID_HOME)
 
   app.on("second-instance", (_event: Event, argv: string[]) => {
     const urls = argv.filter((arg: string) => arg.startsWith("opencode://"))
@@ -357,7 +358,7 @@ const main = Effect.gen(function* () {
 
     yield* Effect.promise(() =>
       seedAgents(
-        join(process.env.XDG_CONFIG_HOME ?? join(homedir(), ".config", "void"), "opencode"),
+        join(process.env.XDG_CONFIG_HOME ?? voidAppEnv(VOID_HOME, {}).XDG_CONFIG_HOME, "opencode"),
         app.getPath("userData"),
         [
           { name: "main", content: mainAgent },
