@@ -24,12 +24,20 @@ describe("lsp.launch", () => {
   test("gives servers the user's own xdg dirs", async () => {
     if (process.platform === "win32") return
 
-    const keys = ["XDG_CONFIG_HOME", "XDG_DATA_HOME", "VOID_USER_ENV"]
+    const keys = [
+      "XDG_CONFIG_HOME",
+      "XDG_DATA_HOME",
+      "VOID_USER_ENV",
+      "OPENCODE_SERVER_USERNAME",
+      "OPENCODE_SERVER_PASSWORD",
+    ]
     const prev = Object.fromEntries(keys.map((key) => [key, process.env[key]]))
     Object.assign(process.env, {
       XDG_CONFIG_HOME: "/home/u/.config/void",
       XDG_DATA_HOME: "/home/u/.local/share/void",
       VOID_USER_ENV: JSON.stringify({ XDG_CONFIG_HOME: "/home/u/.config", XDG_DATA_HOME: null }),
+      OPENCODE_SERVER_USERNAME: "opencode",
+      OPENCODE_SERVER_PASSWORD: "test-password",
     })
     try {
       const proc = spawn("/usr/bin/env", { env: { LSP_PROBE: "1" } })
@@ -37,7 +45,7 @@ describe("lsp.launch", () => {
       expect(await proc.exited).toBe(0)
       const lines = out
         .split("\n")
-        .filter((line) => /^(XDG_CONFIG_HOME|XDG_DATA_HOME|VOID_USER_|LSP_PROBE)/.test(line))
+        .filter((line) => /^(XDG_CONFIG_HOME|XDG_DATA_HOME|VOID_USER_|OPENCODE_SERVER_|LSP_PROBE)/.test(line))
         .sort()
       expect(lines).toEqual(["LSP_PROBE=1", "XDG_CONFIG_HOME=/home/u/.config"])
     } finally {
