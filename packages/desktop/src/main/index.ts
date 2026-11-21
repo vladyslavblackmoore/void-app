@@ -57,7 +57,7 @@ import { registerWslIpcHandlers } from "./wsl/ipc"
 import { spawnWslSidecar } from "./wsl/sidecar"
 import { cleanupStoreFiles } from "./store-cleanup"
 import { startBackgroundCli } from "./background-cli"
-import { createCores, type Cores } from "./cores"
+import { createCores, type Cores, type CoreStatus } from "./cores"
 import { createSpaceService, type SpaceService } from "./space-service"
 import { ensureDefaultSpaces, seedSpace, type SpaceSeed } from "./space-defaults"
 import { HOME_SPACE_ID, ensureHomeSpace, spaceDir } from "./spaces"
@@ -422,6 +422,11 @@ const main = Effect.gen(function* () {
     )
     const spaces = createCores({
       root: appRoot,
+      onStatus: (event: CoreStatus) => {
+        for (const win of BrowserWindow.getAllWindows()) {
+          if (!win.isDestroyed()) win.webContents.send("spaces-core-status", event)
+        }
+      },
       prepare: (id) => seedSpace(appRoot, id, seed).catch((error) => logger.warn("failed to seed space", error)),
       start: async (id, options) => {
         let exitSignal!: () => void

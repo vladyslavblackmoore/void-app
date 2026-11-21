@@ -1352,4 +1352,8 @@ export const dict = {
   "hub.panel.access.none": "This connector has no per-service permissions to set.",
   "hub.panel.done.title": "{{name}} is ready",
   "hub.panel.done.description": "Agents in this space can use it with your permission.",
+  "space.core.restarting": "Space core crashed, restarting…",
+  "space.core.up": "Space core is back up",
+  "space.core.failed": "Space core failed to restart",
+  "space.core.retry": "Retry",
 }

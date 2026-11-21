@@ -6,6 +6,7 @@ import { pathKey } from "@/utils/path-key"
 import { useServerHealth } from "@/utils/server-health"
 import { createServerSdkContext } from "./server-sdk"
 import { createServerSyncContext } from "./server-sync"
+import { endpointSignature } from "@/spaces/connection"
 import { getOwner } from "solid-js/web"
 import { QueryClient } from "@tanstack/solid-query"
 import type { ServerScope } from "@/utils/server-scope"
@@ -37,18 +38,20 @@ export const { use: useGlobal, provider: GlobalProvider } = createSimpleContext(
 
     const serverCtxs = new Map<
       ServerConnection.Key,
-      { dispose: () => void; serverCtx: ReturnType<typeof createServerCtx> }
+      { dispose: () => void; serverCtx: ReturnType<typeof createServerCtx>; signature: string }
     >()
 
     const owner = getOwner()
 
     const ensureServerCtx = (conn: ServerConnection.Any) => {
       const key = ServerConnection.key(conn)
+      const signature = "http" in conn ? endpointSignature(conn) : key
       const existing = serverCtxs.get(key)
-      if (existing) return existing.serverCtx
+      if (existing?.signature === signature) return existing.serverCtx
+      existing?.dispose()
       const root = createRoot((dispose) => {
         const serverCtx = createServerCtx(conn, server.scope(key), server.projects.forServer(key))
-        return { dispose, serverCtx }
+        return { dispose, serverCtx, signature }
       }, owner as any)
       serverCtxs.set(key, root)
       return root.serverCtx

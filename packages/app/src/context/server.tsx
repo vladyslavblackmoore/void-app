@@ -180,6 +180,15 @@ export function resolveServerList(input: {
   return [...deduped.values()]
 }
 
+export function serversForActive(
+  servers: Array<ServerConnection.Any>,
+  active: ServerConnection.Key,
+): Array<ServerConnection.Any> {
+  const current = servers.find((server) => ServerConnection.key(server) === active)
+  if (!current || !ServerConnection.builtin(current)) return servers
+  return servers.filter((server) => !ServerConnection.builtin(server) || ServerConnection.key(server) === active)
+}
+
 export namespace ServerConnection {
   type Base = { displayName?: string; label?: string }
 
@@ -285,7 +294,10 @@ export const { use: useServer, provider: ServerProvider } = createSimpleContext(
     })
 
     const allServers = createMemo((): Array<ServerConnection.Any> => {
-      return resolveServerList({ stored: store.list, props: [...(props.servers ?? []), ...state.spaces] })
+      return serversForActive(
+        resolveServerList({ stored: store.list, props: [...(props.servers ?? []), ...state.spaces] }),
+        state.active,
+      )
     })
 
     function register(conn: ServerConnection.Sidecar) {

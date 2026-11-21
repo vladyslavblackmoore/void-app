@@ -271,6 +271,16 @@ export const loadAgentsQuery = (
       }),
   })
 
+export const loadSpaceAgentsQuery = (scope: ServerScope, legacy: OpencodeClient, protocol?: Promise<ServerProtocol>) =>
+  queryOptions({
+    queryKey: [scope, "space", "agents"],
+    queryFn: () =>
+      retry(async () => {
+        if ((await protocol) !== "v1") return []
+        return normalizeAgentList((await legacy.app.agents()).data ?? [])
+      }),
+  })
+
 export const agentsQueryFilter = (scope: ServerScope) => ({
   predicate: (query: { queryKey: readonly unknown[] }) => query.queryKey[0] === scope && query.queryKey[2] === "agents",
 })

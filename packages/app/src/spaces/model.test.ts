@@ -2,7 +2,8 @@ import { describe, expect, test } from "bun:test"
 import { ServerConnection } from "@/context/server"
 import { HOME_SPACE_ID, type SpaceSummary, type SpacesPlatform } from "./types"
 import { spaceConnection } from "./connection"
-import { menuSpaces, switchToSpace } from "./model"
+import { endpointSignature } from "./connection"
+import { applyCoreStatus, menuSpaces, visibleCoreState, switchToSpace } from "./model"
 
 const summary = (id: string, extra: Partial<SpaceSummary> = {}): SpaceSummary => ({
   id,
@@ -98,5 +99,69 @@ describe("menuSpaces", () => {
       ["void", true, false],
     ])
     expect(Object.keys(items[0]!).sort()).toEqual(["busy", "color", "id", "name", "viewed"])
+  })
+})
+
+describe("applyCoreStatus", () => {
+  const endpoint = { url: "http://127.0.0.1:9", username: "opencode", password: "new" }
+
+  test("reconnects the viewed space to the restarted core", () => {
+    const registered: unknown[] = []
+    const activated: string[] = []
+    const shown = applyCoreStatus({
+      status: { space: "void", state: "up", endpoint },
+      viewed: "void",
+      name: "VOID",
+      register: (conn) => registered.push(conn),
+      activate: (key) => activated.push(key),
+    })
+    expect(shown).toBe("up")
+    expect(registered).toEqual([spaceConnection({ id: "void", name: "VOID" }, endpoint)])
+    expect(activated).toEqual(["sidecar:void"])
+  })
+
+  test("reports restarting and failed without touching the connection", () => {
+    const registered: unknown[] = []
+    for (const state of ["restarting", "failed"] as const) {
+      const shown = applyCoreStatus({
+        status: { space: "void", state },
+        viewed: "void",
+        name: "VOID",
+        register: (conn) => registered.push(conn),
+        activate: () => registered.push("activate"),
+      })
+      expect(shown).toBe(state)
+    }
+    expect(registered).toEqual([])
+  })
+
+  test("ignores a status of a space that is not viewed", () => {
+    const registered: unknown[] = []
+    const shown = applyCoreStatus({
+      status: { space: "work", state: "up", endpoint },
+      viewed: "void",
+      name: "VOID",
+      register: (conn) => registered.push(conn),
+      activate: () => registered.push("activate"),
+    })
+    expect(shown).toBeUndefined()
+    expect(registered).toEqual([])
+  })
+})
+
+describe("endpointSignature", () => {
+  test("changes with the url or the password", () => {
+    const base = { http: { url: "http://127.0.0.1:1", username: "opencode", password: "a" } }
+    expect(endpointSignature(base)).toBe(endpointSignature({ http: { ...base.http } }))
+    expect(endpointSignature(base)).not.toBe(endpointSignature({ http: { ...base.http, url: "http://127.0.0.1:2" } }))
+    expect(endpointSignature(base)).not.toBe(endpointSignature({ http: { ...base.http, password: "b" } }))
+  })
+})
+
+describe("visibleCoreState", () => {
+  test("shows a state only for the viewed space", () => {
+    expect(visibleCoreState({ space: "a", state: "restarting" }, "a")).toBe("restarting")
+    expect(visibleCoreState({ space: "a", state: "failed" }, "b")).toBeUndefined()
+    expect(visibleCoreState(undefined, "a")).toBeUndefined()
   })
 })
