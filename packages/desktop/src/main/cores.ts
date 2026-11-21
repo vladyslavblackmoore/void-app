@@ -5,6 +5,10 @@ import { userXdg, voidAppEnv } from "./void-home"
 
 export const IDLE_STOP_MS = 30 * 60 * 1000
 export const IDLE_SWEEP_MS = 60 * 1000
+export const RESTART_DELAYS_MS = [1000, 2000, 4000, 8000, 16000]
+export const RESTART_MAX_ATTEMPTS = RESTART_DELAYS_MS.length
+export const RESTART_WINDOW_MS = 5 * 60 * 1000
+export const STABLE_UPTIME_MS = 60 * 1000
 
 const HOSTNAME = "127.0.0.1"
 const USERNAME = "opencode"
@@ -17,6 +21,14 @@ export type CoreEndpoint = { url: string; username: string; password: string }
 export type CoreStartOptions = { hostname: string; port: number; password: string; env: Record<string, string> }
 export type CoreStart = (id: string, options: CoreStartOptions) => Promise<{ stop: () => Promise<void>; ready?: Promise<void>; exited?: Promise<void> }>
 
+export type CoreStatus = {
+  space: string
+  state: "restarting" | "up" | "failed"
+  attempt?: number
+  delayMs?: number
+  endpoint?: CoreEndpoint
+}
+
 export type CoresDeps = {
   root: string
   start: CoreStart
@@ -27,6 +39,8 @@ export type CoresDeps = {
   fetch?: Fetch
   now?: () => number
   every?: (run: () => void, ms: number) => () => void
+  after?: (run: () => void, ms: number) => () => void
+  onStatus?: (event: CoreStatus) => void
 }
 
 export function freeLoopbackPort() {
@@ -82,7 +96,15 @@ export async function isCoreBusy(core: CoreEndpoint, fetcher: Fetch = fetch) {
   }
 }
 
-type Running = { endpoint: CoreEndpoint; stop: () => Promise<void>; ready: Promise<void>; lastBusy: number }
+type Running = {
+  endpoint: CoreEndpoint
+  stop: () => Promise<void>
+  ready: Promise<void>
+  lastBusy: number
+  startedAt: number
+}
+
+type Supervision = { attempts: number[]; cancel?: () => void; announce: boolean }
 
 export function createCores(deps: CoresDeps) {
   const fetcher = deps.fetch ?? fetch
@@ -98,7 +120,18 @@ export function createCores(deps: CoresDeps) {
       return () => clearInterval(timer)
     })
 
+  const after =
+    deps.after ??
+    ((run, ms) => {
+      const timer = setTimeout(run, ms)
+      timer.unref()
+      return () => clearTimeout(timer)
+    })
+  const emit = (event: CoreStatus) => deps.onStatus?.(event)
+
   const running = new Map<string, Running>()
+  const supervision = new Map<string, Supervision>()
+  let closed = false
   const viewedBy = new Map<string | number, string>()
   const queues = new Map<string, Promise<unknown>>()
   let cancelSweep: (() => void) | undefined
@@ -124,15 +157,89 @@ export function createCores(deps: CoresDeps) {
     }
     const handle = await deps.start(id, options)
     const endpoint = { url: `http://${HOSTNAME}:${options.port}`, username: USERNAME, password: options.password }
-    const entry = { endpoint, stop: handle.stop, ready: handle.ready ?? Promise.resolve(), lastBusy: now() }
+    const entry = { endpoint, stop: handle.stop, ready: handle.ready ?? Promise.resolve(), lastBusy: now(), startedAt: now() }
     entry.ready.catch(() => undefined)
     running.set(id, entry)
     cancelSweep ??= every(() => void sweep().catch(() => undefined), IDLE_SWEEP_MS)
     void handle.exited?.then(
-      () => drop(id, entry),
-      () => drop(id, entry),
+      () => crashed(id, entry),
+      () => crashed(id, entry),
     )
     return endpoint
+  }
+
+  const supervisor = (id: string) => {
+    const existing = supervision.get(id)
+    if (existing) return existing
+    const created: Supervision = { attempts: [], announce: false }
+    supervision.set(id, created)
+    return created
+  }
+
+  const cancelRestart = (id: string) => {
+    const sup = supervision.get(id)
+    if (!sup) return
+    sup.cancel?.()
+    supervision.delete(id)
+  }
+
+  const crashed = (id: string, entry: Running) => {
+    if (running.get(id) !== entry) return
+    drop(id, entry)
+    if (!isViewed(id)) return
+    const sup = supervisor(id)
+    if (now() - entry.startedAt >= STABLE_UPTIME_MS) sup.attempts = []
+    scheduleRestart(id)
+  }
+
+  const scheduleRestart = (id: string) => {
+    if (closed) return
+    const sup = supervisor(id)
+    const current = now()
+    sup.attempts = sup.attempts.filter((at) => current - at < RESTART_WINDOW_MS)
+    if (sup.attempts.length >= RESTART_MAX_ATTEMPTS) {
+      sup.cancel = undefined
+      sup.announce = true
+      emit({ space: id, state: "failed" })
+      return
+    }
+    const delayMs = RESTART_DELAYS_MS[Math.min(sup.attempts.length, RESTART_DELAYS_MS.length - 1)]
+    sup.attempts.push(current)
+    sup.announce = true
+    emit({ space: id, state: "restarting", attempt: sup.attempts.length, delayMs })
+    sup.cancel = after(() => restart(id), delayMs)
+  }
+
+  const announceUp = (id: string, entry: Running) =>
+    entry.ready.then(
+      () => {
+        if (running.get(id) !== entry) return
+        emit({ space: id, state: "up", endpoint: entry.endpoint })
+      },
+      () => {
+        if (running.get(id) !== entry) return
+        drop(id, entry)
+        void entry.stop().catch(() => undefined)
+        if (isViewed(id)) scheduleRestart(id)
+      },
+    )
+
+  const restart = (id: string) => {
+    const sup = supervision.get(id)
+    if (sup) sup.cancel = undefined
+    if (closed || !isViewed(id) || running.has(id)) return
+    serialize(id, async () => {
+      if (running.has(id) || !isViewed(id)) return
+      await launch(id)
+    }).then(
+      () => {
+        const entry = running.get(id)
+        if (entry) void announceUp(id, entry)
+      },
+      () => {
+        if (isViewed(id)) scheduleRestart(id)
+      },
+    )
   }
 
   const isViewed = (id: string) => [...viewedBy.values()].includes(id)
@@ -163,19 +270,32 @@ export function createCores(deps: CoresDeps) {
         live.lastBusy = now()
         return live.endpoint
       }
-      return launch(id, options.port)
+      const sup = supervision.get(id)
+      const announce = sup?.announce === true
+      cancelRestart(id)
+      const endpoint = await launch(id, options.port).catch((error) => {
+        if (announce) emit({ space: id, state: "failed" })
+        throw error
+      })
+      const entry = running.get(id)
+      if (announce && entry) void announceUp(id, entry)
+      return endpoint
     })
   }
 
-  const stop = (id: string) =>
-    serialize(id, async () => {
+  const stop = (id: string) => {
+    cancelRestart(id)
+    return serialize(id, async () => {
       const current = running.get(id)
       if (!current) return
       drop(id, current)
       await current.stop()
     })
+  }
 
   const stopAll = async () => {
+    closed = true
+    for (const id of [...supervision.keys()]) cancelRestart(id)
     await Promise.allSettled([...queues.values()])
     await Promise.all([...running.keys()].map(stop))
   }
@@ -207,6 +327,7 @@ export function createCores(deps: CoresDeps) {
     viewedBy.set(window, id)
     const left = previous && previous !== id ? running.get(previous) : undefined
     if (left) left.lastBusy = now()
+    if (previous && previous !== id && !isViewed(previous)) cancelRestart(previous)
     const next = running.get(id)
     if (next) next.lastBusy = now()
   }
@@ -216,6 +337,7 @@ export function createCores(deps: CoresDeps) {
     viewedBy.delete(window)
     const left = previous ? running.get(previous) : undefined
     if (left) left.lastBusy = now()
+    if (previous && !isViewed(previous)) cancelRestart(previous)
   }
 
   return {

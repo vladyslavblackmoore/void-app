@@ -1207,4 +1207,8 @@ export const dict: Record<string, string> = {
   "space.switcher.failed": "Could not open that space.",
   "space.switcher.new": "New space\u2026",
   "space.switcher.manage": "Manage spaces",
+  "space.core.restarting": "Space core crashed, restarting…",
+  "space.core.up": "Space core is back up",
+  "space.core.failed": "Space core failed to restart",
+  "space.core.retry": "Retry",
 }

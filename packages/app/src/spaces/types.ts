@@ -15,9 +15,18 @@ export type SpaceEndpoint = {
   password: string
 }
 
+export type CoreStatus = {
+  space: string
+  state: "restarting" | "up" | "failed"
+  attempt?: number
+  delayMs?: number
+  endpoint?: SpaceEndpoint
+}
+
 export type SpacesPlatform = {
   list(): Promise<SpaceSummary[]>
   start(id: string): Promise<SpaceEndpoint>
   getViewed(): Promise<string>
   setViewed(id: string): Promise<SpaceEndpoint>
+  onCoreStatus?(callback: (status: CoreStatus) => void): () => void
 }
