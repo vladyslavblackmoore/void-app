@@ -1201,4 +1201,10 @@ export const dict = {
   "dialog.update.major.action.quit": "Atnaujinti baigiant darbą",
   "dialog.update.major.action.restart": "Paleisti iš naujo ir atnaujinti",
   "dialog.update.major.action.restartNow": "Paleisti iš naujo dabar",
+  "space.switcher.ariaLabel": "Switch space",
+  "space.switcher.heading": "Spaces",
+  "space.switcher.running": "Running",
+  "space.switcher.failed": "Could not open that space.",
+  "space.switcher.new": "New space\u2026",
+  "space.switcher.manage": "Manage spaces",
 }

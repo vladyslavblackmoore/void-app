@@ -1250,4 +1250,10 @@ export const dict = {
   "error.childStore.persistedProjectIconCreateFailed": "建立持續性專案圖示失敗",
   "error.childStore.storeCreateFailed": "建立儲存區失敗",
   "terminal.connectionLost.abnormalClose": "WebSocket 異常關閉：{{code}}",
+  "space.switcher.ariaLabel": "Switch space",
+  "space.switcher.heading": "Spaces",
+  "space.switcher.running": "Running",
+  "space.switcher.failed": "Could not open that space.",
+  "space.switcher.new": "New space\u2026",
+  "space.switcher.manage": "Manage spaces",
 } satisfies Partial<Record<Keys, string>>

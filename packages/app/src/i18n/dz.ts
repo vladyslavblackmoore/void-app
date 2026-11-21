@@ -1210,4 +1210,10 @@ export const dict: Record<string, string> = {
   "dialog.update.major.action.quit": "ཕྱིར་འཐོན་འབདཝ་ད་དུས་མཐུན་བཟོ",
   "dialog.update.major.action.restart": "དུས་མཐུན་བཟོ་ནིའི་དོན་ལུ་ལོག་འགོ་བཙུགས",
   "dialog.update.major.action.restartNow": "ད་ལྟོ་ལོག་འགོ་བཙུགས",
+  "space.switcher.ariaLabel": "Switch space",
+  "space.switcher.heading": "Spaces",
+  "space.switcher.running": "Running",
+  "space.switcher.failed": "Could not open that space.",
+  "space.switcher.new": "New space\u2026",
+  "space.switcher.manage": "Manage spaces",
 }

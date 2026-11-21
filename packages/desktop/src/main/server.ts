@@ -6,7 +6,7 @@ import { getLogger } from "./logging"
 import { getUserShell, loadShellEnv } from "./shell-env"
 import { getStore } from "./store"
 import { DEFAULT_SERVER_URL_KEY } from "./store-keys"
-import { userXdg, voidAppEnv } from "./void-home"
+import { coreEnv, userXdg, voidAppEnv } from "./void-home"
 
 export type HealthCheck = { wait: Promise<void> }
 
@@ -23,6 +23,7 @@ const SIDECAR_STOP_TIMEOUT = 6_000
 
 type SpawnLocalServerOptions = {
   userDataPath: string
+  env?: Record<string, string>
   onStdout?: (message: string) => void
   onStderr?: (message: string) => void
   onExit?: (code: number) => void
@@ -65,7 +66,7 @@ export async function spawnLocalServer(
   const sidecar = join(dirname(fileURLToPath(import.meta.url)), "sidecar.js")
   const child = utilityProcess.fork(sidecar, [], {
     cwd: process.cwd(),
-    env: createSidecarEnv(),
+    env: createSidecarEnv(options.env),
     serviceName: SIDECAR_SERVICE_NAME,
     stdio: "pipe",
   })
@@ -212,10 +213,8 @@ export async function checkHealth(url: string, password?: string | null): Promis
   return false
 }
 
-function createSidecarEnv(): Record<string, string> {
-  const env = Object.fromEntries(
-    Object.entries(process.env).flatMap(([key, value]) => (value === undefined ? [] : [[key, String(value)]])),
-  )
+function createSidecarEnv(overrides: Record<string, string> = {}): Record<string, string> {
+  const env = coreEnv(process.env, overrides)
   delete env.DEBUG
   if (process.platform === "linux") delete env.LD_PRELOAD
   return env

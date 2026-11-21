@@ -1265,4 +1265,10 @@ export const dict = {
   "error.childStore.persistedProjectIconCreateFailed": "ไม่สามารถสร้างไอคอนโปรเจกต์ถาวร",
   "error.childStore.storeCreateFailed": "ไม่สามารถสร้างที่เก็บ",
   "terminal.connectionLost.abnormalClose": "WebSocket ปิดอย่างผิดปกติ: {{code}}",
+  "space.switcher.ariaLabel": "Switch space",
+  "space.switcher.heading": "Spaces",
+  "space.switcher.running": "Running",
+  "space.switcher.failed": "Could not open that space.",
+  "space.switcher.new": "New space\u2026",
+  "space.switcher.manage": "Manage spaces",
 }

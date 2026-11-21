@@ -1204,4 +1204,10 @@ export const dict = {
   "desktop.wsl.error.failedPort": "Impossibile ottenere la porta",
   "desktop.picker.error.notSelected": "Il file non è stato selezionato nella finestra di selezione",
   "desktop.picker.error.sizeLimit": "Gli allegati selezionati superano il limite di {{limit}} MB",
+  "space.switcher.ariaLabel": "Switch space",
+  "space.switcher.heading": "Spaces",
+  "space.switcher.running": "Running",
+  "space.switcher.failed": "Could not open that space.",
+  "space.switcher.new": "New space\u2026",
+  "space.switcher.manage": "Manage spaces",
 }

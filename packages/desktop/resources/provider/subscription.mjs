@@ -139,8 +139,19 @@ export function wrapModel(build, check, key = "subscription") {
   })
 }
 
+export function spaceSettings(settings = {}, env = process.env) {
+  const dir = env.VOID_SPACE_CLI_DIR
+  if (!dir) {
+    if (!Array.isArray(settings.settingSources) || settings.settingSources.length > 0) return settings
+    const { settingSources: _dropped, ...rest } = settings
+    return rest
+  }
+  if (settings.env?.CLAUDE_CONFIG_DIR) return settings
+  return { ...settings, env: { ...settings.env, CLAUDE_CONFIG_DIR: dir } }
+}
+
 export function createSubscription(options = {}, factory = createClaudeCode) {
-  const defaultSettings = options.defaultSettings ?? {}
+  const defaultSettings = spaceSettings(options.defaultSettings)
   const key = options.name ?? "subscription"
   const base = factory({ defaultSettings })
   const check = statusCheck(defaultSettings.pathToClaudeCodeExecutable, defaultSettings.env ?? {})

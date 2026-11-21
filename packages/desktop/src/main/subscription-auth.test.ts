@@ -129,3 +129,88 @@ describe("subscription auth plugin", () => {
     expect(result.type).toBe("failed")
   })
 })
+
+const dirStub = `#!/bin/sh
+d="\${CLAUDE_CONFIG_DIR:-}"
+echo "\${CLAUDE_CONFIG_DIR-unset}" >> "$0.envs"
+if [ -z "$d" ]; then d="$HOME/default-login"; fi
+mkdir -p "$d"
+case "$1 $2" in
+  "auth status")
+    echo "{\\"loggedIn\\": $(cat "$d/state" 2>/dev/null || echo false)}"
+    ;;
+  "auth login")
+    echo true > "$d/state"
+    ;;
+esac
+`
+
+async function loadWith(options: Record<string, unknown>) {
+  count++
+  const mod = await import(`${source}?case=${count}`)
+  return (await mod.default.server({}, { binary: join(dir, "stub"), ...options })) as Hooks
+}
+
+describe("subscription auth plugin per space", () => {
+  const saved = process.env.VOID_SPACE_CLI_DIR
+
+  beforeEach(async () => {
+    delete process.env.VOID_SPACE_CLI_DIR
+    await writeFile(join(dir, "stub"), dirStub)
+    await chmod(join(dir, "stub"), 0o755)
+  })
+
+  afterEach(() => {
+    if (saved === undefined) delete process.env.VOID_SPACE_CLI_DIR
+    else process.env.VOID_SPACE_CLI_DIR = saved
+  })
+
+  test("signing in one space leaves another signed out", async () => {
+    const first = await loadWith({ configDir: join(dir, "space-a") })
+    const second = await loadWith({ configDir: join(dir, "space-b") })
+    const started = await first.auth.methods[0].authorize()
+    expect((await started.callback()).type).toBe("success")
+    expect(await first.auth.connected({ type: "api", key: "subscription" })).toBe(true)
+    expect(await second.auth.connected({ type: "api", key: "subscription" })).toBe(false)
+  })
+
+  test("takes the login directory from the space variable when no option is set", async () => {
+    process.env.VOID_SPACE_CLI_DIR = join(dir, "from-env")
+    const hooks = await loadWith({})
+    const started = await hooks.auth.methods[0].authorize()
+    expect(await started.callback()).toEqual(
+      expect.objectContaining({ type: "success", metadata: { configDir: join(dir, "from-env") } }),
+    )
+    expect((await readFile(join(dir, "from-env", "state"), "utf8")).trim()).toBe("true")
+    expect(await readFile(join(dir, "stub.envs"), "utf8")).toContain(join(dir, "from-env"))
+  })
+
+  test("a removed marker never logs the user's own cli out when no directory is set", async () => {
+    await writeFile(join(dir, "stub"), dirStub.replace('"auth login")', '"auth logout")\n    echo logout >> "$0.logouts"\n    ;;\n  "auth login")'))
+    const hooks = await loadWith({})
+    await (await hooks.auth.methods[0].authorize()).callback()
+    expect(await hooks.auth.connected({ type: "api", key: "subscription" })).toBe(true)
+    expect(await hooks.auth.connected(undefined)).toBe(false)
+    expect(await readFile(join(dir, "stub.logouts"), "utf8").catch(() => "")).toBe("")
+  })
+
+  test("an option wins over the space variable", async () => {
+    process.env.VOID_SPACE_CLI_DIR = join(dir, "from-env")
+    const hooks = await loadWith({ configDir: join(dir, "from-option") })
+    await (await hooks.auth.methods[0].authorize()).callback()
+    expect((await readFile(join(dir, "from-option", "state"), "utf8")).trim()).toBe("true")
+  })
+
+  test("without a directory the cli gets no config dir variable and uses its default", async () => {
+    const hooks = await loadWith({})
+    const started = await hooks.auth.methods[0].authorize()
+    expect(await started.callback()).toEqual(
+      expect.objectContaining({ type: "success", metadata: { userDefault: true } }),
+    )
+    await hooks.auth.connected({ type: "api", key: "subscription" })
+    const envs = (await readFile(join(dir, "stub.envs"), "utf8")).split("\n").filter(Boolean)
+    expect(envs.length).toBeGreaterThan(0)
+    expect(envs.every((line) => line === "unset")).toBe(true)
+    expect((await readFile(join(dir, "default-login", "state"), "utf8")).trim()).toBe("true")
+  })
+})

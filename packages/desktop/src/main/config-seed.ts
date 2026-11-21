@@ -27,12 +27,25 @@ const mains: Array<[string, Record<string, string>]> = [
 const agent = (name: string, values: Record<string, string>) =>
   Object.entries(values).map(([key, value]): [string[], unknown] => [["agent", name, key], value])
 
-export async function seedConfig(configDir: string, userDataDir: string, wrapper: string, authFile = "") {
-  const target = join(configDir, "provider", "subscription.mjs")
-  if ((await readFile(target, "utf8").catch(() => undefined)) !== wrapper) {
-    await mkdir(dirname(target), { recursive: true })
-    await writeFile(target, wrapper)
-  }
+async function writeIfChanged(target: string, content: string) {
+  if ((await readFile(target, "utf8").catch(() => undefined)) === content) return
+  await mkdir(dirname(target), { recursive: true })
+  await writeFile(target, content)
+}
+
+export type ConfigTemplates = { plugin?: string; config?: string }
+
+export async function seedConfig(
+  configDir: string,
+  userDataDir: string,
+  wrapper: string,
+  authFile = "",
+  templates: ConfigTemplates = {},
+) {
+  await writeIfChanged(join(configDir, "provider", "subscription.mjs"), wrapper)
+  if (templates.plugin !== undefined) await writeIfChanged(join(configDir, "plugins", "subscription-auth.js"), templates.plugin)
+  if (templates.config !== undefined && !existsSync(join(configDir, "opencode.jsonc")))
+    await writeFile(join(configDir, "opencode.jsonc"), templates.config)
 
   const seeded = existsSync(join(userDataDir, CONFIG_STAMP))
   const connected = Object.keys(JSON.parse((await readFile(authFile, "utf8").catch(() => undefined)) ?? "{}"))

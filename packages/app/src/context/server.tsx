@@ -4,6 +4,8 @@ import { createStore, type SetStoreFunction, type Store } from "solid-js/store"
 import { Persist, persisted } from "@/utils/persist"
 import { pathKey } from "@/utils/path-key"
 import { ServerScope } from "@/utils/server-scope"
+import { spaceKey } from "@/spaces/connection"
+import { HOME_SPACE_ID } from "@/spaces/types"
 
 type StoredProject = { worktree: string; expanded: boolean }
 type StoredServer = string | ServerConnection.HttpBase | ServerConnection.Http
@@ -199,7 +201,7 @@ export namespace ServerConnection {
     http: HttpBase
   } & (
     | // Regular desktop server
-    { variant: "base" }
+    { variant: "base"; space?: string }
     // WSL server (windows only)
     | {
         variant: "wsl"
@@ -227,7 +229,7 @@ export namespace ServerConnection {
         return Key.make(conn.http.url)
       case "sidecar": {
         if (conn.variant === "wsl") return Key.make(`wsl:${conn.distro}`)
-        return Key.make("sidecar")
+        return Key.make(spaceKey(conn.space))
       }
       case "ssh":
         return Key.make(`ssh:${conn.host}`)
@@ -237,6 +239,8 @@ export namespace ServerConnection {
   export type Key = string & { _brand: "Key" }
   export const Key = { make: (v: string) => v as Key }
 
+  export const space = (conn?: Any) =>
+    conn?.type === "sidecar" && conn.variant === "base" ? (conn.space ?? HOME_SPACE_ID) : undefined
   export const builtin = (conn: Any) => conn.type === "sidecar" && conn.variant === "base"
   export const local = (conn?: Any) =>
     !!conn && (builtin(conn) || (conn.type === "http" && isLocalHost(conn.http.url) === "local"))
@@ -275,13 +279,20 @@ export const { use: useServer, provider: ServerProvider } = createSimpleContext(
 
     const url = (x: StoredServer) => (typeof x === "string" ? x : "type" in x ? x.http.url : x.url)
 
-    const allServers = createMemo((): Array<ServerConnection.Any> => {
-      return resolveServerList({ stored: store.list, props: props.servers })
-    })
-
     const [state, setState] = createStore({
       active: props.defaultServer,
+      spaces: [] as ServerConnection.Sidecar[],
     })
+
+    const allServers = createMemo((): Array<ServerConnection.Any> => {
+      return resolveServerList({ stored: store.list, props: [...(props.servers ?? []), ...state.spaces] })
+    })
+
+    function register(conn: ServerConnection.Sidecar) {
+      const key = ServerConnection.key(conn)
+      const index = state.spaces.findIndex((item) => ServerConnection.key(item) === key)
+      setState("spaces", index === -1 ? state.spaces.length : index, conn)
+    }
 
     function setActive(input: ServerConnection.Key) {
       if (state.active !== input) setState("active", input)
@@ -348,6 +359,7 @@ export const { use: useServer, provider: ServerProvider } = createSimpleContext(
         return current()
       },
       setActive,
+      register,
       add,
       remove,
       scope,

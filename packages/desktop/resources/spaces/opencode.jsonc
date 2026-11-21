@@ -1,0 +1,18 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "subscription": {
+      "name": "Subscription",
+      "npm": "file://{env:XDG_CONFIG_HOME}/opencode/provider/subscription.mjs",
+      "options": {
+        "defaultSettings": {
+          "settingSources": []
+        }
+      },
+      "models": {
+        "opus": { "name": "Opus" },
+        "sonnet": { "name": "Sonnet" }
+      }
+    }
+  }
+}

@@ -1195,4 +1195,10 @@ export const dict = {
   "help.tabs.persistence": "Kun avaat sovelluksen uudelleen, välilehtesi ovat yhä avoinna.",
   "help.tabs.worktrees":
     "Uusi ulkoasu ei vielä tue Git-työpuita, mutta tuki on tulossa pian. Jos haluat jatkaa aiemman ulkoasun käyttöä, voit vaihtaa ulkoasua asetuksissa. Huomaa kuitenkin, että uudesta ulkoasusta tulee pysyvä muutaman viikon kuluttua.",
+  "space.switcher.ariaLabel": "Switch space",
+  "space.switcher.heading": "Spaces",
+  "space.switcher.running": "Running",
+  "space.switcher.failed": "Could not open that space.",
+  "space.switcher.new": "New space\u2026",
+  "space.switcher.manage": "Manage spaces",
 }

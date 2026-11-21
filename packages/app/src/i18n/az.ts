@@ -1195,4 +1195,10 @@ export const dict = {
   "workspace.reset.archived.one": "1 sessiya arxivlənəcək.",
   "workspace.reset.archived.many": "{{count}} sessiya arxivlənəcək.",
   "workspace.reset.note": "Bu iş sahəsini standart branch ilə uyğunlaşdırmaq üçün sıfırlayacaq.",
+  "space.switcher.ariaLabel": "Switch space",
+  "space.switcher.heading": "Spaces",
+  "space.switcher.running": "Running",
+  "space.switcher.failed": "Could not open that space.",
+  "space.switcher.new": "New space\u2026",
+  "space.switcher.manage": "Manage spaces",
 }

@@ -1186,4 +1186,10 @@ export const dict = {
   "dialog.update.major.action.quit": "Çykanda täzeläň",
   "dialog.update.major.action.restart": "Täzelemek üçin täzeden açyň",
   "dialog.update.major.action.restartNow": "Häzir täzeden açyň",
+  "space.switcher.ariaLabel": "Switch space",
+  "space.switcher.heading": "Spaces",
+  "space.switcher.running": "Running",
+  "space.switcher.failed": "Could not open that space.",
+  "space.switcher.new": "New space\u2026",
+  "space.switcher.manage": "Manage spaces",
 }

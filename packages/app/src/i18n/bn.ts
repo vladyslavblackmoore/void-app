@@ -1179,4 +1179,10 @@ export const dict: Record<string, string> = {
   "dialog.update.major.action.quit": "প্রস্থানের সময় আপগ্রেড করুন",
   "dialog.update.major.action.restart": "আপগ্রেড করতে রিস্টার্ট করুন",
   "dialog.update.major.action.restartNow": "এখন রিস্টার্ট করুন",
+  "space.switcher.ariaLabel": "Switch space",
+  "space.switcher.heading": "Spaces",
+  "space.switcher.running": "Running",
+  "space.switcher.failed": "Could not open that space.",
+  "space.switcher.new": "New space\u2026",
+  "space.switcher.manage": "Manage spaces",
 }

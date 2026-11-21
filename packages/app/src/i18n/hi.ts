@@ -1190,4 +1190,10 @@ export const dict = {
   "workspace.reset.archived.one": "1 सेशन संग्रहित किया जाएगा।",
   "workspace.reset.archived.many": "{{count}} सेशन संग्रहित किए जाएँगे।",
   "workspace.reset.note": "यह डिफ़ॉल्ट शाखा से मिलान करने के लिए वर्कस्पेस को रीसेट कर देगा।",
+  "space.switcher.ariaLabel": "Switch space",
+  "space.switcher.heading": "Spaces",
+  "space.switcher.running": "Running",
+  "space.switcher.failed": "Could not open that space.",
+  "space.switcher.new": "New space\u2026",
+  "space.switcher.manage": "Manage spaces",
 }

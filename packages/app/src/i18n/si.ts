@@ -1180,4 +1180,10 @@ export const dict: Record<string, string> = {
   "dialog.update.major.action.quit": "ඉවත් වන විට උත්ශ්‍රේණි කරන්න",
   "dialog.update.major.action.restart": "උත්ශ්‍රේණි කිරීමට යළි අරඹන්න",
   "dialog.update.major.action.restartNow": "දැන් යළි අරඹන්න",
+  "space.switcher.ariaLabel": "Switch space",
+  "space.switcher.heading": "Spaces",
+  "space.switcher.running": "Running",
+  "space.switcher.failed": "Could not open that space.",
+  "space.switcher.new": "New space\u2026",
+  "space.switcher.manage": "Manage spaces",
 }

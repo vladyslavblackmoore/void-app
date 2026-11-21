@@ -1204,4 +1204,10 @@ export const dict = {
   "dialog.update.major.action.quit": "ထွက်သည့်အခါ အဆင့်မြှင့်ပါ",
   "dialog.update.major.action.restart": "အဆင့်မြှင့်ရန် ပြန်လည်စတင်ပါ",
   "dialog.update.major.action.restartNow": "ယခု ပြန်လည်စတင်ပါ",
+  "space.switcher.ariaLabel": "Switch space",
+  "space.switcher.heading": "Spaces",
+  "space.switcher.running": "Running",
+  "space.switcher.failed": "Could not open that space.",
+  "space.switcher.new": "New space\u2026",
+  "space.switcher.manage": "Manage spaces",
 }

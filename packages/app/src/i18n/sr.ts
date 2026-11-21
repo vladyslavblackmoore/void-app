@@ -1189,4 +1189,10 @@ export const dict = {
   "dialog.update.major.action.quit": "Надогради при изласку",
   "dialog.update.major.action.restart": "Поново покрени и надогради",
   "dialog.update.major.action.restartNow": "Поново покрени сада",
+  "space.switcher.ariaLabel": "Switch space",
+  "space.switcher.heading": "Spaces",
+  "space.switcher.running": "Running",
+  "space.switcher.failed": "Could not open that space.",
+  "space.switcher.new": "New space\u2026",
+  "space.switcher.manage": "Manage spaces",
 }

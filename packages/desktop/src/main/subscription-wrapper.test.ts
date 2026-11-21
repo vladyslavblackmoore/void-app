@@ -16,6 +16,7 @@ type Provider = ((modelId: string, settings?: Record<string, unknown>) => Model)
 type Wrapper = {
   notConnected: string
   createSubscription: (options: Record<string, unknown>, factory: unknown) => Provider
+  spaceSettings: (settings: Record<string, unknown> | undefined, env: Record<string, string>) => Record<string, unknown>
 }
 
 const authError = (message: string) => Object.assign(new Error(message), { auth: true })
@@ -165,5 +166,40 @@ describe("subscription wrapper login handling", () => {
       provider("sonnet").doStream({ providerOptions: { subscription: { effort: "high" } } }),
     ).rejects.toThrow(wrapper.notConnected)
     expect(model.calls.map((call) => call.settings)).not.toContainEqual({ effort: "high" })
+  })
+})
+
+describe("subscription wrapper space login directory", () => {
+  test("passes the space variable to the sdk as the cli config dir", () => {
+    const settings = wrapper.spaceSettings({ settingSources: [], env: { A: "1" } }, { VOID_SPACE_CLI_DIR: "/space/cli" })
+    expect(settings).toEqual({ settingSources: [], env: { A: "1", CLAUDE_CONFIG_DIR: "/space/cli" } })
+  })
+
+  test("leaves the settings alone without the variable and keeps an explicit dir", () => {
+    const own = { env: { CLAUDE_CONFIG_DIR: "/own" } }
+    expect(wrapper.spaceSettings(own, { VOID_SPACE_CLI_DIR: "/space/cli" })).toBe(own)
+    expect(wrapper.spaceSettings({ a: 1 }, {})).toEqual({ a: 1 })
+  })
+
+  test("drops an empty setting sources list when the space uses the user's login directory", () => {
+    expect(wrapper.spaceSettings({ settingSources: [], permissionMode: "x" }, {})).toEqual({ permissionMode: "x" })
+    expect(wrapper.spaceSettings({ settingSources: ["user"] }, {})).toEqual({ settingSources: ["user"] })
+    expect(wrapper.spaceSettings({ settingSources: [] }, { VOID_SPACE_CLI_DIR: "/c" })).toEqual({
+      settingSources: [],
+      env: { CLAUDE_CONFIG_DIR: "/c" },
+    })
+  })
+
+  test("builds the sdk provider with the space directory", () => {
+    const model = fake()
+    const saved = process.env.VOID_SPACE_CLI_DIR
+    process.env.VOID_SPACE_CLI_DIR = "/space/cli"
+    try {
+      wrapper.createSubscription({}, model.factory)
+    } finally {
+      if (saved === undefined) delete process.env.VOID_SPACE_CLI_DIR
+      else process.env.VOID_SPACE_CLI_DIR = saved
+    }
+    expect(model.factories).toEqual([{ defaultSettings: { env: { CLAUDE_CONFIG_DIR: "/space/cli" } } }])
   })
 })

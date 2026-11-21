@@ -1212,4 +1212,10 @@ export const dict = {
   "error.childStore.persistedProjectIconCreateFailed": "Nie udało się utworzyć trwałej ikony projektu",
   "error.childStore.storeCreateFailed": "Nie udało się utworzyć magazynu",
   "terminal.connectionLost.abnormalClose": "WebSocket zamknięty nieprawidłowo: {{code}}",
+  "space.switcher.ariaLabel": "Switch space",
+  "space.switcher.heading": "Spaces",
+  "space.switcher.running": "Running",
+  "space.switcher.failed": "Could not open that space.",
+  "space.switcher.new": "New space\u2026",
+  "space.switcher.manage": "Manage spaces",
 }
