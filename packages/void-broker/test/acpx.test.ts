@@ -55,6 +55,16 @@ async function records(file: string) {
     .map((line) => entry.parse(JSON.parse(line)))
 }
 
+async function started(file: string) {
+  const deadline = Date.now() + 10_000
+  while (Date.now() < deadline) {
+    const found = (await records(file)).flatMap((item) => (item.type === "start" ? [item] : []))[0]
+    if (found) return found
+    await Bun.sleep(10)
+  }
+  throw new Error("the stub binary did not record a start")
+}
+
 async function run(worker: AcpxWorkerLink, prompt: string) {
   const events: WorkerEvent[] = []
   for await (const event of worker.prompt(prompt)) events.push(event)
@@ -101,13 +111,12 @@ describe("AcpxWorkerLink", () => {
   test("the shim argv carries model, effort, mode and account, and no setting sources by default", async () => {
     const { created, record, dir } = await link()
     await created.start()
-    const argv = (await records(record)).flatMap((item) => (item.type === "start" ? [item.argv] : []))[0] ?? []
+    const { argv } = await started(record)
     expect(argv[argv.indexOf("--model") + 1]).toBe("sonnet")
     expect(argv[argv.indexOf("--effort") + 1]).toBe("low")
     expect(argv[argv.indexOf("--permission-mode") + 1]).toBe("bypassPermissions")
     expect(argv).not.toContain("--setting-sources")
-    const start = (await records(record)).find((item) => item.type === "start")
-    expect(start?.type === "start" ? start.configDir : "").toBe(path.join(dir, "account"))
+    expect((await started(record)).configDir).toBe(path.join(dir, "account"))
   })
 
   test("settingSources is passed only when set", async () => {
@@ -115,7 +124,7 @@ describe("AcpxWorkerLink", () => {
       entry: { id: "w2", backend: "anthropic-cli", mcp: [], warm: false, description: "", settingSources: "project" },
     })
     await created.start()
-    const argv = (await records(record)).flatMap((item) => (item.type === "start" ? [item.argv] : []))[0] ?? []
+    const { argv } = await started(record)
     expect(argv[argv.indexOf("--setting-sources") + 1]).toBe("project")
   })
 
@@ -124,7 +133,7 @@ describe("AcpxWorkerLink", () => {
       mcpServers: [{ name: "memory", command: "bun", args: ["m.ts"], env: [{ name: "VOID_MEMORY_DB", value: "/tmp/x.db" }] }],
     })
     await created.start()
-    const argv = (await records(record)).flatMap((item) => (item.type === "start" ? [item.argv] : []))[0] ?? []
+    const { argv } = await started(record)
     expect(argv).toContain("--strict-mcp-config")
     const file = text(argv[argv.indexOf("--mcp-config") + 1])
     const config = z.object({ mcpServers: z.record(z.string(), z.unknown()) }).parse(await Bun.file(file).json())
