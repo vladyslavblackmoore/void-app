@@ -34,3 +34,17 @@ describe("titlebar", () => {
     expect(source("../../components/titlebar-tab-nav.tsx")).not.toContain("SettingsTabItem")
   })
 })
+
+describe("settings screens", () => {
+  test("reuse the home projects column", () => {
+    const page = source("../settings-tab.tsx")
+    expect(page).toContain("HomeProjects")
+    expect(page).toContain("createHomeProjectsController")
+    expect(page).not.toContain("<aside")
+    expect(page).not.toContain("HomeUtilityNav")
+  })
+
+  test("home projects column does not require the sessions scroll controller", () => {
+    expect(source("./home-projects.tsx")).not.toContain("HomeScrollController")
+  })
+})
