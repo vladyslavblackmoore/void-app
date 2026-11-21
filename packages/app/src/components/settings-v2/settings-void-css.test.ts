@@ -42,6 +42,13 @@ describe("void settings css", () => {
     expect(block('html[data-theme="void"] .void-general-col')).toContain("gap: var(--void-gap, 14px)")
   })
 
+  test("the default tag is a small muted chip and the data path is monospace", () => {
+    const tag = block('html[data-theme="void"] .void-space-tag')
+    expect(tag).toContain("flex: none")
+    expect(tag).toContain("color: var(--void-text-2)")
+    expect(block('html[data-theme="void"] .void-data-path')).toContain("font-family: var(--font-family-mono)")
+  })
+
   test("the search field is a void input", () => {
     const input = block(`${content} .settings-v2-tab-search [data-component="text-input-v2"]`)
     expect(input).toContain("background: var(--void-inner)")
