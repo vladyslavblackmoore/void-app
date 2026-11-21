@@ -410,6 +410,7 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
 
             return (
               <div
+                data-void-row={isVoid() ? "" : undefined}
                 class="h-full flex-1 overflow-hidden flex flex-row items-center gap-1.5 px-2 md:pr-3"
                 classList={{
                   "pt-2": !bottom(),
@@ -418,74 +419,76 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
                   "md:pl-4": !macTrafficLights(),
                 }}
               >
-                <ChannelIndicator debugTools={props.debugTools} />
-                <Show when={windows() || linux()}>
-                  <WindowsAppMenu command={command} platform={platform} variant="v2" />
-                </Show>
-                <Show when={isVoid()}>
-                  <VoidLogo />
-                </Show>
-                <Show when={isVoid()}>
-                  <SectionTabs active={activeSection()} onSelect={selectSection} />
-                </Show>
-                <Show when={!isVoid()}>
-                  <TooltipV2
-                    placement="bottom"
-                    value={
-                      <>
-                        {language.t("home.title")}
-                        <KeybindV2 keys={command.keybindParts("home.toggle")} variant="neutral" />
-                      </>
-                    }
-                    class="shrink-0"
-                  >
-                    <IconButtonV2
-                      type="button"
-                      variant="ghost-muted"
-                      size="large"
-                      class="!w-9 shrink-0"
-                      icon={<IconV2 name="grid-plus" />}
-                      state={layout.route().type === "home" ? "pressed" : undefined}
-                      onClick={toggleHome}
-                      aria-label={language.t("home.title")}
-                      aria-pressed={layout.route().type === "home"}
-                    />
-                  </TooltipV2>
-                </Show>
-
-                <Show when={!isVoid()}>
-                  <SpaceSwitcher />
-                </Show>
                 <Show
-                  when={!isVoid()}
+                  when={isVoid()}
                   fallback={
-                    <div data-component="void-titlebar-center">
+                    <>
+                      <ChannelIndicator debugTools={props.debugTools} />
+                      <Show when={windows() || linux()}>
+                        <WindowsAppMenu command={command} platform={platform} variant="v2" />
+                      </Show>
+                      <TooltipV2
+                        placement="bottom"
+                        value={
+                          <>
+                            {language.t("home.title")}
+                            <KeybindV2 keys={command.keybindParts("home.toggle")} variant="neutral" />
+                          </>
+                        }
+                        class="shrink-0"
+                      >
+                        <IconButtonV2
+                          type="button"
+                          variant="ghost-muted"
+                          size="large"
+                          class="!w-9 shrink-0"
+                          icon={<IconV2 name="grid-plus" />}
+                          state={layout.route().type === "home" ? "pressed" : undefined}
+                          onClick={toggleHome}
+                          aria-label={language.t("home.title")}
+                          aria-pressed={layout.route().type === "home"}
+                        />
+                      </TooltipV2>
+
                       <SpaceSwitcher />
-                    </div>
+                      <TitlebarTabStrip
+                        tabs={tabsStore}
+                        currentTab={currentTab}
+                        forceTruncate={tabsAreOverflowing()}
+                        onOverflowChange={setTabsAreOverflowing}
+                        onNavigate={(tab, el) => {
+                          tabs.select(tab)
+                          el?.scrollIntoView({ behavior: "instant" })
+                        }}
+                        onClose={(tab) => {
+                          const index = tabsStore.findIndex((item) => tabKey(item) === tabKey(tab))
+                          if (index !== -1) tabsStoreActions.closeTab(index)
+                        }}
+                        onReorder={(keys) => tabsStoreActions.reorder(keys)}
+                      />
+                      <div class="flex-1" />
+                      <TitlebarV2Right state={v2RightState()} />
+                    </>
                   }
                 >
-                  <TitlebarTabStrip
-                    tabs={tabsStore}
-                    currentTab={currentTab}
-                    forceTruncate={tabsAreOverflowing()}
-                    onOverflowChange={setTabsAreOverflowing}
-                    onNavigate={(tab, el) => {
-                      tabs.select(tab)
-                      el?.scrollIntoView({ behavior: "instant" })
-                    }}
-                    onClose={(tab) => {
-                      const index = tabsStore.findIndex((item) => tabKey(item) === tabKey(tab))
-                      if (index !== -1) tabsStoreActions.closeTab(index)
-                    }}
-                    onReorder={(keys) => tabsStoreActions.reorder(keys)}
-                  />
+                  <div data-component="void-titlebar-left">
+                    <ChannelIndicator debugTools={props.debugTools} />
+                    <Show when={windows() || linux()}>
+                      <WindowsAppMenu command={command} platform={platform} variant="v2" />
+                    </Show>
+                    <VoidLogo />
+                    <SectionTabs active={activeSection()} onSelect={selectSection} />
+                  </div>
+                  <div data-component="void-titlebar-center">
+                    <SpaceSwitcher />
+                  </div>
+                  <div data-component="void-titlebar-right">
+                    <TitlebarV2Right
+                      state={v2RightState()}
+                      trailing={<VoidTitlebarActions onSearch={command.show} onNewTask={openNewTab} />}
+                    />
+                  </div>
                 </Show>
-                <TitlebarV2Right
-                  state={v2RightState()}
-                  trailing={
-                    isVoid() ? <VoidTitlebarActions onSearch={command.show} onNewTask={openNewTab} /> : undefined
-                  }
-                />
               </div>
             )
           }}

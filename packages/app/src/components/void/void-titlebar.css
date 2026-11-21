@@ -65,11 +65,30 @@ html[data-theme="void"] [data-slot="void-section-tab"][data-active="true"] {
   font-weight: var(--void-weight-medium);
 }
 
+html[data-theme="void"] [data-void-row] {
+  display: grid;
+  grid-template-columns: minmax(min-content, 1fr) minmax(0, auto) minmax(min-content, 1fr);
+  gap: 12px;
+}
+
+html[data-theme="void"] [data-component="void-titlebar-left"] {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+}
+
 html[data-theme="void"] [data-component="void-titlebar-center"] {
   display: flex;
   min-width: 0;
-  flex: 1 1 auto;
   justify-content: center;
+}
+
+html[data-theme="void"] [data-component="void-titlebar-right"] {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 html[data-theme="void"] [data-component="space-switcher"][data-void-chip] {

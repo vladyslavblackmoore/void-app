@@ -1,6 +1,6 @@
 export function VoidLogo() {
   return (
-    <div data-component="void-logo" class="[app-region:no-drag]">
+    <div data-component="void-logo">
       <svg width="24" height="24" viewBox="0 0 30 30" aria-hidden="true">
         <ellipse
           cx="15"
