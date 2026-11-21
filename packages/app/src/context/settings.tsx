@@ -172,6 +172,11 @@ export function sansFontFamily(font: string | undefined) {
   return stack(font, sansBase)
 }
 
+export function sansFontVariable(font: string | undefined) {
+  if (!font?.trim()) return undefined
+  return sansFontFamily(font)
+}
+
 export function terminalInput(font: string | undefined) {
   return input(font)
 }
@@ -347,7 +352,9 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
       if (typeof document === "undefined") return
       const root = document.documentElement
       root.style.setProperty("--font-family-mono", monoFontFamily(store.appearance?.mono))
-      root.style.setProperty("--font-family-sans", sansFontFamily(store.appearance?.sans))
+      const sans = sansFontVariable(store.appearance?.sans)
+      if (sans) root.style.setProperty("--font-family-sans", sans)
+      else root.style.removeProperty("--font-family-sans")
     })
 
     createEffect(() => {
