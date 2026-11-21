@@ -38,7 +38,10 @@ export type HomeSessionGroup = {
 
 export type OpenSessionOptions = { background?: boolean }
 
-export function createHomeSessionsController(home: HomeController) {
+export function createHomeSessionsController(
+  home: HomeController,
+  options: { commands?: boolean; prefetch?: boolean } = {},
+) {
   const tabs = useTabs()
   const command = useCommand()
   const dialog = useDialog()
@@ -99,6 +102,7 @@ export function createHomeSessionsController(home: HomeController) {
   const prefetched = new Set<string>()
 
   createEffect(() => {
+    if (options.prefetch === false) return
     const ctx = home.server.focusedContext()
     const conn = home.server.focused()
     if (!ctx || !conn) return
@@ -131,7 +135,9 @@ export function createHomeSessionsController(home: HomeController) {
       })
   })
 
-  command.register("home.palette", () => [
+  const register: typeof command.register = options.commands === false ? () => undefined : command.register
+
+  register("home.palette", () => [
     {
       id: "command.palette",
       title: language.t("command.palette"),

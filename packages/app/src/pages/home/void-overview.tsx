@@ -3,7 +3,7 @@ import { CardV2 } from "@opencode-ai/ui/v2/card-v2"
 import { ButtonV2 } from "@opencode-ai/ui/v2/button-v2"
 import { StatusDotV2 } from "@opencode-ai/ui/v2/status-dot-v2"
 import { useLanguage } from "@/context/language"
-import { usePermission } from "@/context/permission"
+import { showToast } from "@/utils/toast"
 import { needsYouCards, type NeedsYouCard } from "@/components/void/needs-you-model"
 import {
   filterOverview,
@@ -12,43 +12,37 @@ import {
   type OverviewFilter,
   type OverviewSession,
 } from "@/components/void/overview-model"
-import { sessionPermissionRequest, sessionQuestionRequest } from "@/pages/session/composer/session-request-tree"
 import { sessionTitle } from "@/utils/session-title"
 import type { HomeController } from "./home-controller"
 import type { HomeSessionRecord, HomeSessionsController } from "./home-sessions-controller"
+import { createVoidSessionItems } from "./void-session-items"
 import "./void-overview.css"
 
 const filters: OverviewFilter[] = ["all", "running", "waiting"]
 
 export function VoidOverview(props: { home: HomeController; sessions: HomeSessionsController }) {
   const language = useLanguage()
-  const permission = usePermission()
   const [filter, setFilter] = createSignal<OverviewFilter>("all")
 
-  const items = createMemo(() => {
-    const sync = props.home.server.focusedSync()
-    const server = props.sessions.session.server()
-    return props.sessions.data.records().map((record) => {
-      const directory = record.session.directory
-      const [store] = sync.child(directory)
-      const state = permission.ensureServerState(server)
-      const pending = sessionPermissionRequest(
-        store.session,
-        sync.session.data.permission,
-        record.session.id,
-        (request) => !state.autoResponds(request, directory),
-      )
-      const waiting =
-        !!pending || !!sessionQuestionRequest(store.session, sync.session.data.question, record.session.id)
-      return {
-        id: record.session.id,
-        record,
-        pending,
-        waiting,
-        working: sync.session.data.session_working(record.session.id),
-      }
-    })
-  })
+  const items = createVoidSessionItems(props.home, props.sessions)
+  const [responding, setResponding] = createSignal<string>()
+  const allow = (card: NeedsYouCard) => {
+    const ctx = props.home.server.focusedContext()
+    if (!ctx || responding() === card.id) return
+    setResponding(card.id)
+    ctx.sdk.api.permission
+      .reply({
+        sessionID: card.sessionID,
+        requestID: card.id,
+        reply: "once",
+        location: { directory: card.directory },
+      })
+      .catch((err: unknown) => {
+        const description = err instanceof Error ? err.message : String(err)
+        showToast({ title: language.t("common.requestFailed"), description })
+      })
+      .finally(() => setResponding((id) => (id === card.id ? undefined : id)))
+  }
   const cards = createMemo(() =>
     needsYouCards(
       items().map((item) => ({
@@ -57,6 +51,7 @@ export function VoidOverview(props: { home: HomeController; sessions: HomeSessio
         projectName: item.record.projectName,
         directory: item.record.session.directory,
         permission: item.pending,
+        question: item.question,
       })),
     ),
   )
@@ -93,16 +88,10 @@ export function VoidOverview(props: { home: HomeController; sessions: HomeSessio
                   {(card) => (
                     <NeedsYou
                       card={card}
-                      onAllow={() =>
-                        permission.ensureServerState(props.sessions.session.server()).respond({
-                          sessionID: card.sessionID,
-                          permissionID: card.id,
-                          response: "once",
-                          directory: card.directory,
-                        })
-                      }
+                      responding={responding() === card.id}
+                      onAllow={() => allow(card)}
                       onOpen={() => {
-                        const record = props.sessions.data.records().find((item) => item.session.id === card.sessionID)
+                        const record = props.sessions.data.records().find((item) => item.session.id === card.rootID)
                         if (record) props.sessions.session.open(record.session)
                       }}
                     />
@@ -145,21 +134,23 @@ export function VoidOverview(props: { home: HomeController; sessions: HomeSessio
   )
 }
 
-function NeedsYou(props: { card: NeedsYouCard; onAllow: () => void; onOpen: () => void }) {
+function NeedsYou(props: { card: NeedsYouCard; responding: boolean; onAllow: () => void; onOpen: () => void }) {
   const language = useLanguage()
   return (
     <CardV2 surface="inner" data-slot="void-overview-needs-item">
       <div data-slot="void-overview-needs-kind">
-        {language.t("void.overview.needs.permission", { project: props.card.projectName })}
+        {language.t(`void.overview.needs.${props.card.kind}`, { project: props.card.projectName })}
       </div>
       <div data-slot="void-overview-needs-title">{props.card.title}</div>
       <Show when={props.card.detail}>
         <div data-slot="void-overview-needs-detail">{props.card.detail}</div>
       </Show>
       <div data-slot="void-overview-needs-actions">
-        <ButtonV2 variant="contrast" size="normal" onClick={props.onAllow}>
-          {language.t("void.overview.needs.allow")}
-        </ButtonV2>
+        <Show when={props.card.kind === "permission"}>
+          <ButtonV2 variant="contrast" size="normal" disabled={props.responding} onClick={props.onAllow}>
+            {language.t("void.overview.needs.allow")}
+          </ButtonV2>
+        </Show>
         <ButtonV2 variant="neutral" size="normal" onClick={props.onOpen}>
           {language.t("void.overview.needs.open")}
         </ButtonV2>

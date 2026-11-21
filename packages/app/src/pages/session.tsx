@@ -82,6 +82,9 @@ import {
   sessionPanelWidthMax,
 } from "@/pages/session/session-panel-width"
 import { SessionSidePanel } from "@/pages/session/session-side-panel"
+import { VoidRunDetails } from "@/pages/session/void-run-details"
+import { VoidSessionList } from "@/pages/session/void-session-list"
+import { useVoidTheme } from "@/components/void/use-void-theme"
 import { sessionPanelLayout } from "@/pages/session/session-panel-layout"
 import { SessionReviewEmptyChangesV2 } from "@opencode-ai/session-ui/v2/session-review-empty-changes-v2"
 import { SessionReviewEmptyNoGitV2 } from "@opencode-ai/session-ui/v2/session-review-empty-no-git-v2"
@@ -466,6 +469,8 @@ export default function Page() {
     newSessionDesign() ? desktopV2ReviewOpen() || desktopTerminalOpen() : desktopReviewOpen(),
   )
   const desktopSidePanelOpen = createMemo(() => desktopSessionResizeOpen() || desktopFileTreeOpen())
+  const voidTheme = useVoidTheme()
+  const voidSheets = createMemo(() => voidTheme() && newSessionDesign() && isDesktop() && !desktopSidePanelOpen())
   let panelRow: HTMLDivElement | undefined
   const [panelRowWidth, setPanelRowWidth] = createSignal<number>()
   createResizeObserver(
@@ -2251,6 +2256,7 @@ export default function Page() {
       <SessionHeader />
       <div
         ref={panelRow}
+        data-void-sheets={voidSheets() ? "" : undefined}
         class="flex-1 min-h-0 flex flex-col md:flex-row"
         classList={{
           "gap-2 p-2": settings.general.newLayoutDesigns(),
@@ -2258,7 +2264,12 @@ export default function Page() {
       >
         <Show when={!isDesktop() && !!params.id && !settings.general.newLayoutDesigns()}>{mobileTabs()}</Show>
 
+        <Show when={voidSheets()}>
+          <VoidSessionList />
+        </Show>
+
         <div
+          data-slot={voidSheets() ? "void-session-main" : undefined}
           classList={{
             "@container relative shrink-0 flex flex-col min-h-0 h-full flex-1 md:flex-none transition-[width]": true,
             "duration-[240ms] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-[width] motion-reduce:transition-none":
@@ -2380,6 +2391,9 @@ export default function Page() {
               </Show>
             </div>
           </Show>
+        </Show>
+        <Show when={voidSheets() && !!params.id}>
+          <VoidRunDetails diffs={reviewDiffs} />
         </Show>
       </div>
 
