@@ -17,6 +17,7 @@
 @import "@opencode-ai/ui/styles/void/models.css";
 @import "@opencode-ai/ui/styles/void/scroll.css";
 @import "@opencode-ai/ui/styles/void/controls.css";
+@import "@opencode-ai/ui/styles/void/appearance.css";
 
 @font-face {
   font-family: "JetBrainsMono Nerd Font Mono";
