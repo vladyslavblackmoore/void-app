@@ -10,6 +10,7 @@ import {
   canSave,
   effortControl,
   groupModels,
+  hideUpstreamGroups,
   initialDraft,
   selectModel,
   variantsFor,
@@ -33,7 +34,10 @@ export function AgentEditorPanel(props: {
   const theme = useTheme()
   const [draft, setDraft] = createStore<AgentDraft>(initialDraft(props.node))
   const [state, setState] = createStore({ confirming: false, saving: false })
-  const groups = createMemo(() => groupModels(props.providers))
+  const groups = createMemo(() => {
+    const all = groupModels(props.providers)
+    return theme.themeId() === "void" ? hideUpstreamGroups(all, props.node.model) : all
+  })
   const variants = createMemo(() => variantsFor(props.providers, draft.model))
   const canInherit = () => !props.node.isMain && !props.locked.model
   const selectedRef = () => (draft.inherit || !draft.model ? undefined : formatModelRef(draft.model))
@@ -60,7 +64,7 @@ export function AgentEditorPanel(props: {
       data-component="agents-panel"
       role="dialog"
       aria-label={props.node.name}
-      class="absolute right-6 top-6 z-20 flex max-h-[calc(100%-48px)] w-[384px] flex-col gap-4 overflow-y-auto rounded-3xl p-5 text-v2-text-text-base"
+      class="absolute right-6 top-6 z-20 flex max-h-[calc(100%-48px)] w-[384px] flex-col gap-3 overflow-hidden rounded-3xl p-5 text-v2-text-text-base"
     >
       <div class="flex flex-col gap-1">
         <h3 class="flex items-center gap-2 text-[17px] font-medium">
@@ -68,10 +72,13 @@ export function AgentEditorPanel(props: {
           {props.node.name}
         </h3>
         <Show when={props.node.description}>
-          <p class="text-[12px] text-v2-text-text-faint">{props.node.description}</p>
+          <p data-slot="agents-description" class="text-[12px] text-v2-text-text-faint">
+            {props.node.description}
+          </p>
         </Show>
       </div>
 
+      <div data-slot="agents-body" class="flex min-h-0 flex-col gap-3 overflow-y-auto">
       <div class="flex flex-col gap-2">
         <div class="flex items-center justify-between text-[12px] text-v2-text-text-faint">
           <span>{language.t("agents.editor.model")}</span>
@@ -106,7 +113,12 @@ export function AgentEditorPanel(props: {
                       }
                     >
                       <span data-slot="agents-radio" />
-                      <span class="min-w-0 truncate">{model.id}</span>
+                      <span class="min-w-0 flex-1 truncate">{model.id}</span>
+                      <span data-slot="agents-meta" class="shrink-0 font-sans text-[11px]">
+                        {model.variants.length > 0
+                          ? language.t("agents.editor.levels", { count: model.variants.length })
+                          : language.t("agents.editor.noLevels")}
+                      </span>
                     </button>
                   )}
                 </For>
@@ -180,9 +192,10 @@ export function AgentEditorPanel(props: {
           class="flex items-center justify-between rounded-xl px-3 py-2"
           data-slot="agents-chip"
         >
-          {language.t("agents.editor.inherit")}
+          <span data-slot="agents-inherit-label">{language.t("agents.editor.inherit")}</span>
         </Switch>
       </Show>
+      </div>
 
       <Show when={state.confirming}>
         <p data-slot="agents-warning" role="alert" class="rounded-xl px-3 py-2 text-[12px]">
@@ -190,7 +203,7 @@ export function AgentEditorPanel(props: {
         </p>
       </Show>
 
-      <div class="flex gap-2">
+      <div data-slot="agents-footer" class="flex shrink-0 gap-2">
         <ButtonV2 variant="outline" class="flex-1" disabled={state.saving} onClick={props.onClose}>
           {language.t("common.cancel")}
         </ButtonV2>

@@ -6,6 +6,7 @@ import {
   fileFields,
   groupModels,
   hasRunningSessions,
+  hideUpstreamGroups,
   initialDraft,
   selectModel,
   variantsFor,
@@ -231,5 +232,23 @@ describe("withConfigProviders", () => {
 
   test("ignores missing config", () => {
     expect(withConfigProviders(catalog, undefined)).toEqual(catalog)
+  })
+})
+
+describe("hideUpstreamGroups", () => {
+  const groups = groupModels([
+    { id: "opencode", name: "OpenCode", models: { a: { id: "a", name: "A" } } },
+    { id: "opencode-go", name: "OpenCode Go", models: { b: { id: "b", name: "B" } } },
+    ...providers,
+  ])
+
+  test("drops the upstream groups", () => {
+    expect(hideUpstreamGroups(groups, undefined).map((group) => group.id)).toEqual(["subscription", "api"])
+  })
+
+  test("keeps and renames the group of the selected model", () => {
+    const kept = hideUpstreamGroups(groups, { providerID: "opencode", modelID: "a" })
+    expect(kept.map((group) => group.id)).toEqual(["opencode", "subscription", "api"])
+    expect(kept[0]?.name).toBe("Built-in")
   })
 })

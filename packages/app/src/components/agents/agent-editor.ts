@@ -62,6 +62,16 @@ export function groupModels(providers: ProviderInput[]): ModelGroup[] {
     .filter((group) => group.models.length > 0)
 }
 
+const UPSTREAM_GROUP = /^opencode/i
+
+export function hideUpstreamGroups(groups: ModelGroup[], selected: ModelRef | undefined): ModelGroup[] {
+  return groups.flatMap((group) => {
+    if (!UPSTREAM_GROUP.test(group.id)) return [group]
+    if (selected?.providerID !== group.id) return []
+    return [{ ...group, name: "Built-in" }]
+  })
+}
+
 export function withConfigProviders(providers: ProviderInput[], configured: ConfigProviders | undefined) {
   const listed = new Set(providers.map((provider) => provider.id))
   const extra = Object.entries(configured ?? {}).flatMap(([id, provider]): ProviderInput[] =>
