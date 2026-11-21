@@ -27,6 +27,23 @@ export const newId = (kind: string): string => `${kind}-${crypto.randomUUID().re
 
 const ownScope = (agent: string | undefined): string | null => (agent ? `agent:${agent}` : null)
 
+export const expansionSql = (history: boolean, cap: number): string => {
+  const edgeLive = history ? "" : " and e.invalidated_at is null"
+  const visible = history
+    ? "(m.scope = 'shared' or m.scope = ?3)"
+    : "(m.scope = 'shared' or m.scope = ?3) and m.invalidated_at is null"
+  return `with recursive walk(id, d, seed) as (
+      select value, 0, value from json_each(?1)
+      union
+      select e.dst, w.d + 1, w.seed from walk w join edge e on e.src = w.id join node m on m.id = e.dst
+        where w.d < ?2${edgeLive} and ${visible}
+      union
+      select e.src, w.d + 1, w.seed from walk w join edge e on e.dst = w.id join node m on m.id = e.src
+        where w.d < ?2${edgeLive} and ${visible}
+    )
+    select id, d, seed from walk limit ${cap}`
+}
+
 export const createMemory = (db: Database, expansionCap: number = defaultExpansionCap) => {
   const findNode = db.query<NodeRow, [string]>("select * from node where id = ?1")
   const findByKey = db.query<{ id: string }, [string, string, string]>(
@@ -234,19 +251,8 @@ export const createMemory = (db: Database, expansionCap: number = defaultExpansi
     if (hops === 0) {
       for (const seed of seeds) note(seed.id, 0, seed.id)
     } else {
-      const params: SQLQueryBindings[] = [JSON.stringify(seeds.map((seed) => seed.id)), hops]
-      const edgeLive = history ? "" : " and e.invalidated_at is null"
-      const out = visible("m", input.agent, history, params)
-      const sql = `with recursive walk(id, d, seed) as (
-          select value, 0, value from json_each(?1)
-          union
-          select e.dst, w.d + 1, w.seed from walk w join edge e on e.src = w.id join node m on m.id = e.dst
-            where w.d < ?2${edgeLive} and ${out}
-          union
-          select e.src, w.d + 1, w.seed from walk w join edge e on e.dst = w.id join node m on m.id = e.src
-            where w.d < ?2${edgeLive} and ${out}
-        )
-        select id, d, seed from walk limit ${expansionCap}`
+      const params: SQLQueryBindings[] = [JSON.stringify(seeds.map((seed) => seed.id)), hops, ownScope(input.agent)]
+      const sql = expansionSql(history, expansionCap)
       const rows = db.query<{ id: string; d: number; seed: string }, SQLQueryBindings[]>(sql).all(...params)
       for (const row of rows) note(row.id, row.d, row.seed)
     }
