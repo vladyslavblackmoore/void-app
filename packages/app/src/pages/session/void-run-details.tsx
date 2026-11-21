@@ -2,12 +2,11 @@ import { createMemo, Show } from "solid-js"
 import { useParams } from "@solidjs/router"
 import { StatusDotV2 } from "@opencode-ai/ui/v2/status-dot-v2"
 import { useLanguage } from "@/context/language"
-import { usePermission } from "@/context/permission"
 import { useSDK } from "@/context/sdk"
 import { useServerSync } from "@/context/server-sync"
 import { useSync } from "@/context/sync"
 import { useProviders } from "@/hooks/use-providers"
-import { sessionPermissionRequest, sessionQuestionRequest } from "@/pages/session/composer/session-request-tree"
+import { createSheetStatus } from "./void-sheet-status"
 import { runSummary } from "./void-run-model"
 import { VoidRunView } from "./void-run-view"
 import "./void-session-sheets.css"
@@ -18,22 +17,11 @@ export function VoidRunDetails(props: { diffs: () => { file?: string }[] }) {
   const sdk = useSDK()
   const sync = useSync()
   const serverSync = useServerSync()
-  const permission = usePermission()
   const providers = useProviders(() => sdk().directory)
 
   const messages = createMemo(() => (params.id ? (sync().data.message[params.id] ?? []) : []))
   const todos = createMemo(() => (params.id ? (serverSync().session.data.todo[params.id] ?? []) : []))
-  const waiting = createMemo(
-    () =>
-      !!sessionPermissionRequest(
-        sync().data.session,
-        sync().data.permission,
-        params.id,
-        (item) => !permission.autoResponds(item, sdk().directory),
-      ) || !!sessionQuestionRequest(sync().data.session, sync().data.question, params.id),
-  )
-  const working = createMemo(() => sync().data.session_working(params.id ?? ""))
-  const status = createMemo(() => (waiting() ? "waiting" : working() ? "running" : "idle"))
+  const { waiting, status } = createSheetStatus(() => params.id)
   const files = createMemo(() => props.diffs().flatMap((diff) => (diff.file ? [diff.file] : [])))
   const summary = createMemo(() =>
     runSummary({

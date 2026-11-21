@@ -1,28 +1,13 @@
 import { createMemo, For, Show } from "solid-js"
 import { StatusDotV2 } from "@opencode-ai/ui/v2/status-dot-v2"
 import { useLanguage } from "@/context/language"
-import { usePermission } from "@/context/permission"
-import { useSDK } from "@/context/sdk"
 import { useServerSync } from "@/context/server-sync"
-import { useSync } from "@/context/sync"
-import { sessionPermissionRequest, sessionQuestionRequest } from "@/pages/session/composer/session-request-tree"
-import { sheetStatus, sheetTabs, type SheetView } from "@/pages/session/void-sheet-model"
+import { sheetTabs, type SheetView } from "@/pages/session/void-sheet-model"
+import { createSheetStatus } from "@/pages/session/void-sheet-status"
+import { VoidTodoRow } from "@/pages/session/void-todo-row"
 
 export function VoidSheetDot(props: { sessionID: string | undefined }) {
-  const sdk = useSDK()
-  const sync = useSync()
-  const permission = usePermission()
-  const waiting = createMemo(
-    () =>
-      !!sessionPermissionRequest(
-        sync().data.session,
-        sync().data.permission,
-        props.sessionID,
-        (item) => !permission.autoResponds(item, sdk().directory),
-      ) || !!sessionQuestionRequest(sync().data.session, sync().data.question, props.sessionID),
-  )
-  const working = createMemo(() => sync().data.session_working(props.sessionID ?? ""))
-  const status = createMemo(() => sheetStatus({ waiting: waiting(), working: working() }))
+  const { status } = createSheetStatus(() => props.sessionID)
 
   return (
     <span data-slot="void-sheet-dot" data-state={status()}>
@@ -58,7 +43,6 @@ export function VoidSheetTasks(props: { sessionID: string | undefined }) {
   const language = useLanguage()
   const serverSync = useServerSync()
   const todos = createMemo(() => (props.sessionID ? (serverSync().session.data.todo[props.sessionID] ?? []) : []))
-  const tone = (state: string) => (state === "completed" ? "green" : state === "in_progress" ? "yellow" : "grey")
 
   return (
     <div data-slot="void-sheet-tasks">
@@ -67,12 +51,7 @@ export function VoidSheetTasks(props: { sessionID: string | undefined }) {
         fallback={<div data-slot="void-sheet-tasks-empty">{language.t("void.sheet.tasks.empty")}</div>}
       >
         <For each={todos()}>
-          {(todo) => (
-            <div data-slot="void-sheet-task" data-state={todo.status}>
-              <StatusDotV2 tone={tone(todo.status)} />
-              <span>{todo.content}</span>
-            </div>
-          )}
+          {(todo) => <VoidTodoRow status={todo.status} content={todo.content} />}
         </For>
       </Show>
     </div>

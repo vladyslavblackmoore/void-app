@@ -29,6 +29,11 @@ html[data-theme="void"] [data-component="card"][data-variant="error"]::before {
   content: none;
 }
 
+html[data-theme="void"] [data-void-sheets] {
+  --void-sheet-header: 64px;
+  --void-thread-gap: 18px;
+}
+
 html[data-theme="void"] [data-void-sheets] > [data-slot="void-session-main"] {
   overflow: hidden;
   border: 1px solid var(--void-border);
@@ -233,24 +238,25 @@ html[data-theme="void"] [data-slot="void-sheet-tab"][data-active="true"] {
 
 html[data-theme="void"] [data-slot="void-sheet-tasks"] {
   position: absolute;
-  inset: 66px 0 0;
+  inset: var(--void-sheet-header) 0 0;
   z-index: 20;
   display: flex;
   flex-direction: column;
   gap: 10px;
   overflow-y: auto;
-  padding: 18px;
+  padding: var(--void-thread-gap);
 }
 
-html[data-theme="void"] [data-slot="void-sheet-task"] {
+html[data-theme="void"] [data-slot="void-todo"] {
   display: flex;
   align-items: center;
   gap: 10px;
+  padding: 6px 4px;
   color: var(--void-text-1);
   font-size: var(--void-fs-small);
 }
 
-html[data-theme="void"] [data-slot="void-sheet-task"][data-state="completed"] {
+html[data-theme="void"] [data-slot="void-todo"][data-state="completed"] {
   color: var(--void-text-2);
 }
 

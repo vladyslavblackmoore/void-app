@@ -14,6 +14,7 @@ const sources = [
   "../../../../app/src/pages/session.tsx",
   "../../../../app/src/pages/session/timeline/message-timeline.tsx",
   "../../../../app/src/pages/session/timeline/void-sheet-head.tsx",
+  "../../../../app/src/pages/session/void-todo-row.tsx",
   "../../../../app/src/pages/new-session/new-session-view.tsx",
   "../../../../app/src/pages/new-session.tsx",
 ]

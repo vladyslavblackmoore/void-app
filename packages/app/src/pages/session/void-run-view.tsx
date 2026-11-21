@@ -1,15 +1,14 @@
 import { For, Show } from "solid-js"
-import { StatusDotV2 } from "@opencode-ai/ui/v2/status-dot-v2"
-import type { RunStatus } from "./void-run-model"
+import type { SheetStatus } from "./void-sheet-model"
+import { VoidTodoRow } from "./void-todo-row"
 
 const FILE_LIMIT = 8
-const todoTone = (state: string) => (state === "completed" ? "green" : state === "in_progress" ? "yellow" : "grey")
 
 export type RunViewProps = {
   t: (key: string, params?: Record<string, string>) => string
   intl: string
   id: string | undefined
-  status: RunStatus
+  status: SheetStatus
   context: { total: number; limit: number | undefined; usage: number | null } | undefined
   model: string | undefined
   todos: { status: string; content: string }[]
@@ -65,12 +64,7 @@ export function VoidRunView(props: RunViewProps) {
         <section>
           <div data-slot="void-sheet-eyebrow">{props.t("void.run.plan")}</div>
           <For each={props.todos}>
-            {(todo) => (
-              <div data-slot="void-run-todo" data-state={todo.status}>
-                <StatusDotV2 tone={todoTone(todo.status)} />
-                <span>{todo.content}</span>
-              </div>
-            )}
+            {(todo) => <VoidTodoRow status={todo.status} content={todo.content} />}
           </For>
         </section>
       </Show>

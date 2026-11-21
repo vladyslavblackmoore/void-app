@@ -198,18 +198,6 @@ html[data-theme="void"] [data-slot="void-run-bar"] > i {
   background: var(--void-space-void);
 }
 
-html[data-theme="void"] [data-slot="void-run-todo"] {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 4px;
-  font-size: 14px;
-}
-
-html[data-theme="void"] [data-slot="void-run-todo"][data-state="completed"] {
-  color: var(--void-text-2);
-}
-
 html[data-theme="void"] [data-slot="void-run-files"] {
   display: flex;
   flex-direction: column;

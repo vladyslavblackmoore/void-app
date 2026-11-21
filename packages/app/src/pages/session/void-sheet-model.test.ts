@@ -1,12 +1,14 @@
 import { describe, expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import {
+  SHEET_HEADER_HEIGHT,
   VOID_THREAD_GAP,
   reviewToggleVisible,
   sheetHeaderOffset,
   sheetStatus,
   sheetTabs,
   sheetView,
+  todoTone,
 } from "./void-sheet-model"
 
 describe("void sheet model", () => {
@@ -15,6 +17,31 @@ describe("void sheet model", () => {
     expect(sheetStatus({ waiting: true, working: false })).toBe("waiting")
     expect(sheetStatus({ waiting: false, working: true })).toBe("running")
     expect(sheetStatus({ waiting: false, working: false })).toBe("idle")
+  })
+
+  test("maps todo states to dot tones", () => {
+    expect(todoTone("completed")).toBe("green")
+    expect(todoTone("in_progress")).toBe("yellow")
+    expect(todoTone("pending")).toBe("grey")
+  })
+
+  test("the status, the todo row and the tasks inset are defined once", () => {
+    const read = (path: string) => readFileSync(new URL(path, import.meta.url), "utf8")
+    const head = read("./timeline/void-sheet-head.tsx")
+    const details = read("./void-run-details.tsx")
+    const view = read("./void-run-view.tsx")
+    expect(head).toContain("createSheetStatus")
+    expect(details).toContain("createSheetStatus")
+    expect(head).not.toContain("sessionPermissionRequest")
+    expect(details).not.toContain("sessionPermissionRequest")
+    expect(head).toContain("VoidTodoRow")
+    expect(view).toContain("VoidTodoRow")
+    expect(read("./void-run-model.ts")).not.toContain("RunStatus")
+    const css = read("../../../../ui/src/styles/void/chat.css")
+    expect(css).toContain(`--void-sheet-header: ${SHEET_HEADER_HEIGHT}px`)
+    expect(css).toContain(`--void-thread-gap: ${VOID_THREAD_GAP}px`)
+    expect(css).not.toContain("inset: 66px")
+    expect(read("./void-session-sheets.css")).not.toContain("void-run-todo")
   })
 
   test("shows the Chat and Tasks tabs only under the void theme", () => {

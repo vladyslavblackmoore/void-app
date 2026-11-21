@@ -7,8 +7,6 @@ type Provider = {
   models: Record<string, { name?: string; limit: { context: number } } | undefined>
 }
 
-export type RunStatus = "waiting" | "running" | "idle"
-
 export function runModelLabel(messages: Message[], providers: Provider[]) {
   for (let i = messages.length - 1; i >= 0; i--) {
     const message = messages[i]

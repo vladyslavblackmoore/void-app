@@ -25,3 +25,8 @@ export function sheetHeaderOffset(input: { header: boolean; void: boolean }) {
 export function reviewToggleVisible(input: { desktop: boolean; void: boolean }) {
   return input.desktop && !input.void
 }
+
+export function todoTone(state: string) {
+  if (state === "completed") return "green"
+  return state === "in_progress" ? "yellow" : "grey"
+}
