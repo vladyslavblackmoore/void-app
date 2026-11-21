@@ -3,8 +3,6 @@ import { homedir } from "node:os"
 import { join } from "node:path"
 
 const provider = "subscription"
-const binary = join(homedir(), ".local", "bin", "claude")
-const configDir = join(homedir(), "void", "claude")
 const loginLimit = 10 * 60 * 1000
 const statusLimit = 15 * 1000
 const markerWindow = 30 * 1000
@@ -13,16 +11,25 @@ const passEnv = ["HOME", "USER", "LOGNAME", "PATH", "SHELL", "LANG", "LC_ALL", "
 
 let login
 let markerDueUntil = 0
+let markerSeen = false
 let statusCache
+let exitHooked = false
 
-function cliEnv() {
-  const env = Object.fromEntries(passEnv.filter((key) => process.env[key]).map((key) => [key, process.env[key]]))
-  return { ...env, CLAUDE_CONFIG_DIR: configDir }
+function cliSettings(options) {
+  return {
+    binary: options?.binary ?? join(homedir(), ".local", "bin", "claude"),
+    configDir: options?.configDir ?? join(homedir(), "void", "claude"),
+  }
 }
 
-function run(args, limit) {
+function cliEnv(cli) {
+  const env = Object.fromEntries(passEnv.filter((key) => process.env[key]).map((key) => [key, process.env[key]]))
+  return { ...env, CLAUDE_CONFIG_DIR: cli.configDir }
+}
+
+function run(cli, args, limit) {
   return new Promise((resolve) => {
-    const child = spawn(binary, args, { env: cliEnv(), stdio: ["ignore", "pipe", "ignore"] })
+    const child = spawn(cli.binary, args, { env: cliEnv(cli), stdio: ["ignore", "pipe", "ignore"] })
     let out = ""
     child.stdout.on("data", (chunk) => {
       if (out.length < 65536) out += chunk
@@ -39,8 +46,8 @@ function run(args, limit) {
   })
 }
 
-async function readStatus() {
-  const { out } = await run(["auth", "status", "--json"], statusLimit)
+async function readStatus(cli) {
+  const { out } = await run(cli, ["auth", "status", "--json"], statusLimit)
   try {
     return JSON.parse(out).loggedIn === true
   } catch {
@@ -48,28 +55,41 @@ async function readStatus() {
   }
 }
 
-function signedIn() {
+function signedIn(cli) {
   const now = Date.now()
   if (statusCache && now - statusCache.at < statusTtl) return statusCache.value
-  const value = readStatus()
+  const value = readStatus(cli)
   statusCache = { at: now, value }
   return value
 }
 
-async function connected(auth) {
-  if (auth) markerDueUntil = 0
-  if (!(await signedIn())) return false
+async function connected(cli, auth) {
+  if (auth) {
+    markerDueUntil = 0
+    markerSeen = true
+  }
+  if (!(await signedIn(cli))) return false
   if (auth) return true
   if (login || Date.now() < markerDueUntil) return true
-  await run(["auth", "logout"], statusLimit)
+  if (!markerSeen) return false
+  markerSeen = false
+  await run(cli, ["auth", "logout"], statusLimit)
   statusCache = undefined
   return false
 }
 
-function startLogin() {
-  if (login) login.child.kill()
-  const child = spawn(binary, ["auth", "login", "--claudeai"], {
-    env: cliEnv(),
+function stopLogin() {
+  login?.child.kill()
+}
+
+function startLogin(cli, owned) {
+  stopLogin()
+  if (!exitHooked) {
+    exitHooked = true
+    process.once("exit", stopLogin)
+  }
+  const child = spawn(cli.binary, ["auth", "login", "--claudeai"], {
+    env: cliEnv(cli),
     stdio: ["pipe", "ignore", "ignore"],
   })
   const done = new Promise((resolve) => {
@@ -79,8 +99,10 @@ function startLogin() {
   const timer = setTimeout(() => child.kill(), loginLimit)
   const current = { child, done }
   login = current
+  owned.add(current)
   done.then((code) => {
     clearTimeout(timer)
+    owned.delete(current)
     statusCache = undefined
     if (code === 0) markerDueUntil = Date.now() + markerWindow
     if (login === current) login = undefined
@@ -88,34 +110,42 @@ function startLogin() {
   return current
 }
 
-async function finish(current) {
+async function finish(cli, current) {
   const code = await current.done
   if (code !== 0) return { type: "failed" }
-  if (!(await signedIn())) return { type: "failed" }
-  return { type: "success", key: provider, metadata: { configDir } }
+  if (!(await signedIn(cli))) return { type: "failed" }
+  return { type: "success", key: provider, metadata: { configDir: cli.configDir } }
 }
 
 export default {
   id: "void.subscription-auth",
-  server: async () => ({
-    auth: {
-      provider,
-      connected,
-      methods: [
-        {
-          type: "oauth",
-          label: "Sign in with your subscription",
-          authorize: async () => {
-            const current = startLogin()
-            return {
-              url: "https://claude.ai/login",
-              method: "auto",
-              instructions: "The sign-in page opened in your browser",
-              callback: () => finish(current),
-            }
+  server: async (_input, options) => {
+    const cli = cliSettings(options)
+    const owned = new Set()
+    return {
+      auth: {
+        provider,
+        connected: (auth) => connected(cli, auth),
+        methods: [
+          {
+            type: "oauth",
+            label: "Sign in with your subscription",
+            authorize: async () => {
+              const current = startLogin(cli, owned)
+              return {
+                url: "https://claude.ai/login",
+                method: "auto",
+                instructions: "The sign-in page opened in your browser",
+                callback: () => finish(cli, current),
+              }
+            },
           },
-        },
-      ],
-    },
-  }),
+        ],
+      },
+      dispose: async () => {
+        for (const current of owned) current.child.kill()
+        owned.clear()
+      },
+    }
+  },
 }
