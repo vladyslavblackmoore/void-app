@@ -51,8 +51,14 @@ describe("void settings css", () => {
 
   test("shortcut key hints are readable", () => {
     const hint = block(`${content} .settings-v2-keybind-button`)
-    expect(hint).toContain("font-size: var(--void-fs-small, 12px)")
+    expect(hint).toContain("font-size: 13px")
     expect(hint).toContain("color: var(--void-text-2)")
+  })
+
+  test("the data path is legible", () => {
+    const path = block('html[data-theme="void"] .void-data-path')
+    expect(path).toContain("font-size: 13px")
+    expect(path).toContain("color: var(--void-text-1)")
   })
 
   test("the search field is a void input", () => {

@@ -1192,12 +1192,14 @@ html[data-theme="void"] .void-space-tag {
 }
 
 html[data-theme="void"] .void-settings-content .settings-v2-keybind-button {
-  font-size: var(--void-fs-small, 12px);
+  font-size: 13px;
   color: var(--void-text-2);
 }
 
 html[data-theme="void"] .void-data-path {
   font-family: var(--font-family-mono);
+  font-size: 13px;
+  color: var(--void-text-1);
 }
 
 html[data-theme="void"] .void-appearance-scheme + [data-component="settings-v2-list"] {
