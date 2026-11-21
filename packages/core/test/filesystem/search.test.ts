@@ -28,6 +28,32 @@ describe("Ripgrep", () => {
     ),
   )
 
+  it.live("finds files without entering excluded top-level dirs", () =>
+    withTmp((cwd) =>
+      Effect.gen(function* () {
+        yield* Effect.promise(() =>
+          Promise.all([
+            fs.mkdir(path.join(cwd, "Desktop", "a"), { recursive: true }),
+            fs.mkdir(path.join(cwd, "code", "Desktop"), { recursive: true }),
+          ]),
+        )
+        yield* Effect.promise(() =>
+          Promise.all([
+            fs.writeFile(path.join(cwd, "Desktop", "a", "skip.ts"), ""),
+            fs.writeFile(path.join(cwd, "code", "Desktop", "keep.ts"), ""),
+          ]),
+        )
+        const result = yield* (yield* Ripgrep.Service).find({
+          cwd,
+          pattern: "*",
+          limit: 10,
+          exclude: ["Desktop"],
+        })
+        expect(result.map((item) => item.path)).toEqual([RelativePath.make("code/Desktop/keep.ts")])
+      }),
+    ),
+  )
+
   it.live("greps files with include filtering", () =>
     withTmp((cwd) =>
       Effect.gen(function* () {

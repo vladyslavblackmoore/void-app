@@ -5,6 +5,8 @@ import { promisify } from "node:util"
 
 import type { Configuration } from "electron-builder"
 
+import { voidMacSigning } from "./scripts/void-signing"
+
 const execFileAsync = promisify(execFile)
 const packageDir = path.dirname(fileURLToPath(import.meta.url))
 const rootDir = path.resolve(packageDir, "../..")
@@ -81,6 +83,7 @@ const getBase = (appId: string): Configuration => ({
     entitlementsInherit: "resources/entitlements.plist",
     notarize: true,
     target: ["dmg", "zip"],
+    ...voidMacSigning(),
   },
   dmg: {
     sign: true,
