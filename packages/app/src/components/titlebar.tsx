@@ -42,6 +42,8 @@ import "./titlebar.css"
 import "./void/void-titlebar.css"
 import { VoidLogo } from "./void/void-logo"
 import { useVoidTheme } from "./void/use-void-theme"
+import { SectionTabs } from "./void/section-tabs"
+import { sectionForRoute, sectionTarget, type VoidSection } from "./void/section-tabs-model"
 import { normalizeSessionInfo } from "@/utils/session"
 
 const legacyTitlebarHeight = 40
@@ -186,6 +188,7 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
   return (
     <header
       data-slot={useV2Titlebar() ? "titlebar-v2" : undefined}
+      data-void-shell={useV2Titlebar() && isVoid() ? "" : undefined}
       classList={{
         "shrink-0 relative flex flex-row": true,
         "h-9 bg-v2-background-bg-deep overflow-visible": useV2Titlebar(),
@@ -328,6 +331,24 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
               tabs.newDraft({ server: fallback.server, directory: fallback.project.worktree }, "")
             }
             const toggleHome = () => tabs.toggleHome({ home: layout.route().type === "home", current: currentTab() })
+            const activeSection = () => sectionForRoute(layout.route())
+            const selectSection = (section: VoidSection) => {
+              if (section === activeSection()) return
+              const target = sectionTarget(section)
+              if (!target) return
+              if (target.type === "home") {
+                tabs.toggleHome({ home: false, current: currentTab() })
+                return
+              }
+              if (target.type === "settings") {
+                const tab = settingsTabs.find((item) => item.page === target.page)
+                if (tab) tabs.select(tab)
+                return
+              }
+              const chat = tabsStore.find((item) => !isFixedTab(item))
+              if (chat) tabs.select(chat)
+              else openNewTab()
+            }
 
             command.register("titlebar-home", () => [
               {
@@ -391,45 +412,52 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
                 <Show when={isVoid()}>
                   <VoidLogo />
                 </Show>
-                <TooltipV2
-                  placement="bottom"
-                  value={
-                    <>
-                      {language.t("home.title")}
-                      <KeybindV2 keys={command.keybindParts("home.toggle")} variant="neutral" />
-                    </>
-                  }
-                  class="shrink-0"
-                >
-                  <IconButtonV2
-                    type="button"
-                    variant="ghost-muted"
-                    size="large"
-                    class="!w-9 shrink-0"
-                    icon={<IconV2 name="grid-plus" />}
-                    state={layout.route().type === "home" ? "pressed" : undefined}
-                    onClick={toggleHome}
-                    aria-label={language.t("home.title")}
-                    aria-pressed={layout.route().type === "home"}
-                  />
-                </TooltipV2>
+                <Show when={isVoid()}>
+                  <SectionTabs active={activeSection()} onSelect={selectSection} />
+                </Show>
+                <Show when={!isVoid()}>
+                  <TooltipV2
+                    placement="bottom"
+                    value={
+                      <>
+                        {language.t("home.title")}
+                        <KeybindV2 keys={command.keybindParts("home.toggle")} variant="neutral" />
+                      </>
+                    }
+                    class="shrink-0"
+                  >
+                    <IconButtonV2
+                      type="button"
+                      variant="ghost-muted"
+                      size="large"
+                      class="!w-9 shrink-0"
+                      icon={<IconV2 name="grid-plus" />}
+                      state={layout.route().type === "home" ? "pressed" : undefined}
+                      onClick={toggleHome}
+                      aria-label={language.t("home.title")}
+                      aria-pressed={layout.route().type === "home"}
+                    />
+                  </TooltipV2>
+                </Show>
 
                 <SpaceSwitcher />
-                <TitlebarTabStrip
-                  tabs={tabsStore}
-                  currentTab={currentTab}
-                  forceTruncate={tabsAreOverflowing()}
-                  onOverflowChange={setTabsAreOverflowing}
-                  onNavigate={(tab, el) => {
-                    tabs.select(tab)
-                    el?.scrollIntoView({ behavior: "instant" })
-                  }}
-                  onClose={(tab) => {
-                    const index = tabsStore.findIndex((item) => tabKey(item) === tabKey(tab))
-                    if (index !== -1) tabsStoreActions.closeTab(index)
-                  }}
-                  onReorder={(keys) => tabsStoreActions.reorder(keys)}
-                />
+                <Show when={!isVoid()} fallback={<div class="min-w-0 flex-1" />}>
+                  <TitlebarTabStrip
+                    tabs={tabsStore}
+                    currentTab={currentTab}
+                    forceTruncate={tabsAreOverflowing()}
+                    onOverflowChange={setTabsAreOverflowing}
+                    onNavigate={(tab, el) => {
+                      tabs.select(tab)
+                      el?.scrollIntoView({ behavior: "instant" })
+                    }}
+                    onClose={(tab) => {
+                      const index = tabsStore.findIndex((item) => tabKey(item) === tabKey(tab))
+                      if (index !== -1) tabsStoreActions.closeTab(index)
+                    }}
+                    onReorder={(keys) => tabsStoreActions.reorder(keys)}
+                  />
+                </Show>
                 <TitlebarV2Right state={v2RightState()} />
               </div>
             )

@@ -1282,4 +1282,11 @@ export const dict = {
   "space.switcher.failed": "Could not open that space.",
   "space.switcher.new": "New space\u2026",
   "space.switcher.manage": "Manage spaces",
+  "void.nav.label": "Sections",
+  "void.nav.overview": "Overview",
+  "void.nav.chat": "Chat",
+  "void.nav.agents": "Agents",
+  "void.nav.models": "Models",
+  "void.nav.hub": "Hub",
+  "void.nav.settings": "Settings",
 } satisfies Partial<Record<Keys, string>>
