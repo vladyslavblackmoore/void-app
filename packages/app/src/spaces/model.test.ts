@@ -17,14 +17,12 @@ const summary = (id: string, extra: Partial<SpaceSummary> = {}): SpaceSummary =>
 function platformSpaces(log: string[], fail?: string): SpacesPlatform {
   return {
     list: async () => [summary("home"), summary("void")],
-    start: async (id) => {
-      log.push(`start:${id}`)
-      if (id === fail) throw new Error("boom")
-      return { url: `http://127.0.0.1:${id === "home" ? 1 : 2}`, username: "opencode", password: `pw-${id}` }
-    },
+    start: async (id) => ({ url: `http://127.0.0.1:${id === "home" ? 1 : 2}`, username: "opencode", password: `pw-${id}` }),
     getViewed: async () => HOME_SPACE_ID,
     setViewed: async (id) => {
       log.push(`viewed:${id}`)
+      if (id === fail) throw new Error("boom")
+      return { url: `http://127.0.0.1:${id === "home" ? 1 : 2}`, username: "opencode", password: `pw-${id}` }
     },
   }
 }
@@ -53,7 +51,7 @@ describe("spaceConnection", () => {
 })
 
 describe("switchToSpace", () => {
-  test("starts the core, registers it, activates it and then records the viewed space", async () => {
+  test("views the space for this window, then registers and activates the endpoint it returns", async () => {
     const log: string[] = []
     const registered: ServerConnection.Any[] = []
     await switchToSpace({
@@ -62,7 +60,7 @@ describe("switchToSpace", () => {
       register: (conn) => registered.push(conn),
       activate: (key) => log.push(`active:${key}`),
     })
-    expect(log).toEqual(["start:void", "active:sidecar:void", "viewed:void"])
+    expect(log).toEqual(["viewed:void", "active:sidecar:void"])
     expect(registered).toHaveLength(1)
     expect(registered[0]?.http.password).toBe("pw-void")
   })
@@ -88,7 +86,7 @@ describe("switchToSpace", () => {
         activate: () => log.push("activate"),
       }),
     ).rejects.toThrow("boom")
-    expect(log).toEqual(["start:void"])
+    expect(log).toEqual(["viewed:void"])
   })
 })
 

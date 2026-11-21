@@ -53,13 +53,17 @@ export function createSpaceService(deps: SpaceServiceDeps) {
     return spaces.some((space) => space.id === saved) ? saved : HOME_SPACE_ID
   }
 
-  const setViewed = async (id: string) => {
+  const setViewed = async (id: string, window: string | number = 0): Promise<CoreEndpoint> => {
     await known(id)
+    const endpoint = await deps.cores.ensure(id)
     await writeViewedSpace(deps.root, id)
-    deps.cores.setViewed(id)
+    deps.cores.setViewed(id, window)
+    return endpoint
   }
 
-  return { list, start, getViewed, setViewed }
+  const closeWindow = (window: string | number) => deps.cores.closeWindow(window)
+
+  return { list, start, getViewed, setViewed, closeWindow }
 }
 
 export type SpaceService = ReturnType<typeof createSpaceService>

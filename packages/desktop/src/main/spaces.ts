@@ -187,15 +187,20 @@ async function writeMarker(home: string, plan: MigrationPlan) {
   await rename(temp, join(home, MIGRATION_MARKER))
 }
 
+function parseJson(text: string): unknown {
+  try {
+    return JSON.parse(text)
+  } catch {
+    return undefined
+  }
+}
+
 async function readMarker(home: string): Promise<MigrationPlan | undefined> {
   const text = await readFile(join(home, MIGRATION_MARKER), "utf8").catch(() => undefined)
   if (text === undefined) return
-  try {
-    const value = JSON.parse(text) as MigrationPlan
-    return Array.isArray(value.sources) ? value : undefined
-  } catch {
-    return
-  }
+  const value = parseJson(text) as MigrationPlan | undefined
+  if (Array.isArray(value?.sources)) return value
+  throw new Error(`home migration marker is unreadable: ${join(home, MIGRATION_MARKER)}`)
 }
 
 async function planMigration(root: string, now: Date): Promise<MigrationPlan> {

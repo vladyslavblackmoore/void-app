@@ -19,5 +19,5 @@ export type SpacesPlatform = {
   list(): Promise<SpaceSummary[]>
   start(id: string): Promise<SpaceEndpoint>
   getViewed(): Promise<string>
-  setViewed(id: string): Promise<void>
+  setViewed(id: string): Promise<SpaceEndpoint>
 }

@@ -98,8 +98,29 @@ describe("space service", () => {
     await service.setViewed("void")
     expect(await service.getViewed()).toBe("void")
     expect(await readViewedSpace(root)).toBe("void")
-    expect(cores.viewed()).toBe("void")
+    expect(cores.viewed(0)).toBe("void")
     expect(cores.running().sort()).toEqual(["home", "void"])
+  })
+
+  test("viewing a space whose core was stopped restarts it and returns the live endpoint", async () => {
+    const { service, cores } = make()
+    const first = await service.start("void")
+    await cores.stop("void")
+    const endpoint = await service.setViewed("void", 7)
+    expect(endpoint.url).not.toBe(first.url)
+    expect(cores.endpoint("void")).toEqual(endpoint)
+    expect(started).toEqual(["void", "void"])
+  })
+
+  test("tracks the viewed space per window and drops a closed window", async () => {
+    const { service, cores } = make()
+    await service.setViewed("void", 1)
+    await service.setViewed("home", 2)
+    expect(cores.viewed(1)).toBe("void")
+    expect(cores.viewed(2)).toBe("home")
+    service.closeWindow(2)
+    expect(cores.viewed(1)).toBe("void")
+    expect(cores.viewed(2)).toBeUndefined()
   })
 
   test("falls back to home when the saved space is gone", async () => {

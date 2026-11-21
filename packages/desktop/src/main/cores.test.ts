@@ -18,9 +18,12 @@ let gate: Promise<void> | undefined
 let exits: Record<string, () => void>
 let startGate: Promise<void> | undefined
 let stopFails: boolean
+let stopGate: Promise<void> | undefined
+let order: string[]
 
 const start: CoreStart = async (id, options) => {
   await startGate
+  order.push(`start:${id}`)
   calls.push({ id, port: options.port, password: options.password, env: options.env })
   const exited = new Promise<void>((resolve) => {
     exits[id] = resolve
@@ -29,6 +32,9 @@ const start: CoreStart = async (id, options) => {
     exited,
     stop: async () => {
       stops.push(id)
+      order.push(`stop-begin:${id}`)
+      await stopGate
+      order.push(`stop-end:${id}`)
       if (stopFails) throw new Error("stop failed")
     },
   }
@@ -79,6 +85,8 @@ beforeEach(() => {
   exits = {}
   startGate = undefined
   stopFails = false
+  stopGate = undefined
+  order = []
 })
 
 describe("core manager", () => {
@@ -190,6 +198,46 @@ describe("core manager", () => {
 })
 
 describe("idle stop", () => {
+  test("never stops a core viewed by any open window", async () => {
+    const cores = make()
+    cores.setViewed("home", "a")
+    cores.setViewed("work", "b")
+    await cores.ensure("home")
+    await cores.ensure("work")
+    clock = IDLE_STOP_MS * 3
+    await cores.sweep()
+    expect(stops).toEqual([])
+  })
+
+  test("a core viewed by two windows stays exempt until both leave it", async () => {
+    const cores = make()
+    cores.setViewed("work", "a")
+    cores.setViewed("work", "b")
+    cores.setViewed("home", "a")
+    await cores.ensure("work")
+    clock = IDLE_STOP_MS * 3
+    await cores.sweep()
+    expect(stops).toEqual([])
+    cores.setViewed("home", "b")
+    clock += IDLE_STOP_MS
+    await cores.sweep()
+    expect(stops).toEqual(["work"])
+  })
+
+  test("closing a window releases the space it viewed", async () => {
+    const cores = make()
+    cores.setViewed("home", "a")
+    cores.setViewed("work", "b")
+    await cores.ensure("work")
+    clock = IDLE_STOP_MS * 3
+    cores.closeWindow("b")
+    await cores.sweep()
+    expect(stops).toEqual([])
+    clock += IDLE_STOP_MS
+    await cores.sweep()
+    expect(stops).toEqual(["work"])
+  })
+
   test("never stops the viewed core", async () => {
     const cores = make()
     cores.setViewed("home")
@@ -343,6 +391,52 @@ describe("races and exits", () => {
     await stopping
     expect(stops).toEqual(["work"])
     expect(cores.running()).toEqual([])
+  })
+
+  test("a start issued while a stop is in flight waits for it and ends with one running core", async () => {
+    const cores = make()
+    await cores.ensure("work")
+    let release!: () => void
+    stopGate = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    const stopping = cores.stop("work")
+    await Promise.resolve()
+    const starting = cores.ensure("work")
+    await new Promise((resolve) => setTimeout(resolve, 5))
+    release()
+    await stopping
+    const endpoint = await starting
+    expect(order).toEqual(["start:work", "stop-begin:work", "stop-end:work", "start:work"])
+    expect(cores.running()).toEqual(["work"])
+    expect(cores.endpoint("work")).toEqual(endpoint)
+  })
+
+  test("a start issued after a queued stop does not return the core that is about to stop", async () => {
+    const cores = make()
+    const first = await cores.ensure("work")
+    const stopping = cores.stop("work")
+    const second = await cores.ensure("work")
+    await stopping
+    expect(second.url).not.toBe(first.url)
+    expect(order).toEqual(["start:work", "stop-begin:work", "stop-end:work", "start:work"])
+  })
+
+  test("a stop of one space does not wait for another space", async () => {
+    const cores = make()
+    await cores.ensure("work")
+    let release!: () => void
+    stopGate = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    const stopping = cores.stop("work")
+    await Promise.resolve()
+    await cores.ensure("home")
+    expect(order.indexOf("start:home")).toBeGreaterThan(order.indexOf("stop-begin:work"))
+    expect(order).not.toContain("stop-end:work")
+    release()
+    await stopping
+    expect(cores.running()).toEqual(["home"])
   })
 
   test("a rejected stop does not break the sweep", async () => {

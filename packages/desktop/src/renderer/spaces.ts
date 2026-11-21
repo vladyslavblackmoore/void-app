@@ -4,11 +4,11 @@ import { HOME_SPACE_ID, type SpacesPlatform } from "@opencode-ai/app/spaces/type
 export async function loadViewedSpace(spaces: SpacesPlatform) {
   try {
     const id = await spaces.getViewed()
-    if (id === HOME_SPACE_ID) return
-    const summary = (await spaces.list()).find((item) => item.id === id)
-    if (!summary) return
-    return spaceConnection(summary, await spaces.start(id))
+    const summary = id === HOME_SPACE_ID ? undefined : (await spaces.list()).find((item) => item.id === id)
+    const endpoint = await spaces.setViewed(summary ? id : HOME_SPACE_ID)
+    return summary ? spaceConnection(summary, endpoint) : undefined
   } catch {
+    await spaces.setViewed(HOME_SPACE_ID).catch(() => undefined)
     return
   }
 }

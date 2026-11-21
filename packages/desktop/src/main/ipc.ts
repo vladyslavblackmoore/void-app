@@ -62,13 +62,19 @@ export function registerIpcHandlers(deps: Deps) {
   app.once("will-quit", updaterSubscriptions.clear)
   app.on("before-quit", () => drafts.flush())
   app.once("will-quit", () => drafts.close())
-  app.on("browser-window-created", (_event, win) => win.on("session-end", () => drafts.flush()))
+  app.on("browser-window-created", (_event, win) => {
+    const contentsId = win.webContents.id
+    win.on("session-end", () => drafts.flush())
+    win.on("closed", () => deps.spaces.closeWindow(contentsId))
+  })
 
   ipcMain.handle("kill-sidecar", () => deps.killSidecar())
   ipcMain.handle("spaces-list", () => deps.spaces.list())
   ipcMain.handle("spaces-start", (_event: IpcMainInvokeEvent, id: string) => deps.spaces.start(id))
   ipcMain.handle("spaces-get-viewed", () => deps.spaces.getViewed())
-  ipcMain.handle("spaces-set-viewed", (_event: IpcMainInvokeEvent, id: string) => deps.spaces.setViewed(id))
+  ipcMain.handle("spaces-set-viewed", (event: IpcMainInvokeEvent, id: string) =>
+    deps.spaces.setViewed(id, event.sender.id),
+  )
   ipcMain.handle("await-initialization", () => deps.awaitInitialization())
   ipcMain.handle("consume-initial-deep-links", () => deps.consumeInitialDeepLinks())
   ipcMain.handle("get-default-server-url", () => deps.getDefaultServerUrl())

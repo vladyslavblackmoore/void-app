@@ -15,27 +15,32 @@ function api(viewed: string, calls: string[] = []): SpacesPlatform {
       return endpoint
     },
     getViewed: async () => viewed,
-    setViewed: async () => undefined,
+    setViewed: async (id) => {
+      calls.push(`viewed:${id}`)
+      return endpoint
+    },
   }
 }
 
 describe("loadViewedSpace", () => {
-  test("starts nothing when home is viewed", async () => {
+  test("registers home as viewed and returns no connection", async () => {
     const calls: string[] = []
     expect(await loadViewedSpace(api("home", calls))).toBeUndefined()
-    expect(calls).toEqual([])
+    expect(calls).toEqual(["viewed:home"])
   })
 
-  test("starts the viewed space and describes it as a connection", async () => {
+  test("registers the viewed space with the window and describes it as a connection", async () => {
     const calls: string[] = []
     const conn = await loadViewedSpace(api("void", calls))
-    expect(calls).toEqual(["start:void"])
+    expect(calls).toEqual(["viewed:void"])
     expect(conn).toMatchObject({ type: "sidecar", space: "void", displayName: "VOID", http: { password: "pw" } })
   })
 
   test("falls back to home when the space is unknown or fails to start", async () => {
-    expect(await loadViewedSpace(api("gone"))).toBeUndefined()
-    const failing = { ...api("void"), start: async () => Promise.reject(new Error("no")) }
+    const calls: string[] = []
+    expect(await loadViewedSpace(api("gone", calls))).toBeUndefined()
+    expect(calls).toEqual(["viewed:home"])
+    const failing = { ...api("void", calls), setViewed: async (id: string) => (id === "void" ? Promise.reject(new Error("no")) : endpoint) }
     expect(await loadViewedSpace(failing)).toBeUndefined()
   })
 })

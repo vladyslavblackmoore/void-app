@@ -8,11 +8,10 @@ export async function switchToSpace(input: {
   register: (conn: SpaceSidecar) => void
   activate: (key: ServerConnection.Key) => void
 }) {
-  const endpoint = await input.spaces.start(input.summary.id)
+  const endpoint = await input.spaces.setViewed(input.summary.id)
   const conn = spaceConnection(input.summary, endpoint)
   input.register(conn)
   input.activate(ServerConnection.key(conn))
-  await input.spaces.setViewed(input.summary.id)
 }
 
 export function menuSpaces(spaces: SpaceSummary[], viewed: string | undefined) {

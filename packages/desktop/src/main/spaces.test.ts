@@ -322,6 +322,45 @@ describe("home migration safety", () => {
     expect(existsSync(join(root, "state.pre-spaces-2026-11-25"))).toBe(false)
   })
 
+  test("blocks on an unreadable marker instead of planning again and changes nothing", async () => {
+    await put(join(root, "data", "opencode", "auth.json"), "{}")
+    await put(join(root, "config", "opencode", "x"), "c")
+    let moves = 0
+    await expect(
+      ensureHomeSpace(root, date, {
+        beforeMove: () => {
+          if (++moves === 2) throw new Error("crash")
+        },
+      }),
+    ).rejects.toThrow("crash")
+    const home = spaceDir(root, "home")
+    await writeFile(join(home, ".migrating"), "{broken")
+    await expect(ensureHomeSpace(root, date)).rejects.toThrow("marker")
+    expect(existsSync(join(home, "space.json"))).toBe(false)
+    expect(await readFile(join(root, "data.pre-spaces-2026-11-21", "opencode", "auth.json"), "utf8")).toBe("{}")
+    expect(await readFile(join(root, "config", "opencode", "x"), "utf8")).toBe("c")
+  })
+
+  test("a retry after a failed attempt replaces partial home data and leaves no marker", async () => {
+    await put(join(root, "data", "opencode", "auth.json"), "{}")
+    await put(join(root, "state", "a"), "a")
+    let moves = 0
+    await expect(
+      ensureHomeSpace(root, date, {
+        beforeMove: () => {
+          if (++moves === 2) throw new Error("crash")
+        },
+      }),
+    ).rejects.toThrow("crash")
+    const home = spaceDir(root, "home")
+    await put(join(home, "data", "stale"), "partial")
+    await ensureHomeSpace(root, date)
+    await ensureHomeSpace(root, date)
+    expect(await files(join(home, "data"))).toEqual(["opencode/auth.json"])
+    expect(await files(join(home, "state"))).toEqual(["a"])
+    expect(existsSync(join(home, ".migrating"))).toBe(false)
+  })
+
   test("logs the start and end of a migration", async () => {
     await put(join(root, "data", "x"), "x")
     const messages: string[] = []

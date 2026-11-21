@@ -99,8 +99,8 @@ export function createCores(deps: CoresDeps) {
     })
 
   const running = new Map<string, Running>()
-  const starting = new Map<string, Promise<CoreEndpoint>>()
-  let viewed: string | undefined
+  const viewedBy = new Map<string | number, string>()
+  const queues = new Map<string, Promise<unknown>>()
   let cancelSweep: (() => void) | undefined
   let sweeping: Promise<void> | undefined
 
@@ -135,42 +135,61 @@ export function createCores(deps: CoresDeps) {
     return endpoint
   }
 
+  const isViewed = (id: string) => [...viewedBy.values()].includes(id)
+
+  const serialize = <T>(id: string, task: () => Promise<T>) => {
+    const previous = queues.get(id) ?? Promise.resolve()
+    const next = previous.then(task, task)
+    const tail = next.then(
+      () => undefined,
+      () => undefined,
+    )
+    queues.set(id, tail)
+    void tail.then(() => {
+      if (queues.get(id) === tail) queues.delete(id)
+    })
+    return next
+  }
+
   const ensure = (id: string, options: { port?: number } = {}) => {
     const current = running.get(id)
-    if (current) {
+    if (current && !queues.has(id)) {
       current.lastBusy = now()
       return Promise.resolve(current.endpoint)
     }
-    const pending = starting.get(id)
-    if (pending) return pending
-    const created = launch(id, options.port).finally(() => starting.delete(id))
-    starting.set(id, created)
-    return created
+    return serialize(id, async () => {
+      const live = running.get(id)
+      if (live) {
+        live.lastBusy = now()
+        return live.endpoint
+      }
+      return launch(id, options.port)
+    })
   }
 
-  const stop = async (id: string) => {
-    await starting.get(id)?.catch(() => undefined)
-    const current = running.get(id)
-    if (!current) return
-    drop(id, current)
-    await current.stop()
-  }
+  const stop = (id: string) =>
+    serialize(id, async () => {
+      const current = running.get(id)
+      if (!current) return
+      drop(id, current)
+      await current.stop()
+    })
 
   const stopAll = async () => {
-    await Promise.allSettled([...starting.values()])
+    await Promise.allSettled([...queues.values()])
     await Promise.all([...running.keys()].map(stop))
   }
 
   const sweepOnce = async () => {
     await Promise.all(
       [...running.entries()]
-        .filter(([id]) => id !== viewed)
+        .filter(([id]) => !isViewed(id))
         .map(async ([id, core]) => {
           if (await isCoreBusy(core.endpoint, fetcher)) {
             core.lastBusy = now()
             return
           }
-          if (id === viewed || now() - core.lastBusy < IDLE_STOP_MS) return
+          if (isViewed(id) || now() - core.lastBusy < IDLE_STOP_MS) return
           await stop(id).catch(() => undefined)
         }),
     )
@@ -183,12 +202,20 @@ export function createCores(deps: CoresDeps) {
     return sweeping
   }
 
-  const setViewed = (id: string | undefined) => {
-    const previous = viewed && viewed !== id ? running.get(viewed) : undefined
-    if (previous) previous.lastBusy = now()
-    const next = id ? running.get(id) : undefined
+  const setViewed = (id: string, window: string | number = 0) => {
+    const previous = viewedBy.get(window)
+    viewedBy.set(window, id)
+    const left = previous && previous !== id ? running.get(previous) : undefined
+    if (left) left.lastBusy = now()
+    const next = running.get(id)
     if (next) next.lastBusy = now()
-    viewed = id
+  }
+
+  const closeWindow = (window: string | number) => {
+    const previous = viewedBy.get(window)
+    viewedBy.delete(window)
+    const left = previous ? running.get(previous) : undefined
+    if (left) left.lastBusy = now()
   }
 
   return {
@@ -197,7 +224,8 @@ export function createCores(deps: CoresDeps) {
     stopAll,
     sweep,
     setViewed,
-    viewed: () => viewed,
+    closeWindow,
+    viewed: (window: string | number = 0) => viewedBy.get(window),
     running: () => [...running.keys()],
     endpoint: (id: string) => running.get(id)?.endpoint,
     ready: (id: string) => running.get(id)?.ready ?? Promise.resolve(),

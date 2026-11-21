@@ -78,6 +78,7 @@ const jsCallStackFeature = "DocumentPolicyIncludeJSCallStacksInCrashReports"
 let logger: ReturnType<typeof initLogging>
 let cores: Cores | undefined
 const spaceService = Promise.withResolvers<SpaceService>()
+spaceService.promise.catch(() => undefined)
 
 const pendingDeepLinks: string[] = []
 
@@ -356,7 +357,8 @@ const main = Effect.gen(function* () {
       list: async () => (await spaceService.promise).list(),
       start: async (id) => (await spaceService.promise).start(id),
       getViewed: async () => (await spaceService.promise).getViewed(),
-      setViewed: async (id) => (await spaceService.promise).setViewed(id),
+      setViewed: async (id, window) => (await spaceService.promise).setViewed(id, window),
+      closeWindow: (window) => void spaceService.promise.then((service) => service.closeWindow(window), () => undefined),
     },
     setNativeTranslations: (bundle) => {
       if (setNativeTranslations(bundle)) createMenu(menuDeps)
@@ -377,7 +379,10 @@ const main = Effect.gen(function* () {
 
   const loadingTask = yield* Effect.gen(function* () {
     logger.log("sidecar connection started", { version: SIDECAR_VERSION })
-    if (migrationFailure !== undefined) return yield* Effect.fail(migrationFailure)
+    if (migrationFailure !== undefined) {
+      spaceService.reject(migrationFailure)
+      return yield* Effect.fail(migrationFailure)
+    }
 
     const seed: SpaceSeed = {
       agents: [
@@ -419,7 +424,6 @@ const main = Effect.gen(function* () {
     cores = spaces
     const service = createSpaceService({ root: appRoot, cores: spaces })
     spaceService.resolve(service)
-    spaces.setViewed(yield* Effect.promise(() => service.getViewed()))
 
     ensureLoopbackNoProxy()
     useEnvProxy()
