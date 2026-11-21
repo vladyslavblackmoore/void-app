@@ -15,8 +15,8 @@ async function setup(options: { chunks?: string[]; delayMs?: number } = {}) {
   const stateDir = await tempDir()
   const server = await startServer({
     stateDir: path.join(stateDir, "state", "broker"),
-    config: { maxActive: 4, workers: [worker("w1")] },
-    createLink: () => createFakeWorker(options),
+    config: { maxActive: 4, queueDepth: 4, workers: [worker("w1")] },
+    createLink: () => createFakeWorker({ sessionId: "fake-session", ...options }),
   })
   cleanup.push(() => server.close())
   process.env["VOID_BROKER_SOCKET"] = server.socketPath

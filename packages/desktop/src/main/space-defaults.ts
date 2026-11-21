@@ -1,12 +1,20 @@
 import { readdir, readFile } from "node:fs/promises"
 import { join } from "node:path"
-import { seedAgents } from "./agents"
+import { seedAgents, seedTools } from "./agents"
+import { addDelegatePermissions, seedBrokerWorkers } from "./broker-seed"
 import { seedConfig } from "./config-seed"
-import { createSpace, ensureHomeSpace, isSpaceId, listSpaces, spaceDir, type Space } from "./spaces"
+import { createSpace, ensureHomeSpace, isSpaceId, listSpaces, readSpace, spaceDir, type Space } from "./spaces"
 
 export type SpaceTemplate = Pick<Space, "class" | "sessionMode" | "color">
 export type SpaceTemplates = { personal: SpaceTemplate; company: SpaceTemplate }
-export type SpaceSeed = { agents: Array<{ name: string; content: string }>; wrapper: string; plugin?: string; config?: string }
+export type SpaceSeed = {
+  agents: Array<{ name: string; content: string }>
+  wrapper: string
+  plugin?: string
+  config?: string
+  tools?: Array<{ name: string; content: string }>
+  workers?: string
+}
 
 const VOID_SPACE_ID = "void"
 const WORK_SPACE_ID = "work"
@@ -58,4 +66,15 @@ export async function seedSpace(root: string, id: string, seed: SpaceSeed) {
     plugin: seed.plugin,
     config: seed.config,
   })
+  await addDelegatePermissions(configDir, stateDir)
+  if (seed.tools) await seedTools(configDir, stateDir, seed.tools)
+  if (seed.workers === undefined) return
+  const space = await readSpace(root, id)
+  await seedBrokerWorkers(
+    join(dir, "config", "broker", "workers.json"),
+    stateDir,
+    seed.workers,
+    space?.sessionMode === "isolated" ? join(dir, "cli") : undefined,
+  )
 }
+

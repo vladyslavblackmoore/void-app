@@ -1,0 +1,24 @@
+{
+  "maxActive": 4,
+  "queueDepth": 4,
+  "workers": [
+    {
+      "id": "sub-worker",
+      "backend": "anthropic-cli",
+      "model": "sonnet",
+      "effort": "medium",
+      "mcp": [],
+      "warm": false,
+      "description": "General worker on the Anthropic subscription: builds, edits and runs commands from a self-contained brief."
+    },
+    {
+      "id": "sub-architect",
+      "backend": "anthropic-cli",
+      "model": "opus",
+      "effort": "high",
+      "mcp": [],
+      "warm": false,
+      "description": "Design and review worker on the Anthropic subscription: plans, architecture and careful reviews."
+    }
+  ]
+}

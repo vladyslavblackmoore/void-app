@@ -150,7 +150,8 @@ export class ShimAgent implements Agent {
     this.proc?.kill()
     this.signalled = false
     const generation = ++this.generation
-    const env = this.options.configDir ? { ...process.env, CLAUDE_CONFIG_DIR: this.options.configDir } : process.env
+    const { ELECTRON_RUN_AS_NODE: _runAsNode, ...inherited } = process.env
+    const env = this.options.configDir ? { ...inherited, CLAUDE_CONFIG_DIR: this.options.configDir } : inherited
     try {
       this.proc = await spawnBinary(
         {

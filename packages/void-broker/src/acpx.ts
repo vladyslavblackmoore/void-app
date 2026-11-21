@@ -11,7 +11,7 @@ import type { WorkerEntry } from "./workers"
 
 const timingShape = z.object({ stdinAt: z.number(), binaryFirstAt: z.number() })
 
-const shimMain = path.join(path.dirname(fileURLToPath(import.meta.url)), "shim/main.ts")
+const shimMain = process.env["VOID_BROKER_SHIM"] || path.join(path.dirname(fileURLToPath(import.meta.url)), "shim/main.ts")
 
 export type AcpxLinkOptions = {
   entry: WorkerEntry

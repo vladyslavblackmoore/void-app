@@ -17,6 +17,7 @@ const start = z.object({
   type: z.literal("start"),
   argv: z.array(z.string()),
   configDir: z.string().nullable(),
+  runAsNode: z.string().nullable(),
   cwd: z.string(),
 })
 const entry = z.union([start, z.object({ type: z.literal("stdin"), line: z.string() })])
@@ -156,6 +157,14 @@ describe("void-cli-acp", () => {
     expect(argv).toContain("--mcp-config")
     expect(spawned?.configDir).toBe(path.join(harness.dir, "account"))
     expect(spawned?.cwd).toBe(await realpath(harness.dir))
+  })
+
+  test("the binary does not inherit ELECTRON_RUN_AS_NODE from the shim", async () => {
+    const harness = await launch({ ELECTRON_RUN_AS_NODE: "1" })
+    await init(harness)
+    await harness.connection.newSession({ cwd: harness.dir, mcpServers: [] })
+    const [spawned] = await starts(harness)
+    expect(spawned?.runAsNode).toBeNull()
   })
 
   test("--setting-sources is passed only when given", async () => {

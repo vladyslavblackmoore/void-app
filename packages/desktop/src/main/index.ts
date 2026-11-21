@@ -2,7 +2,8 @@ import { randomUUID } from "node:crypto"
 import { mkdirSync, rmSync } from "node:fs"
 import * as http from "node:http"
 import { homedir, tmpdir } from "node:os"
-import { join } from "node:path"
+import { dirname, join } from "node:path"
+import { fileURLToPath } from "node:url"
 import { getCACertificates, setDefaultCACertificates } from "node:tls"
 import type { Event } from "electron"
 import { app, BrowserWindow } from "electron"
@@ -12,6 +13,8 @@ import contextMenu from "electron-context-menu"
 
 import mainAgent from "../../resources/agents/main.md?raw"
 import workerAgent from "../../resources/agents/worker.md?raw"
+import delegateTool from "../../resources/tools/delegate.ts?raw"
+import brokerWorkers from "../../resources/broker/workers.json?raw"
 import subscriptionWrapper from "../../resources/provider/subscription.mjs?raw"
 import subscriptionPlugin from "../../resources/plugin/subscription-auth.js?raw"
 import spaceConfigTemplate from "../../resources/spaces/opencode.jsonc?raw"
@@ -52,7 +55,8 @@ import { registerWslIpcHandlers } from "./wsl/ipc"
 import { spawnWslSidecar } from "./wsl/sidecar"
 import { cleanupStoreFiles } from "./store-cleanup"
 import { startBackgroundCli } from "./background-cli"
-import { createCores, type Cores } from "./cores"
+import { brokerRuntime, withBroker } from "./broker"
+import { createCores, type Cores, type CoreStart } from "./cores"
 import { createSpaceService, type SpaceService } from "./space-service"
 import { ensureDefaultSpaces, seedSpace, type SpaceSeed } from "./space-defaults"
 import { HOME_SPACE_ID, ensureHomeSpace, spaceDir } from "./spaces"
@@ -392,6 +396,8 @@ const main = Effect.gen(function* () {
       wrapper: subscriptionWrapper,
       plugin: subscriptionPlugin,
       config: spaceConfigTemplate,
+      tools: [{ name: "delegate", content: delegateTool }],
+      workers: brokerWorkers,
     }
     yield* Effect.promise(() =>
       ensureDefaultSpaces(
@@ -400,26 +406,38 @@ const main = Effect.gen(function* () {
         onboardingTestRoot ? join(onboardingTestRoot, "no-old-runtime") : join(homedir(), ".void", "spaces"),
       ).catch((error) => logger.warn("failed to create default spaces", error)),
     )
+    const brokerRuntimeChoice = brokerRuntime({
+      packaged: app.isPackaged,
+      execPath: process.execPath,
+      resourcesPath: process.resourcesPath,
+      devEntry: join(dirname(fileURLToPath(import.meta.url)), "../../../void-broker/src/main.ts"),
+      env: process.env,
+    })
+    const startCore: CoreStart = async (id, options) => {
+      let exitSignal!: () => void
+      const exited = new Promise<void>((resolve) => {
+        exitSignal = resolve
+      })
+      const { listener, health } = await spawnLocalServer(options.hostname, options.port, options.password, {
+        userDataPath: join(spaceDir(appRoot, id), "state"),
+        env: options.env,
+        onStdout: (message) => writeLog("server", "stdout", { message, space: id }),
+        onStderr: (message) => writeLog("server", "stderr", { message, space: id }, "warn"),
+        onExit: (code) => {
+          writeLog("utility", "sidecar exited", { code, space: id }, "warn")
+          exitSignal()
+        },
+      })
+      return { stop: listener.stop, ready: health.wait, exited }
+    }
     const spaces = createCores({
       root: appRoot,
       prepare: (id) => seedSpace(appRoot, id, seed).catch((error) => logger.warn("failed to seed space", error)),
-      start: async (id, options) => {
-        let exitSignal!: () => void
-        const exited = new Promise<void>((resolve) => {
-          exitSignal = resolve
-        })
-        const { listener, health } = await spawnLocalServer(options.hostname, options.port, options.password, {
-          userDataPath: join(spaceDir(appRoot, id), "state"),
-          env: options.env,
-          onStdout: (message) => writeLog("server", "stdout", { message, space: id }),
-          onStderr: (message) => writeLog("server", "stderr", { message, space: id }, "warn"),
-          onExit: (code) => {
-            writeLog("utility", "sidecar exited", { code, space: id }, "warn")
-            exitSignal()
-          },
-        })
-        return { stop: listener.stop, ready: health.wait, exited }
-      },
+      start: withBroker(startCore, {
+        root: appRoot,
+        runtime: brokerRuntimeChoice,
+        warn: (message, error) => logger.warn(message, error),
+      }),
     })
     cores = spaces
     const service = createSpaceService({ root: appRoot, cores: spaces })
