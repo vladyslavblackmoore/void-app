@@ -33,6 +33,7 @@ export async function runBroker(env: Record<string, string | undefined>) {
   return startServer({
     config,
     stateDir,
+    socketPath: env["VOID_BROKER_SOCKET"] || undefined,
     createLink: createLinkFactory({
       stateDir,
       cwd: env["VOID_BROKER_CWD"] || process.cwd(),

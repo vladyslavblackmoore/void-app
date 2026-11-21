@@ -70,6 +70,18 @@ test("serves the socket from the environment and exits when stdin closes", async
   expect(existsSync(socket)).toBe(false)
 })
 
+test("listens on VOID_BROKER_SOCKET when it is set", async () => {
+  const { env, root, socket } = await layout()
+  const custom = path.join(root, "custom.sock")
+  const run = launch({ ...env, VOID_BROKER_SOCKET: custom })
+  await run.ready
+  expect(existsSync(custom)).toBe(true)
+  expect(existsSync(socket)).toBe(false)
+  run.child.stdin?.end()
+  expect(await run.exited).toBe(0)
+  expect(existsSync(custom)).toBe(false)
+})
+
 test("exits on SIGTERM and removes the socket", async () => {
   const { env, socket } = await layout()
   const run = launch(env)

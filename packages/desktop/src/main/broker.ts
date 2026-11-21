@@ -1,5 +1,7 @@
 import { spawn, type ChildProcess } from "node:child_process"
+import { createHash } from "node:crypto"
 import { existsSync } from "node:fs"
+import { tmpdir } from "node:os"
 import { join } from "node:path"
 import type { CoreStart } from "./cores"
 import { coreEnv } from "./void-home"
@@ -9,13 +11,24 @@ import type { BrokerStatusStore } from "./broker-status"
 const READY_TIMEOUT_MS = 30_000
 const STOP_TIMEOUT_MS = 8_000
 
+export function brokerSocketPath(root: string, id: string, platform: NodeJS.Platform = process.platform, tmp = tmpdir()) {
+  const preferred = join(spaceDir(root, id), "state", "broker", "broker.sock")
+  if (platform === "win32") return preferred
+  const limit = platform === "darwin" ? 104 : 108
+  const fits = (path: string) => Buffer.byteLength(path) < limit
+  if (fits(preferred)) return preferred
+  const name = `void-broker-${createHash("sha256").update(`${root}\0${id}`).digest("hex").slice(0, 8)}.sock`
+  const fallback = join(tmp, name)
+  return fits(fallback) ? fallback : join("/tmp", name)
+}
+
 export function brokerPaths(root: string, id: string) {
   const space = spaceDir(root, id)
   const stateDir = join(space, "state", "broker")
   return {
     config: join(space, "config", "broker", "workers.json"),
     stateDir,
-    socket: join(stateDir, "broker.sock"),
+    socket: brokerSocketPath(root, id),
     memoryDb: join(space, "data", "memory", "graph.db"),
     spaceConfig: join(space, "config", "opencode"),
   }
