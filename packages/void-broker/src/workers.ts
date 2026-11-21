@@ -14,6 +14,7 @@ const entry = z
     mode: z.string().min(1).optional(),
     settingSources: z.string().optional(),
     mcp: z.array(z.string().min(1)).default([]),
+    deny: z.array(z.string().regex(/^mcp__[A-Za-z0-9_*-]+$/)).optional(),
     warm: z.boolean().default(false),
     description: z.string().default(""),
   })

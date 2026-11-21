@@ -37,6 +37,7 @@ export async function runBroker(env: Record<string, string | undefined>) {
       stateDir,
       cwd: env["VOID_BROKER_CWD"] || process.cwd(),
       memoryDb,
+      spaceConfigDir: env["VOID_BROKER_SPACE_CONFIG"],
       fallback: unsupported,
     }),
   })

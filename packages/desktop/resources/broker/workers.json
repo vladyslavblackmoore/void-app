@@ -7,7 +7,7 @@
       "backend": "anthropic-cli",
       "model": "sonnet",
       "effort": "medium",
-      "mcp": [],
+      "mcp": ["memory"],
       "warm": false,
       "description": "General worker on the Anthropic subscription: builds, edits and runs commands from a self-contained brief."
     },
@@ -16,7 +16,7 @@
       "backend": "anthropic-cli",
       "model": "opus",
       "effort": "high",
-      "mcp": [],
+      "mcp": ["memory"],
       "warm": false,
       "description": "Design and review worker on the Anthropic subscription: plans, architecture and careful reviews."
     }

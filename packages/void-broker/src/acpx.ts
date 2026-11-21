@@ -30,6 +30,7 @@ export function shimArgv(entry: WorkerEntry, extra: string[] = []) {
   if (entry.mode) argv.push("--permission-mode", entry.mode)
   if (entry.account) argv.push("--config-dir", entry.account)
   if (entry.settingSources !== undefined) argv.push("--setting-sources", entry.settingSources)
+  for (const rule of entry.deny ?? []) argv.push("--deny", rule)
   return [...argv, ...extra]
 }
 

@@ -55,3 +55,10 @@ test("rejects invalid json and a missing file", async () => {
   expect(await failure(loadWorkers(await write("{")))).toBeInstanceOf(Error)
   expect(await failure(loadWorkers(path.join(await tempDir(), "none.json")))).toBeInstanceOf(Error)
 })
+
+test("accepts mcp deny rules and rejects other tool names", async () => {
+  const ok = await write({ workers: [{ id: "a", backend: "anthropic-cli", deny: ["mcp__memory__forget", "mcp__files__*"] }] })
+  expect((await loadWorkers(ok)).workers[0]?.deny).toEqual(["mcp__memory__forget", "mcp__files__*"])
+  const bad = await write({ workers: [{ id: "a", backend: "anthropic-cli", deny: ["Bash"] }] })
+  expect(await failure(loadWorkers(bad))).toBeInstanceOf(Error)
+})

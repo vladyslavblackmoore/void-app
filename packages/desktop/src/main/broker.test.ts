@@ -52,6 +52,7 @@ describe("paths", () => {
     expect(paths.stateDir).toBe("/r/spaces/home/state/broker")
     expect(paths.socket).toBe("/r/spaces/home/state/broker/broker.sock")
     expect(paths.memoryDb).toBe("/r/spaces/home/data/memory/graph.db")
+    expect(paths.spaceConfig).toBe("/r/spaces/home/config/opencode")
   })
 })
 
@@ -65,6 +66,19 @@ describe("startBroker", () => {
     expect(existsSync(paths.socket)).toBe(true)
     await broker!.stop()
     expect(existsSync(paths.socket)).toBe(false)
+  })
+
+  test("passes the space config directory to the broker", async () => {
+    const paths = await seedWorkers()
+    const script = join(root, "env-entry.mjs")
+    const out = join(root, "env.txt")
+    await writeFile(
+      script,
+      `import { writeFileSync } from "node:fs"\nwriteFileSync(${JSON.stringify(out)}, process.env.VOID_BROKER_SPACE_CONFIG ?? "")\nconsole.log("ready")\nprocess.stdin.on("end", () => process.exit(0))\nprocess.stdin.resume()\n`,
+    )
+    const broker = await startBroker({ ...deps(), runtime: { command: process.execPath, entry: script, env: {} } })
+    expect(await readFile(out, "utf8")).toBe(paths.spaceConfig)
+    await broker!.stop()
   })
 
   test("returns nothing without a workers file", async () => {

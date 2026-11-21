@@ -7,6 +7,7 @@ export type ShimOptions = {
   permissionMode?: string
   configDir?: string
   settingSources?: string
+  deny: string[]
   interruptTimeoutMs: number
   closeTimeoutMs: number
 }
@@ -21,6 +22,7 @@ export function parseShimArgs(argv: string[]): ShimOptions {
       "permission-mode": { type: "string" },
       "config-dir": { type: "string" },
       "setting-sources": { type: "string" },
+      deny: { type: "string", multiple: true },
       "interrupt-timeout-ms": { type: "string" },
       "close-timeout-ms": { type: "string" },
     },
@@ -32,6 +34,7 @@ export function parseShimArgs(argv: string[]): ShimOptions {
     permissionMode: values["permission-mode"],
     configDir: values["config-dir"],
     settingSources: values["setting-sources"],
+    deny: values.deny ?? [],
     interruptTimeoutMs: Number(values["interrupt-timeout-ms"] ?? 1500),
     closeTimeoutMs: Number(values["close-timeout-ms"] ?? 3000),
   }
@@ -44,6 +47,7 @@ export function binaryArgs(options: ShimOptions, mcpConfig: string, session: { i
   if (options.effort) args.push("--effort", options.effort)
   if (options.permissionMode) args.push("--permission-mode", options.permissionMode)
   args.push("--permission-prompts", "none", "--strict-mcp-config", "--mcp-config", mcpConfig)
+  if (options.deny.length > 0) args.push("--disallowed-tools", options.deny.join(","))
   if (options.settingSources) args.push("--setting-sources", options.settingSources)
   return args
 }

@@ -16,6 +16,7 @@ export function brokerPaths(root: string, id: string) {
     stateDir,
     socket: join(stateDir, "broker.sock"),
     memoryDb: join(space, "data", "memory", "graph.db"),
+    spaceConfig: join(space, "config", "opencode"),
   }
 }
 
@@ -68,6 +69,7 @@ export async function startBroker(deps: BrokerDeps): Promise<RunningBroker | und
     VOID_BROKER_CONFIG: paths.config,
     VOID_BROKER_STATE_DIR: paths.stateDir,
     VOID_BROKER_MEMORY_DB: paths.memoryDb,
+    VOID_BROKER_SPACE_CONFIG: paths.spaceConfig,
     VOID_BROKER_SOCKET: paths.socket,
   })
   const child = spawn(deps.runtime.command, [deps.runtime.entry], {
