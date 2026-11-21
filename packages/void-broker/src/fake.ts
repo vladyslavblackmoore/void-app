@@ -1,6 +1,16 @@
-import type { WorkerEvent, WorkerLink } from "./types"
+import { randomUUID } from "node:crypto"
+import type { StartOptions, WorkerEvent, WorkerLink, WorkerTiming } from "./types"
 
-export type FakeOptions = { chunks?: string[]; delayMs?: number; sessionId?: string }
+export type FakeOptions = {
+  chunks?: string[]
+  delayMs?: number
+  sessionId?: string
+  crashOnPrompt?: number[]
+  onStart?: (resumeSessionId: string | undefined) => void
+  onPrompt?: () => void
+  onDone?: () => void
+  timing?: WorkerTiming
+}
 
 export function createFakeWorker(options: FakeOptions = {}): WorkerLink {
   const chunks = options.chunks ?? ["fake ", "reply"]
@@ -8,6 +18,8 @@ export function createFakeWorker(options: FakeOptions = {}): WorkerLink {
   const settings = new Map<string, string>()
   let started = false
   let cancelled = false
+  let sessionId = ""
+  let prompts = 0
   let wake: (() => void) | undefined
 
   const pause = () =>
@@ -21,8 +33,14 @@ export function createFakeWorker(options: FakeOptions = {}): WorkerLink {
 
   async function* prompt(text: string): AsyncGenerator<WorkerEvent> {
     if (!started) throw new Error("worker not started")
+    prompts += 1
+    options.onPrompt?.()
     let out = ""
     try {
+      if (options.crashOnPrompt?.includes(prompts)) {
+        started = false
+        throw new Error("worker process exited")
+      }
       for (const chunk of chunks) {
         await pause()
         if (cancelled) break
@@ -34,16 +52,20 @@ export function createFakeWorker(options: FakeOptions = {}): WorkerLink {
         stopReason: cancelled ? "cancelled" : "end_turn",
         text: out,
         usage: { inputTokens: text.length, outputTokens: out.length },
-        sessionId: options.sessionId ?? "fake-session",
+        sessionId,
+        timing: options.timing,
       }
     } finally {
       cancelled = false
       wake = undefined
+      options.onDone?.()
     }
   }
 
   return {
-    async start() {
+    async start(start?: StartOptions) {
+      options.onStart?.(start?.resumeSessionId)
+      sessionId = start?.resumeSessionId ?? options.sessionId ?? `fake-${randomUUID()}`
       started = true
     },
     prompt,

@@ -4,6 +4,8 @@ import { parseEvent, type BinaryEvent } from "./events"
 
 export type BinaryProcess = {
   write(value: object): void
+  end(): void
+  exited: Promise<void>
   signal(name: NodeJS.Signals): void
   kill(): void
 }
@@ -28,6 +30,10 @@ export function spawnBinary(options: BinarySpawn, handlers: BinaryHandlers): Pro
       stdio: ["pipe", "pipe", "inherit"],
     })
     let alive = false
+    let markExited: () => void = () => undefined
+    const exited = new Promise<void>((done) => {
+      markExited = done
+    })
     child.once("error", (error) => {
       if (alive) handlers.onExit(error.message)
       else reject(error)
@@ -38,6 +44,10 @@ export function spawnBinary(options: BinarySpawn, handlers: BinaryHandlers): Pro
         write: (value) => {
           child.stdin.write(JSON.stringify(value) + "\n")
         },
+        end: () => {
+          child.stdin.end()
+        },
+        exited,
         signal: (name) => {
           child.kill(name)
         },
@@ -47,7 +57,10 @@ export function spawnBinary(options: BinarySpawn, handlers: BinaryHandlers): Pro
       })
     })
     child.stdin.on("error", () => undefined)
-    child.once("close", (code, signal) => handlers.onExit(`binary exited (code ${code}, signal ${signal})`))
+    child.once("close", (code, signal) => {
+      markExited()
+      handlers.onExit(`binary exited (code ${code}, signal ${signal})`)
+    })
     createInterface({ input: child.stdout }).on("line", (line) => {
       const event = parseEvent(line)
       if (event) handlers.onEvent(event)

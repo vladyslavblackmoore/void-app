@@ -25,7 +25,12 @@ const control = z.looseObject({
   response: z.looseObject({ request_id: z.string() }),
 })
 
-const event = z.union([assistant, result, control])
+const echo = z.looseObject({
+  type: z.literal("user"),
+  uuid: z.string().optional(),
+})
+
+const event = z.union([assistant, result, control, echo])
 
 export type Block = z.infer<typeof block>
 export type BinaryEvent = z.infer<typeof event>

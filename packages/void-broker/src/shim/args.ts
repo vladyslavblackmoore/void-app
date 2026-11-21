@@ -8,6 +8,7 @@ export type ShimOptions = {
   configDir?: string
   settingSources?: string
   interruptTimeoutMs: number
+  closeTimeoutMs: number
 }
 
 export function parseShimArgs(argv: string[]): ShimOptions {
@@ -21,6 +22,7 @@ export function parseShimArgs(argv: string[]): ShimOptions {
       "config-dir": { type: "string" },
       "setting-sources": { type: "string" },
       "interrupt-timeout-ms": { type: "string" },
+      "close-timeout-ms": { type: "string" },
     },
   })
   return {
@@ -31,11 +33,12 @@ export function parseShimArgs(argv: string[]): ShimOptions {
     configDir: values["config-dir"],
     settingSources: values["setting-sources"],
     interruptTimeoutMs: Number(values["interrupt-timeout-ms"] ?? 1500),
+    closeTimeoutMs: Number(values["close-timeout-ms"] ?? 3000),
   }
 }
 
 export function binaryArgs(options: ShimOptions, mcpConfig: string, session: { id: string; resume: boolean }) {
-  const args = ["-p", "--input-format", "stream-json", "--output-format", "stream-json", "--verbose"]
+  const args = ["-p", "--input-format", "stream-json", "--output-format", "stream-json", "--verbose", "--replay-user-messages"]
   args.push(session.resume ? "--resume" : "--session-id", session.id)
   if (options.model) args.push("--model", options.model)
   if (options.effort) args.push("--effort", options.effort)

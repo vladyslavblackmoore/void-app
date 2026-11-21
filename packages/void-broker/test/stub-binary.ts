@@ -6,6 +6,7 @@ const record = process.env["STUB_RECORD"] ?? ""
 const name = process.env["STUB_FIXTURE"] ?? "stream-basic"
 const ignoreInterrupt = process.env["STUB_IGNORE_INTERRUPT"] === "1"
 const failTurn = process.env["STUB_FAIL_TURN"] === "1"
+const staleTurn = process.env["STUB_STALE_TURN"] === "1"
 
 const log = (entry: object) => appendFileSync(record, JSON.stringify(entry) + "\n")
 const lines = readFileSync(new URL(`fixtures/${name}.jsonl`, import.meta.url), "utf8").split("\n").filter(Boolean)
@@ -45,6 +46,14 @@ reader.on("line", (line) => {
     if (failTurn) {
       process.exit(3)
     }
+    if (staleTurn && turn === 0) {
+      emit([
+        JSON.stringify({ type: "system", subtype: "task_notification", summary: "background command stopped" }),
+        JSON.stringify({ type: "assistant", message: { content: [{ type: "text", text: "STALE" }] } }),
+        JSON.stringify({ type: "result", subtype: "success", is_error: false, result: "" }),
+      ])
+    }
+    emit([JSON.stringify({ type: "user", uuid: message.uuid, message: message.message })])
     const next = turns[turn % turns.length] ?? []
     turn += 1
     if (split === -1) {

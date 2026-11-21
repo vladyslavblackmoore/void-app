@@ -130,6 +130,7 @@ describe("void-cli-acp", () => {
     const sent = (await entries(harness)).flatMap((item) => (item.type === "stdin" ? [JSON.parse(item.line)] : []))
     expect(sent[0]).toEqual({
       type: "user",
+      uuid: expect.any(String),
       message: { role: "user", content: "Reply with exactly one word: ok" },
       parent_tool_use_id: null,
     })
@@ -281,6 +282,40 @@ describe("void-cli-acp", () => {
       .prompt({ sessionId: session.sessionId, prompt: [{ type: "text", text: "x" }] })
       .catch((reason: unknown) => reason)
     expect(error).toBeInstanceOf(Error)
+  })
+
+  test("a result that precedes the echo of the prompt belongs to an earlier turn and is ignored", async () => {
+    const harness = await launch({ STUB_FIXTURE: "stream-basic", STUB_STALE_TURN: "1" })
+    await init(harness)
+    const session = await harness.connection.newSession({ cwd: harness.dir, mcpServers: [] })
+    const response = await harness.connection.prompt({
+      sessionId: session.sessionId,
+      prompt: [{ type: "text", text: "Reply with exactly one word: ok" }],
+    })
+    expect(response.stopReason).toBe("end_turn")
+    expect(chunkText(harness)).toEqual(["ok"])
+  })
+
+  test("the binary is started with replay of user messages", async () => {
+    const harness = await launch({})
+    await init(harness)
+    await harness.connection.newSession({ cwd: harness.dir, mcpServers: [] })
+    const [spawned] = await starts(harness)
+    expect(spawned?.argv).toContain("--replay-user-messages")
+  })
+
+  test("the prompt response carries the shim timing", async () => {
+    const harness = await launch({ STUB_FIXTURE: "stream-basic" })
+    await init(harness)
+    const session = await harness.connection.newSession({ cwd: harness.dir, mcpServers: [] })
+    const before = Date.now()
+    const response = await harness.connection.prompt({
+      sessionId: session.sessionId,
+      prompt: [{ type: "text", text: "Reply with exactly one word: ok" }],
+    })
+    const timing = z.object({ stdinAt: z.number(), binaryFirstAt: z.number() }).parse(response._meta?.["voidTiming"])
+    expect(timing.stdinAt).toBeGreaterThanOrEqual(before)
+    expect(timing.binaryFirstAt).toBeGreaterThanOrEqual(timing.stdinAt)
   })
 
   test("a missing binary fails session/new", async () => {

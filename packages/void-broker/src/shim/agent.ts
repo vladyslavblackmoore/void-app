@@ -21,6 +21,10 @@ type Turn = {
   resolve: (response: PromptResponse) => void
   reject: (error: Error) => void
   cancelled: boolean
+  uuid: string
+  echoed: boolean
+  stdinAt: number
+  binaryFirstAt: number
 }
 
 export class ShimAgent implements Agent {
@@ -69,7 +73,15 @@ export class ShimAgent implements Agent {
     if (!this.sessionId || params.sessionId !== this.sessionId) throw RequestError.invalidParams(undefined, "unknown session")
     if (this.turn) throw RequestError.invalidRequest(undefined, "a prompt is already running")
     const text = params.prompt.flatMap((block) => (block.type === "text" ? [block.text] : [])).join("\n")
-    const turn: Turn = { resolve: () => undefined, reject: () => undefined, cancelled: false }
+    const turn: Turn = {
+      resolve: () => undefined,
+      reject: () => undefined,
+      cancelled: false,
+      uuid: randomUUID(),
+      echoed: false,
+      stdinAt: 0,
+      binaryFirstAt: 0,
+    }
     const done = new Promise<PromptResponse>((resolve, reject) => {
       turn.resolve = resolve
       turn.reject = reject
@@ -78,7 +90,10 @@ export class ShimAgent implements Agent {
     try {
       if (!this.proc || this.signalled) await this.spawn(true)
       if (turn.cancelled) this.finish((item) => item.resolve({ stopReason: "cancelled" }))
-      else this.proc?.write({ type: "user", message: { role: "user", content: text }, parent_tool_use_id: null })
+      else {
+        this.proc?.write({ type: "user", uuid: turn.uuid, message: { role: "user", content: text }, parent_tool_use_id: null })
+        turn.stdinAt = Date.now()
+      }
     } catch (error) {
       this.turn = undefined
       throw error
@@ -103,8 +118,18 @@ export class ShimAgent implements Agent {
   async close() {
     clearTimeout(this.timer)
     this.generation += 1
-    this.proc?.kill()
+    const proc = this.proc
     this.proc = undefined
+    if (proc) {
+      proc.end()
+      let timer: ReturnType<typeof setTimeout> | undefined
+      const grace = new Promise<void>((done) => {
+        timer = setTimeout(done, this.options.closeTimeoutMs)
+      })
+      await Promise.race([proc.exited, grace])
+      clearTimeout(timer)
+      proc.kill()
+    }
     await this.store.dispose()
   }
 
@@ -149,7 +174,18 @@ export class ShimAgent implements Agent {
   }
 
   private onEvent(event: BinaryEvent) {
+    const turn = this.turn
+    if (event.type === "user") {
+      if (turn && event.uuid === turn.uuid) turn.echoed = true
+      return
+    }
+    if (event.type === "control_response") {
+      if (event.response.request_id === this.interruptId) clearTimeout(this.timer)
+      return
+    }
+    if (!turn?.echoed) return
     if (event.type === "assistant") {
+      if (!turn.binaryFirstAt) turn.binaryFirstAt = Date.now()
       for (const block of event.message.content) {
         if (block.type === "text" && "text" in block && typeof block.text === "string") {
           this.send({ sessionUpdate: "agent_message_chunk", content: { type: "text", text: block.text } })
@@ -168,16 +204,13 @@ export class ShimAgent implements Agent {
       }
       return
     }
-    if (event.type === "control_response") {
-      if (event.response.request_id === this.interruptId) clearTimeout(this.timer)
-      return
-    }
     if (event.type === "result") {
       const message = event.result ?? event.errors?.join("; ") ?? event.subtype
-      this.finish((turn) => {
-        if (turn.cancelled) turn.resolve({ stopReason: "cancelled" })
-        else if (event.is_error) turn.reject(RequestError.internalError(event, message))
-        else turn.resolve({ stopReason: "end_turn" })
+      const meta = { voidTiming: { stdinAt: turn.stdinAt, binaryFirstAt: turn.binaryFirstAt || Date.now() } }
+      this.finish((item) => {
+        if (item.cancelled) item.resolve({ stopReason: "cancelled", _meta: meta })
+        else if (event.is_error) item.reject(RequestError.internalError(event, message))
+        else item.resolve({ stopReason: "end_turn", _meta: meta })
       })
     }
   }

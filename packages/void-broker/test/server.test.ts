@@ -11,11 +11,11 @@ afterEach(async () => {
   while (cleanup.length) await cleanup.pop()!()
 })
 
-async function setup(options: { chunks?: string[]; delayMs?: number } = {}) {
+async function setup(options: { chunks?: string[]; delayMs?: number; queueDepth?: number } = {}) {
   const stateDir = await tempDir()
   const server: BrokerServer = await startServer({
     stateDir: path.join(stateDir, "state", "broker"),
-    config: { maxActive: 4, workers: [worker("w1"), worker("w2")] },
+    config: { maxActive: 4, queueDepth: options.queueDepth ?? 4, workers: [worker("w1"), worker("w2")] },
     createLink: () => createFakeWorker(options),
   })
   cleanup.push(() => server.close())
@@ -56,7 +56,7 @@ test("delegate.start streams events then one result", async () => {
   const second = await client.next((message) => message.method === "delegate.event")
   expect(second.params?.text).toBe("two")
   const result = await client.next((message) => message.method === "delegate.result")
-  expect(result.params).toMatchObject({ runId, stopReason: "end_turn", text: "one two", sessionId: "fake-session" })
+  expect(result.params).toMatchObject({ runId, stopReason: "end_turn", text: "one two", sessionId: expect.stringMatching(/^fake-/) })
   expect(result.params?.usage).toBeDefined()
 })
 
@@ -90,8 +90,8 @@ test("delegate.cancel ends the run with a cancelled stop reason", async () => {
   expect(result.params).toMatchObject({ runId, stopReason: "cancelled" })
 })
 
-test("a second run on a busy worker is refused, another worker runs in parallel", async () => {
-  const { client } = await setup({ chunks: ["a"], delayMs: 100 })
+test("with no queue depth a second run on a busy worker is refused, another worker runs in parallel", async () => {
+  const { client } = await setup({ chunks: ["a"], delayMs: 100, queueDepth: 0 })
   client.send({ jsonrpc: "2.0", id: 1, method: "delegate.start", params: { worker: "w1", prompt: "go" } })
   await client.next(isResponse(1))
   client.send({ jsonrpc: "2.0", id: 2, method: "delegate.start", params: { worker: "w1", prompt: "again" } })
@@ -107,7 +107,7 @@ test("the task id is prepended to the prompt", async () => {
   const stateDir = await tempDir()
   const server = await startServer({
     stateDir,
-    config: { maxActive: 4, workers: [worker("w1")] },
+    config: { maxActive: 4, queueDepth: 4, workers: [worker("w1")] },
     createLink: () => {
       const link = createFakeWorker()
       return {

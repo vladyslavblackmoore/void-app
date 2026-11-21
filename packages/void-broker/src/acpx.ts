@@ -5,8 +5,11 @@ import { randomUUID } from "node:crypto"
 import { mkdir } from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
-import type { Usage, WorkerEvent, WorkerHealth, WorkerLink } from "./types"
+import { z } from "zod"
+import type { StartOptions, Usage, WorkerEvent, WorkerHealth, WorkerLink, WorkerTiming } from "./types"
 import type { WorkerEntry } from "./workers"
+
+const timingShape = z.object({ stdinAt: z.number(), binaryFirstAt: z.number() })
 
 const shimMain = path.join(path.dirname(fileURLToPath(import.meta.url)), "shim/main.ts")
 
@@ -17,6 +20,7 @@ export type AcpxLinkOptions = {
   mcpServers: McpServer[]
   shimArgs?: string[]
   env?: Record<string, string>
+  closeTimeoutMs?: number
 }
 
 export function shimArgv(entry: WorkerEntry, extra: string[] = []) {
@@ -35,6 +39,21 @@ const eventOf = (event: AcpRuntimeEvent): WorkerEvent | undefined => {
   return undefined
 }
 
+const timingOf = (meta: Record<string, unknown> | null | undefined): WorkerTiming | undefined => {
+  const parsed = timingShape.safeParse(meta?.["voidTiming"])
+  return parsed.success ? parsed.data : undefined
+}
+
+const alive = (pid: number) => {
+  if (pid <= 0) return false
+  try {
+    process.kill(pid, 0)
+    return true
+  } catch {
+    return false
+  }
+}
+
 export class AcpxWorkerLink implements WorkerLink {
   private runtime: ReturnType<typeof createAcpRuntime> | undefined
   private handle: AcpRuntimeHandle | undefined
@@ -46,7 +65,7 @@ export class AcpxWorkerLink implements WorkerLink {
     return { pid: this.pid, sessionId: this.handle?.agentSessionId ?? this.handle?.backendSessionId ?? "" }
   }
 
-  async start() {
+  async start(options: StartOptions = {}) {
     if (this.handle) return
     const { entry, stateDir, cwd } = this.options
     await mkdir(stateDir, { recursive: true })
@@ -64,7 +83,17 @@ export class AcpxWorkerLink implements WorkerLink {
       },
     })
     try {
-      this.handle = await runtime.ensureSession({ sessionKey: entry.id, agent: entry.id, mode: "persistent", cwd })
+      if (options.fresh) {
+        const existing = await runtime.findSession?.({ sessionKey: entry.id, agent: entry.id })
+        if (existing) await runtime.prepareFreshSession?.({ handle: existing })
+      }
+      this.handle = await runtime.ensureSession({
+        sessionKey: entry.id,
+        agent: entry.id,
+        mode: "persistent",
+        cwd,
+        resumeSessionId: options.fresh ? undefined : options.resumeSessionId,
+      })
     } catch (error) {
       await runtime.shutdown?.()
       throw error
@@ -88,7 +117,14 @@ export class AcpxWorkerLink implements WorkerLink {
     }
     const result = await turn.result
     if (result.status === "failed") throw new Error(result.error.message)
-    yield { type: "result", stopReason: result.stopReason ?? (result.status === "cancelled" ? "cancelled" : "end_turn"), text: out, usage, sessionId: this.info().sessionId }
+    yield {
+      type: "result",
+      stopReason: result.stopReason ?? (result.status === "cancelled" ? "cancelled" : "end_turn"),
+      text: out,
+      usage,
+      sessionId: this.info().sessionId,
+      timing: timingOf(result._meta),
+    }
   }
 
   async cancel() {
@@ -104,7 +140,15 @@ export class AcpxWorkerLink implements WorkerLink {
     const runtime = this.runtime
     this.runtime = undefined
     this.handle = undefined
-    await runtime?.shutdown?.()
+    const pid = this.pid
+    this.pid = 0
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const limit = new Promise<void>((resolve) => {
+      timer = setTimeout(resolve, this.options.closeTimeoutMs ?? 3000)
+    })
+    await Promise.race([runtime?.shutdown?.().catch(() => undefined), limit])
+    clearTimeout(timer)
+    if (runtime && alive(pid)) process.kill(pid, "SIGKILL")
   }
 
   async health(): Promise<WorkerHealth> {

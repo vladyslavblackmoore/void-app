@@ -22,6 +22,7 @@ const entry = z
 const file = z
   .object({
     maxActive: z.number().int().min(1).default(4),
+    queueDepth: z.number().int().min(0).default(4),
     workers: z.array(entry),
   })
   .strict()

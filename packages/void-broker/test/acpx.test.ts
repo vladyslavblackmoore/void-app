@@ -160,6 +160,45 @@ describe("AcpxWorkerLink", () => {
     expect(second.created.info().sessionId).toBe(id)
   })
 
+  test("start with a resume session id resumes exactly that session", async () => {
+    const { created, record } = await link()
+    const target = "11111111-2222-4333-8444-555555555555"
+    await created.start({ resumeSessionId: target })
+    await run(created, "hi")
+    const starts = (await records(record)).flatMap((item) => (item.type === "start" ? [item.argv] : []))
+    const argv = starts[0] ?? []
+    expect(argv[argv.indexOf("--resume") + 1]).toBe(target)
+    expect(created.info().sessionId).toBe(target)
+  })
+
+  test("a fresh start after a close creates a new session id", async () => {
+    const first = await link()
+    await first.created.start()
+    await run(first.created, "hi")
+    const id = first.created.info().sessionId
+    await first.created.close()
+    const second = await link({
+      entry: first.entry,
+      stateDir: path.join(first.dir, "state"),
+      cwd: first.dir,
+      env: { STUB_RECORD: first.record },
+    })
+    await second.created.start({ fresh: true, resumeSessionId: id })
+    await run(second.created, "again")
+    expect(second.created.info().sessionId).not.toBe(id)
+    expect(second.created.info().sessionId.length).toBeGreaterThan(0)
+  })
+
+  test("the result carries the shim timing", async () => {
+    const { created } = await link()
+    await created.start()
+    const events = await run(created, "hi")
+    const last = events.at(-1)
+    const timing = last?.type === "result" ? last.timing : undefined
+    expect(timing?.stdinAt).toBeGreaterThan(0)
+    expect(timing?.binaryFirstAt).toBeGreaterThanOrEqual(timing?.stdinAt ?? 0)
+  })
+
   test("cancel ends the turn with cancelled", async () => {
     const { created } = await link({ env: { STUB_RECORD: "/dev/null", STUB_FIXTURE: "stream-interrupt" } })
     await created.start()
