@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { buildAgentsDiagram, formatModelRef, linkPaths, parseModelRef } from "./agents-diagram-model"
+import { buildAgentsDiagram, mainAgentName, formatModelRef, linkPaths, parseModelRef } from "./agents-diagram-model"
 
 const providers = [
   {
@@ -198,5 +198,23 @@ describe("buildAgentsDiagram config model", () => {
 
   test("a config model on an unknown provider stays unavailable", () => {
     expect(buildAgentsDiagram({ ...base, configModel: "gone/x" }).main.status).toBe("unavailable")
+  })
+})
+
+describe("main agent name", () => {
+  test("prefers the agent named main, else the first primary, else main", () => {
+    expect(
+      mainAgentName([
+        { name: "x", mode: "primary" },
+        { name: "main", mode: "primary" },
+      ] as never),
+    ).toBe("main")
+    expect(
+      mainAgentName([
+        { name: "x", mode: "subagent" },
+        { name: "lead", mode: "primary" },
+      ] as never),
+    ).toBe("lead")
+    expect(mainAgentName([])).toBe("main")
   })
 })

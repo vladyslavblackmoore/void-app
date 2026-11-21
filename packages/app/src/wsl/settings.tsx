@@ -12,6 +12,8 @@ import { ServerHealthIndicator } from "@/components/server/server-row"
 import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
 import { ServerConnection } from "@/context/server"
+import { useVoidTheme } from "@/components/void/use-void-theme"
+import { resetButtonVariant } from "@/components/settings-v2/settings-void-model"
 import { showToast } from "@/utils/toast"
 import { DialogAddWslServer } from "./dialog-add-server"
 import { useWslServers } from "./context"
@@ -27,6 +29,7 @@ export function AddServerMenu(props: { onAddServer: () => void }) {
   const platform = usePlatform()
   const dialog = useDialog()
   const language = useLanguage()
+  const isVoid = useVoidTheme()
   const openAddWsl = () => {
     dialog.push(() => <DialogAddWslServer />)
   }
@@ -34,13 +37,13 @@ export function AddServerMenu(props: { onAddServer: () => void }) {
     <Show
       when={platform.wslServers}
       fallback={
-        <ButtonV2 variant="ghost-muted" icon="plus" onClick={props.onAddServer}>
+        <ButtonV2 variant={resetButtonVariant(isVoid())} icon="plus" onClick={props.onAddServer}>
           {language.t("dialog.server.add.button")}
         </ButtonV2>
       }
     >
       <MenuV2 gutter={4} modal={false} placement="bottom-end">
-        <MenuV2.Trigger as={ButtonV2} variant="ghost-muted" icon="plus">
+        <MenuV2.Trigger as={ButtonV2} variant={resetButtonVariant(isVoid())} icon="plus">
           {language.t("dialog.server.add.button")}
         </MenuV2.Trigger>
         <MenuV2.Portal>

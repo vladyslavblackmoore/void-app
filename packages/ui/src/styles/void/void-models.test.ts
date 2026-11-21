@@ -34,15 +34,19 @@ describe("void models screens", () => {
 
   test("the scroller keeps bottom and side padding so shadows and the last row are not clipped", () => {
     const rule = body('[data-nav="segmented"] .void-settings-content')
-    expect(rule).toContain("padding: 24px var(--void-shadow-bleed) var(--void-shadow-tail)")
+    expect(rule).toContain("padding: 0 var(--void-shadow-bleed) var(--void-shadow-tail)")
     expect(rule).toContain("margin: 0 calc(var(--void-shadow-bleed) * -1)")
     expect(rule).not.toMatch(/margin:\s*-/)
+    expect(rule).not.toContain("24px")
     expect(rule).not.toContain("height:")
   })
 
   test("the connect dialog is a lifted card with a shadow and no fixed empty height", () => {
     const rule = body(".void-connect-dialog")
-    expect(rule).toContain("background: var(--void-raised)")
+    expect(rule).toContain("background: var(--void-sheet)")
+    const tokens = readFileSync(new URL("tokens.css", dir), "utf8")
+    expect(tokens.match(/--void-sheet: /g)?.length).toBe(2)
+    expect(tokens).toContain("--void-sheet: var(--void-card)")
     expect(rule).toContain("border: 1px solid var(--void-border-strong)")
     expect(rule).toContain("box-shadow: var(--void-shadow)")
     expect(rule).toContain("height: auto !important")
@@ -64,7 +68,7 @@ describe("void models screens", () => {
   })
 
   test("the models list fills the canvas and uses a void search field", () => {
-    expect(body(".settings-v2-tab-body.settings-v2-models")).toContain("repeat(auto-fit, minmax(380px, 1fr))")
+    expect(body(".settings-v2-tab-body.settings-v2-models")).toContain("repeat(auto-fit, minmax(380px, 640px))")
     expect(body('[data-component="text-input-v2"]')).toContain("var(--void-control-h")
   })
 
@@ -73,6 +77,19 @@ describe("void models screens", () => {
       "background: var(--void-green)",
     )
     expect(body('[data-slot="switch-thumb"]')).toContain("width: 14px")
+  })
+
+  test("the default model panel starts level with the grid and lists options as radios", () => {
+    expect(body(".void-default-model")).toContain("top: 0")
+    expect(body(".void-default-model-option")).toContain("border-radius: var(--void-radius-control")
+    expect(body('.void-default-model-option[aria-checked="true"]')).toContain("background: var(--void-pill)")
+    expect(body(".void-default-model-options")).toContain("overflow-y: auto")
+    expect(body(".void-default-model-actions > *")).toContain("flex: 1")
+  })
+
+  test("provider card tags stay on one line", () => {
+    expect(body(".void-providers-layout .void-provider-card-tags")).toContain("flex-wrap: nowrap")
+    expect(body(".void-providers-layout .void-provider-tag")).toContain("text-overflow: ellipsis")
   })
 
   test("uses only void tokens for colours", () => {

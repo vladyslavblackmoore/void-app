@@ -5,7 +5,11 @@ import { useDialog } from "@opencode-ai/ui/context/dialog"
 import { ProviderIcon } from "@opencode-ai/ui/provider-icon"
 import { showToast } from "@/utils/toast"
 import { popularProviders, useProviders } from "@/hooks/use-providers"
-import { createMemo, type Accessor, type Component, For, Show } from "solid-js"
+import { createEffect, createMemo, createSignal, on, type Accessor, type Component, For, Show } from "solid-js"
+import { useQuery } from "@tanstack/solid-query"
+import { SegmentedControlItemV2, SegmentedControlV2 } from "@opencode-ai/ui/v2/segmented-control-v2"
+import { loadSpaceAgentsQuery } from "@/context/global-sync/bootstrap"
+import { buildAgentsDiagram, mainAgentName } from "../agents/agents-diagram-model"
 import { useLanguage } from "@/context/language"
 import { useServerProtocol, useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
@@ -16,7 +20,16 @@ import { useVoidTheme } from "../void/use-void-theme"
 import { providerLabel, providerSlug } from "../void/provider-branding"
 import { SettingsListV2 } from "./parts/list"
 import { providerCards, visibleModelTags, type ProviderCard } from "./provider-cards-model"
-import { defaultModelPanel } from "./default-model-panel-model"
+import {
+  defaultModelGroups,
+  defaultModelPanel,
+  defaultModelPatch,
+  effortOptions,
+  inheritedBy,
+  isDraftDirty,
+  selectDefaultModel,
+  type DefaultDraft,
+} from "./default-model-panel-model"
 import "./settings-v2.css"
 
 type ProviderSource = "env" | "api" | "config" | "custom"
@@ -155,58 +168,160 @@ export const SettingsProvidersV2: Component<{
     }),
   )
 
+  const choices = createMemo(() =>
+    providers.connected().map((item) => ({
+      id: item.id,
+      name: item.name,
+      models: Object.fromEntries(
+        Object.entries(item.models).map(([id, model]) => [id, { name: model.name, variants: model.variants }]),
+      ),
+    })),
+  )
+
+  const spaceAgents = useQuery(() => loadSpaceAgentsQuery(serverSdk().scope, serverSdk().client, serverSdk().protocol))
+  const mainName = createMemo(() => mainAgentName(spaceAgents.data ?? []))
+
   const panel = createMemo(() => {
     const config = serverSync().data.config
     return defaultModelPanel({
       model: config.model,
-      variant: config.agent?.main?.variant,
-      providers: providers.connected().map((item) => ({
-        id: item.id,
-        name: item.name,
-        models: Object.fromEntries(Object.entries(item.models).map(([id, model]) => [id, { name: model.name }])),
-      })),
+      variant: config.agent?.[mainName()]?.variant,
+      providers: choices(),
       isVoid: true,
     })
   })
+
+  const groups = createMemo(() => defaultModelGroups(choices(), true))
+  const saved = createMemo<DefaultDraft>(() => {
+    const config = serverSync().data.config
+    return { model: config.model || undefined, variant: config.agent?.[mainName()]?.variant || undefined }
+  })
+  const [draft, setDraft] = createSignal<DefaultDraft>(saved())
+  createEffect(on(saved, (value) => setDraft(value), { defer: true }))
+  const efforts = createMemo(() => effortOptions(groups(), draft().model))
+  const dirty = createMemo(() => isDraftDirty(draft(), saved()))
+  const modelCount = createMemo(() => groups().reduce((total, group) => total + group.models.length, 0))
+  const [saving, setSaving] = createSignal(false)
+
+  const inherited = createMemo(() => {
+    const agents = spaceAgents.data
+    if (!agents) return undefined
+    const diagram = buildAgentsDiagram({
+      agents,
+      config: serverSync().data.config.agent,
+      providers: providers.connected(),
+      configModel: serverSync().data.config.model,
+    })
+    return inheritedBy([diagram.main, ...diagram.subagents])
+  })
+
+  const saveDefault = () => {
+    const patch = defaultModelPatch(draft(), mainName())
+    if (!patch) return
+    setSaving(true)
+    serverSync()
+      .updateConfig(patch)
+      .catch((err: unknown) => {
+        showToast({
+          title: language.t("common.requestFailed"),
+          description: err instanceof Error ? err.message : String(err),
+        })
+      })
+      .finally(() => setSaving(false))
+  }
 
   const DefaultModelPanel = () => (
     <aside class="void-default-model" data-component="void-default-model" data-state={panel().state}>
       <h2 class="void-default-model-title">{language.t("void.models.default.title")}</h2>
       <p class="void-default-model-meta">{language.t("void.models.default.meta")}</p>
-      <Show when={panel()} keyed>
+      <div class="void-default-model-label">
+        <span>{language.t("void.models.default.model")}</span>
+        <small>{language.t("void.models.default.options", { count: modelCount() })}</small>
+      </div>
+      <Show
+        when={groups().length > 0}
+        fallback={<span class="void-default-model-empty">{language.t("void.models.default.noModels")}</span>}
+      >
+        <div class="void-default-model-options" role="radiogroup" aria-label={language.t("void.models.default.model")}>
+          <For each={groups()}>
+            {(group) => (
+              <>
+                <div class="void-default-model-group">{group.name}</div>
+                <For each={group.models}>
+                  {(option) => (
+                    <button
+                      type="button"
+                      role="radio"
+                      class="void-default-model-option"
+                      aria-checked={draft().model === option.ref}
+                      onClick={() => setDraft((current) => selectDefaultModel(current, option.ref, groups()))}
+                    >
+                      <span class="void-default-model-radio" aria-hidden="true" />
+                      <span class="void-default-model-name">{option.name}</span>
+                      <Show when={option.variants.length > 0}>
+                        <span class="void-default-model-provider">
+                          {language.t("agents.editor.levels", { count: option.variants.length })}
+                        </span>
+                      </Show>
+                    </button>
+                  )}
+                </For>
+              </>
+            )}
+          </For>
+        </div>
+      </Show>
+      <Show when={panel().state === "unavailable"}>
+        <p class="void-default-model-warn" role="status">
+          {language.t("void.models.default.unavailable")}
+        </p>
+      </Show>
+      <div class="void-default-model-label">
+        <span>{language.t("void.models.default.effort")}</span>
+        <small>{language.t("void.models.default.effort.hint")}</small>
+      </div>
+      <Show
+        when={efforts().length > 0}
+        fallback={<span class="void-default-model-empty">{language.t("void.models.default.effort.none")}</span>}
+      >
+        <SegmentedControlV2
+          class="segmented-control-v2--full-width"
+          aria-label={language.t("void.models.default.effort")}
+          value={draft().variant ?? null}
+          allowDeselect
+          onChange={(next) => setDraft((current) => ({ ...current, variant: next ?? undefined }))}
+        >
+          <For each={efforts()}>
+            {(variant) => <SegmentedControlItemV2 value={variant}>{variant}</SegmentedControlItemV2>}
+          </For>
+        </SegmentedControlV2>
+      </Show>
+      <Show when={inherited()}>
         {(value) => (
-          <dl class="void-default-model-fields">
-            <div class="void-default-model-field">
-              <dt>{language.t("void.models.default.model")}</dt>
-              <dd>
-                <Show
-                  when={value.state !== "unset"}
-                  fallback={<span class="void-default-model-empty">{language.t("void.models.default.unset")}</span>}
-                >
-                  <span class="void-default-model-name">{value.state !== "unset" ? value.modelName : ""}</span>
-                  <span class="void-default-model-provider">{value.state !== "unset" ? value.providerName : ""}</span>
-                </Show>
-              </dd>
+          <>
+            <div class="void-default-model-label">
+              <span>{language.t("void.models.default.inherited")}</span>
+              <small>{language.t("void.models.default.inherited.hint")}</small>
             </div>
-            <div class="void-default-model-field">
-              <dt>{language.t("void.models.default.effort")}</dt>
-              <dd>
-                <Show
-                  when={value.state !== "unset" && value.effort}
-                  fallback={<span class="void-default-model-empty">{language.t("void.models.default.unset")}</span>}
-                >
-                  <span class="void-default-model-name">{value.state !== "unset" ? value.effort : ""}</span>
-                </Show>
-              </dd>
+            <div class="void-default-model-inherited">
+              <For each={value().names}>{(name) => <span class="void-default-model-chip">{name}</span>}</For>
+              <Show when={value().own > 0}>
+                <span class="void-default-model-chip" data-muted="">
+                  {language.t("void.models.default.inherited.own", { count: value().own })}
+                </span>
+              </Show>
             </div>
-            <Show when={value.state === "unavailable"}>
-              <p class="void-default-model-warn" role="status">
-                {language.t("void.models.default.unavailable")}
-              </p>
-            </Show>
-          </dl>
+          </>
         )}
       </Show>
+      <div class="void-default-model-actions">
+        <ButtonV2 variant="outline" disabled={!dirty() || saving()} onClick={() => setDraft(saved())}>
+          {language.t("common.reset")}
+        </ButtonV2>
+        <ButtonV2 variant="contrast" disabled={!dirty() || !draft().model || saving()} onClick={saveDefault}>
+          {language.t("common.save")}
+        </ButtonV2>
+      </div>
     </aside>
   )
 
@@ -293,7 +408,7 @@ export const SettingsProvidersV2: Component<{
             </div>
             <p class="void-provider-card-line">{language.t("settings.providers.custom.description")}</p>
             <div class="void-provider-card-foot">
-              <span class="void-provider-card-id">custom</span>
+              <span class="void-provider-card-id">{language.t("void.models.card.custom")}</span>
               <ButtonV2
                 size="normal"
                 variant="neutral"
