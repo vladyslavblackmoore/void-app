@@ -1,19 +1,5 @@
-html[data-theme="void"] {
-  --void-palette-scrim: rgba(5, 6, 8, 0.62);
-}
-
-html[data-theme="void"][data-color-scheme="light"] {
-  --void-palette-scrim: rgba(226, 230, 240, 0.55);
-}
-
-html[data-theme="void"] [data-component="dialog-overlay"]:has(+ [data-dialog-layer] .command-palette-v2) {
-  background-color: var(--void-palette-scrim);
-}
-
 html[data-theme="void"] [data-component="dialog-v2"]:has(.command-palette-v2) [data-slot="dialog-container"] {
-  background: var(--void-glass);
-  -webkit-backdrop-filter: blur(var(--void-blur));
-  backdrop-filter: blur(var(--void-blur));
+  background: var(--void-menu-bg);
   border: 1px solid var(--void-border);
   border-radius: var(--void-radius-card);
   box-shadow: var(--void-shadow);
