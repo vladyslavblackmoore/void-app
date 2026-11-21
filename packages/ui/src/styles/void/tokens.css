@@ -68,6 +68,7 @@ html[data-theme="void"] {
   --void-model-tier-2: #6DB5FF;
   --void-model-tier-3: #FEFA3D;
   --void-model-tier-local: #3EED73;
+  --void-model-tier-other: #C9B8FF;
 
   --void-radius-control: 14px;
   --void-radius-card: 20px;
