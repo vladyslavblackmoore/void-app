@@ -61,11 +61,17 @@ describe("void settings css", () => {
     expect(path).toContain("color: var(--void-text-1)")
   })
 
-  test("the scroller fades its top and bottom edges instead of clipping hard", () => {
+  test("the scroller fades an edge only where content scrolls under it", () => {
     const scroller = block(content)
     expect(scroller).toContain("mask-image: linear-gradient(")
-    expect(scroller).toContain("transparent 0")
-    expect(scroller).toContain("transparent 100%")
+    expect(scroller).toContain("var(--void-fade-top)")
+    expect(scroller).toContain("var(--void-fade-bottom)")
+    expect(scroller).toContain("--void-fade-top: 0px")
+    expect(scroller).toContain("--void-fade-bottom: 0px")
+    expect(scroller).toContain("animation-timeline: scroll(self block)")
+    expect(css).toContain("@property --void-fade-top")
+    expect(css).toContain("@keyframes void-fade-top")
+    expect(css).toContain("@keyframes void-fade-bottom")
   })
 
   test("the search field is a void input", () => {
