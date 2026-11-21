@@ -9,7 +9,6 @@ import { ProviderIcon } from "@opencode-ai/ui/provider-icon"
 import { Spinner } from "@opencode-ai/ui/spinner"
 import { Tag } from "@opencode-ai/ui/tag"
 import { TextField } from "@opencode-ai/ui/text-field"
-import { ButtonV2 } from "@opencode-ai/ui/v2/button-v2"
 import { DialogBody, DialogHeader, DialogTitle, DialogV2 } from "@opencode-ai/ui/v2/dialog-v2"
 import { TextInputV2 } from "@opencode-ai/ui/v2/text-input-v2"
 import { showToast } from "@/utils/toast"
@@ -39,6 +38,7 @@ import { popularProviders, useProviders } from "@/hooks/use-providers"
 import { CustomProviderForm } from "./dialog-custom-provider"
 import { decode64 } from "@/utils/base64"
 import { connectCopyKey, providerLabel } from "./void/provider-branding"
+import { ConnectActions } from "./connect-actions"
 import { providerConnectStatus, providerConnectStep, providerConnectSteps } from "./void/provider-connect-steps"
 import { useVoidTheme } from "./void/use-void-theme"
 
@@ -86,6 +86,11 @@ export const DialogConnectProvider: Component<{
       <Switch>
         <Match when={controller.selected() === CUSTOM_ID}>
           <CustomProviderForm autofocus={!newLayout()} />
+          <Show when={newLayout()}>
+            <div class="px-3 pt-3">
+              <ConnectActions cancelLabel={language.t("common.cancel")} onCancel={reset} />
+            </div>
+          </Show>
         </Match>
         <Match when={controller.selected() && controller.selected() !== CUSTOM_ID ? controller.selected() : undefined}>
           {(provider) => (
@@ -136,19 +141,7 @@ export const DialogConnectProvider: Component<{
         class="[font-family:var(--v2-font-family-sans)] [&_[data-slot=dialog-header]]:!px-5 [&_[data-slot=dialog-header-title]]:!text-[15px] [&_[data-slot=dialog-header-title]]:!tracking-[-0.13px]"
       >
         <DialogHeader closeLabel={language.t("common.close")}>
-          <Show
-            when={controller.selected()}
-            fallback={<DialogTitle>{language.t("command.provider.connect")}</DialogTitle>}
-          >
-            <button
-              type="button"
-              class="flex size-5 items-center justify-center rounded-sm text-v2-icon-icon-muted hover:bg-v2-overlay-simple-overlay-hover focus-visible:bg-v2-overlay-simple-overlay-hover focus-visible:outline-none"
-              onClick={() => back.current()}
-              aria-label={language.t("common.goBack")}
-            >
-              <Icon name="arrow-left" size="small" />
-            </button>
-          </Show>
+          <DialogTitle>{language.t("command.provider.connect")}</DialogTitle>
         </DialogHeader>
         <Show when={isVoid()}>
           <ol
@@ -812,6 +805,9 @@ function ProviderConnection(props: {
               }}
             </For>
           </div>
+          <div class="px-3 pt-3">
+            <ConnectActions cancelLabel={language.t("common.cancel")} onCancel={goBack} />
+          </div>
         </div>
       )
 
@@ -929,9 +925,11 @@ function ProviderConnection(props: {
                 </div>
               )}
             </Show>
-            <ButtonV2 type="submit" variant="contrast" data-action="provider-connect-submit">
-              {language.t("common.continue")}
-            </ButtonV2>
+            <ConnectActions
+              cancelLabel={language.t("common.cancel")}
+              continueLabel={language.t("common.continue")}
+              onCancel={goBack}
+            />
           </form>
         </div>
       )
@@ -1054,9 +1052,11 @@ function ProviderConnection(props: {
                 </div>
               )}
             </Show>
-            <ButtonV2 type="submit" variant="contrast">
-              {language.t("common.continue")}
-            </ButtonV2>
+            <ConnectActions
+              cancelLabel={language.t("common.cancel")}
+              continueLabel={language.t("common.continue")}
+              onCancel={goBack}
+            />
           </form>
         </div>
       )
@@ -1154,6 +1154,9 @@ function ProviderConnection(props: {
           <Spinner />
           <span>{language.t("provider.connect.status.waiting")}</span>
         </div>
+        <Show when={newLayout()}>
+          <ConnectActions cancelLabel={language.t("common.cancel")} onCancel={goBack} />
+        </Show>
       </div>
     )
   }
