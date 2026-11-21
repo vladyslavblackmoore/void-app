@@ -1287,6 +1287,7 @@ export const dict: Record<string, string> = {
   "void.sheet.tab.chat": "Chat",
   "void.sheet.tab.tasks": "Tasks",
   "void.sheet.tasks.empty": "No tasks yet",
+  "void.chat.hint": "Start a session by asking anything below",
   "void.sessions.empty.title": "No sessions yet",
   "void.sessions.empty.text": "Sessions you start in this space appear here.",
   "void.sessions.empty.searchTitle": "No matching sessions",

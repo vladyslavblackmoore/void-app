@@ -153,3 +153,21 @@ describe("void canvas glow in light", () => {
     expect(/--void-glow-blue: rgba\([^)]*0\.\d+\)/.test(tokens.slice(0, tokens.indexOf('data-color-scheme="light"] {')))).toBe(true)
   })
 })
+
+describe("void empty chat hint", () => {
+  test("renders a centred hint above the dock in the empty sheet", () => {
+    const view = readFileSync(new URL("../../../../app/src/pages/new-session/new-session-view.tsx", dir), "utf8")
+    expect(view).toContain('data-slot="new-session-hint"')
+    expect(view).toContain("void.chat.hint")
+    expect(view.indexOf('data-slot="new-session-hint"')).toBeGreaterThan(view.indexOf('data-slot="new-session-dock"'))
+    const css = readFileSync(new URL("chat.css", dir), "utf8")
+    const rule = rules().find((item) =>
+      item.selectors.some((selector) =>
+        selector.endsWith('[data-slot="void-session-main"] [data-slot="new-session-hint"]'),
+      ),
+    )
+    expect(css).toContain('[data-slot="new-session-hint"]')
+    expect(rule?.body).toContain("justify-content: center")
+    expect(rule?.body).toContain("pointer-events: none")
+  })
+})

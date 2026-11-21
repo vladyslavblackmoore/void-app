@@ -33,6 +33,7 @@ export function NewSessionView(props: {
   workspace: NewSessionWorkspaceController
 }) {
   const voidTheme = useVoidTheme()
+  const language = useLanguage()
   return (
     <div class="@container relative flex flex-col min-h-0 h-full flex-1">
       <div
@@ -72,6 +73,9 @@ export function NewSessionView(props: {
             </div>
           </div>
         </div>
+        <Show when={voidTheme()}>
+          <div data-slot="new-session-hint">{language.t("void.chat.hint")}</div>
+        </Show>
         <Show when={!voidTheme()}>
           <ProviderTip />
         </Show>

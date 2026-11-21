@@ -188,6 +188,18 @@ html[data-theme="void"] [data-slot="void-session-main"] [data-slot="new-session-
   bottom: 26px;
 }
 
+html[data-theme="void"] [data-slot="void-session-main"] [data-slot="new-session-hint"] {
+  position: absolute;
+  inset: 0 0 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 24px;
+  color: var(--void-text-2);
+  font-size: var(--void-fs-small);
+  pointer-events: none;
+}
+
 html[data-theme="void"] [data-slot="void-session-main"] [data-timeline-scroll] .scroll-view__viewport {
   display: flex;
   flex-direction: column;
