@@ -118,10 +118,16 @@ describe("void models screens", () => {
     expect(opacity).toBeLessThanOrEqual(0.45)
   })
 
-  test("the default model panel stretches to the bottom of the providers grid", () => {
-    expect(body(".void-providers-layout")).toContain("align-items: stretch")
-    expect(body(".void-default-model")).not.toContain("position: sticky")
-    expect(body(".void-providers-layout .void-provider-grid")).toContain("align-self: start")
+  test("the default model panel is sticky, sized to the visible area, with its actions pinned at the bottom", () => {
+    const panel = body(".void-default-model")
+    expect(panel).toContain("position: sticky")
+    expect(panel).toContain("top: 0")
+    expect(panel).toContain("height: calc(100vh - 176px - var(--void-gutter))")
+    expect(panel).toContain("align-self: start")
+    expect(body(".void-providers-layout")).not.toContain("align-items: stretch")
+    expect(body(".void-default-model-options")).toContain("flex: 0 1 auto")
+    expect(body(".void-default-model-options")).toContain("min-height: 96px")
+    expect(body(".void-default-model-options")).not.toContain("max-height")
     expect(body(".void-default-model-actions")).toContain("margin-top: auto")
   })
 })
