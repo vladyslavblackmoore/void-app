@@ -9,6 +9,7 @@
 @import "@opencode-ai/ui/styles/void/segmented.css";
 @import "@opencode-ai/ui/styles/void/glass.css";
 @import "@opencode-ai/ui/styles/void/canvas.css";
+@import "@opencode-ai/ui/styles/void/dock.css";
 
 @font-face {
   font-family: "JetBrainsMono Nerd Font Mono";
