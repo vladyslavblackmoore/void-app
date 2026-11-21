@@ -14,6 +14,7 @@ const sources = [
   "../../../../app/src/pages/session.tsx",
   "../../../../app/src/pages/session/timeline/message-timeline.tsx",
   "../../../../app/src/pages/new-session/new-session-view.tsx",
+  "../../../../app/src/pages/new-session.tsx",
 ]
 
 function rules() {
@@ -101,5 +102,17 @@ describe("void chat messages", () => {
     const list = readFileSync(new URL("../../../../app/src/pages/session/void-session-list.tsx", dir), "utf8")
     expect(list).toContain('data-slot="void-sheet-search-wrap"')
     expect(list).toContain("<circle")
+  })
+
+  test("anchors the empty chat dock to the bottom of the thread column", () => {
+    const rule = rules().find((item) =>
+      item.selectors.some((selector) => selector.endsWith('[data-slot="void-session-main"] [data-slot="new-session-dock"]')),
+    )
+    expect(rule?.body).toContain("top: auto")
+    expect(rule?.body).toContain("bottom:")
+    const page = readFileSync(new URL("../../../../app/src/pages/new-session.tsx", dir), "utf8")
+    expect(page).toContain("VoidSessionList")
+    expect(page).toContain("VoidRunDetails")
+    expect(page).toContain('data-slot="void-session-main"')
   })
 })
