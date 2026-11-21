@@ -109,9 +109,9 @@ async function ensureConnected(check) {
   if (!(await check())) throw createAuthenticationError({ message: notConnected })
 }
 
-export function wrapModel(build, check) {
+export function wrapModel(build, check, key = "subscription") {
   const model = build()
-  const call = (options) => build(options?.providerOptions?.subscription?.effort)
+  const call = (options) => build(options?.providerOptions?.[key]?.effort)
   return new Proxy(model, {
     get(target, key) {
       if (key === "doStream")
@@ -141,10 +141,11 @@ export function wrapModel(build, check) {
 
 export function createSubscription(options = {}, factory = createClaudeCode) {
   const defaultSettings = options.defaultSettings ?? {}
+  const key = options.name ?? "subscription"
   const base = factory({ defaultSettings })
   const check = statusCheck(defaultSettings.pathToClaudeCodeExecutable, defaultSettings.env ?? {})
   const model = (modelId, settings) =>
-    wrapModel((effort) => base.languageModel(modelId, effort ? { ...settings, effort } : settings), check)
+    wrapModel((effort) => base.languageModel(modelId, effort ? { ...settings, effort } : settings), check, key)
   const provider = (modelId, settings) => model(modelId, settings)
   return Object.assign(provider, base, { languageModel: model, chat: model, specificationVersion: "v3" })
 }

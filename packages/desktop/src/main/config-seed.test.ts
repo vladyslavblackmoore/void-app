@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { parse } from "jsonc-parser"
+import { applyEdits, modify, parse } from "jsonc-parser"
 import { seedConfig } from "./config-seed"
 
 const wrapper = "export function createSubscription() {}\n"
@@ -29,21 +29,25 @@ const config = `{
 `
 
 let dir = ""
+let data = ""
 
 beforeEach(async () => {
   dir = await mkdtemp(join(tmpdir(), "void-config-"))
+  data = await mkdtemp(join(tmpdir(), "void-config-data-"))
 })
 
 afterEach(async () => {
   await rm(dir, { recursive: true, force: true })
+  await rm(data, { recursive: true, force: true })
 })
 
 const read = async () => readFile(join(dir, "opencode.jsonc"), "utf8")
+const remove = (text: string, path: string[]) => applyEdits(text, modify(text, path, undefined, {}))
 const settings = async () => parse(await read()).provider.subscription.options.defaultSettings
 
 describe("seedConfig wrapper", () => {
   test("writes the bundled wrapper when it is missing", async () => {
-    await seedConfig(dir, wrapper)
+    await seedConfig(dir, data, wrapper)
 
     expect(await readFile(join(dir, "provider", "subscription.mjs"), "utf8")).toBe(wrapper)
   })
@@ -52,7 +56,7 @@ describe("seedConfig wrapper", () => {
     await mkdir(join(dir, "provider"), { recursive: true })
     await writeFile(join(dir, "provider", "subscription.mjs"), "old")
 
-    await seedConfig(dir, wrapper)
+    await seedConfig(dir, data, wrapper)
 
     expect(await readFile(join(dir, "provider", "subscription.mjs"), "utf8")).toBe(wrapper)
   })
@@ -63,7 +67,7 @@ describe("seedConfig wrapper", () => {
     const before = (await stat(join(dir, "provider", "subscription.mjs"))).mtimeMs
     await Bun.sleep(20)
 
-    await seedConfig(dir, wrapper)
+    await seedConfig(dir, data, wrapper)
 
     expect((await stat(join(dir, "provider", "subscription.mjs"))).mtimeMs).toBe(before)
   })
@@ -73,7 +77,7 @@ describe("seedConfig opencode.jsonc", () => {
   test("lets the subscription run tools without asking when the settings lack a mode", async () => {
     await writeFile(join(dir, "opencode.jsonc"), config)
 
-    await seedConfig(dir, wrapper)
+    await seedConfig(dir, data, wrapper)
 
     expect(await settings()).toEqual({
       settingSources: [],
@@ -88,7 +92,7 @@ describe("seedConfig opencode.jsonc", () => {
       config.replace('"settingSources": []', '"settingSources": [],\n          "permissionMode": "default"'),
     )
 
-    await seedConfig(dir, wrapper)
+    await seedConfig(dir, data, wrapper)
 
     const text = await read()
     expect(text).toContain("// providers the app shows")
@@ -102,20 +106,20 @@ describe("seedConfig opencode.jsonc", () => {
 
   test("does not rewrite a config that has every key", async () => {
     await writeFile(join(dir, "opencode.jsonc"), config)
-    await seedConfig(dir, wrapper)
+    await seedConfig(dir, data, wrapper)
     const seeded = await read()
 
-    await seedConfig(dir, wrapper)
+    await seedConfig(dir, data, wrapper)
 
     expect(await read()).toBe(seeded)
   })
 
   test("leaves a config without the subscription provider and creates none", async () => {
-    await seedConfig(dir, wrapper)
+    await seedConfig(dir, data, wrapper)
     expect(await Bun.file(join(dir, "opencode.jsonc")).exists()).toBe(false)
 
     await writeFile(join(dir, "opencode.jsonc"), '{ "shell": "zsh" }')
-    await seedConfig(dir, wrapper)
+    await seedConfig(dir, data, wrapper)
     expect(await read()).toBe('{ "shell": "zsh" }')
   })
 })
@@ -131,22 +135,44 @@ describe("seedConfig agents", () => {
   test("puts main on a connected provider with tool calls and the worker on the subscription", async () => {
     await writeFile(join(dir, "opencode.jsonc"), config)
 
-    await seedConfig(dir, wrapper, await auth(["subscription", "openai"]))
+    await seedConfig(dir, data, wrapper, await auth(["subscription", "openai"]))
 
     expect(await agents()).toEqual({
       main: { model: "openai/gpt-6.2-sol", variant: "medium" },
-      worker: { model: "subscription/sonnet", variant: "high" },
+      worker: { model: "subscription/sonnet", variant: "medium" },
     })
   })
 
-  test("keeps main on the subscription when no provider with tool calls is connected", async () => {
+  test("prefers anthropic, then openai, google and github-copilot for main", async () => {
+    await writeFile(join(dir, "opencode.jsonc"), config)
+    await seedConfig(dir, data, wrapper, await auth(["github-copilot", "google", "openai", "anthropic"]))
+    expect((await agents()).main).toEqual({ model: "anthropic/claude-sonnet-5-5", variant: "medium" })
+
+    await rm(join(data, "main-seeded-1"))
+    await writeFile(join(dir, "opencode.jsonc"), config)
+    await seedConfig(dir, data, wrapper, await auth(["github-copilot", "google"]))
+    expect((await agents()).main).toEqual({ model: "google/gemini-4-neon" })
+
+    await rm(join(data, "main-seeded-1"))
+    await writeFile(join(dir, "opencode.jsonc"), config)
+    await seedConfig(dir, data, wrapper, await auth(["subscription", "github-copilot"]))
+    expect((await agents()).main).toEqual({ model: "github-copilot/gpt-6.2-sol", variant: "medium" })
+  })
+
+  test("leaves main unset until a provider with tool calls is connected", async () => {
     await writeFile(join(dir, "opencode.jsonc"), config)
 
-    await seedConfig(dir, wrapper, join(dir, "missing.json"))
+    await seedConfig(dir, data, wrapper, await auth(["subscription"]))
+
+    expect(await agents()).toEqual({ worker: { model: "subscription/sonnet", variant: "medium" } })
+    expect(await Bun.file(join(data, "main-seeded-1")).exists()).toBe(false)
+
+    await writeFile(join(dir, "opencode.jsonc"), remove(await read(), ["agent", "worker", "variant"]))
+    await seedConfig(dir, data, wrapper, await auth(["subscription", "openai"]))
 
     expect(await agents()).toEqual({
-      main: { model: "subscription/opus", variant: "medium" },
-      worker: { model: "subscription/sonnet", variant: "high" },
+      main: { model: "openai/gpt-6.2-sol", variant: "medium" },
+      worker: { model: "subscription/sonnet" },
     })
   })
 
@@ -159,7 +185,7 @@ describe("seedConfig agents", () => {
       ),
     )
 
-    await seedConfig(dir, wrapper, await auth(["openai"]))
+    await seedConfig(dir, data, wrapper, await auth(["openai"]))
 
     expect(await agents()).toEqual({
       main: { model: "anthropic/x", steps: 3 },
@@ -175,7 +201,7 @@ describe("seedConfig effort variants", () => {
   test("gives every subscription model the effort variants", async () => {
     await writeFile(join(dir, "opencode.jsonc"), config)
 
-    await seedConfig(dir, wrapper)
+    await seedConfig(dir, data, wrapper)
 
     expect(await models()).toEqual({
       opus: { name: "Opus", variants: efforts },
@@ -192,8 +218,50 @@ describe("seedConfig effort variants", () => {
       ),
     )
 
-    await seedConfig(dir, wrapper)
+    await seedConfig(dir, data, wrapper)
 
     expect((await models()).sonnet.variants).toEqual({ ...efforts, high: { effort: "max" }, fast: {} })
+  })
+})
+
+describe("seedConfig once", () => {
+  test("keeps keys the owner removed on later launches", async () => {
+    await writeFile(join(dir, "opencode.jsonc"), config)
+    await seedConfig(dir, data, wrapper, join(dir, "missing.json"))
+    expect(await Bun.file(join(data, "config-seeded-1")).exists()).toBe(true)
+
+    const removed = [
+      ["agent", "worker", "model"],
+      ["provider", "subscription", "models", "opus", "variants", "max"],
+      ["provider", "subscription", "options", "defaultSettings", "permissionMode"],
+    ].reduce(remove, await read())
+    await writeFile(join(dir, "opencode.jsonc"), removed)
+
+    await seedConfig(dir, data, wrapper, join(dir, "missing.json"))
+
+    expect(await read()).toBe(removed)
+  })
+
+  test("skips a malformed config and seeds it once it parses", async () => {
+    const broken = config.replace('"mcp":', '"mcp"')
+    await writeFile(join(dir, "opencode.jsonc"), broken)
+
+    await seedConfig(dir, data, wrapper)
+
+    expect(await read()).toBe(broken)
+    expect(await Bun.file(join(data, "config-seeded-1")).exists()).toBe(false)
+
+    await writeFile(join(dir, "opencode.jsonc"), config)
+    await seedConfig(dir, data, wrapper)
+
+    expect((await settings()).permissionMode).toBe("bypassPermissions")
+  })
+
+  test("writes no stamp while the subscription provider is missing", async () => {
+    await writeFile(join(dir, "opencode.jsonc"), '{ "shell": "zsh" }')
+
+    await seedConfig(dir, data, wrapper)
+
+    expect(await Bun.file(join(data, "config-seeded-1")).exists()).toBe(false)
   })
 })

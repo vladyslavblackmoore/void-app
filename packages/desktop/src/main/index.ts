@@ -368,6 +368,7 @@ const main = Effect.gen(function* () {
     yield* Effect.promise(() =>
       seedConfig(
         configDir,
+        app.getPath("userData"),
         subscriptionWrapper,
         join(process.env.XDG_DATA_HOME ?? voidAppEnv(VOID_HOME, {}).XDG_DATA_HOME, "opencode", "auth.json"),
       ).catch((error) => logger.warn("failed to seed config", error)),
