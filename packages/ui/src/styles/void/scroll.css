@@ -12,3 +12,8 @@ html[data-theme="void"] .void-settings-content > * {
 html[data-theme="void"] [data-component="void-hub"] {
   padding-bottom: var(--void-shadow-tail);
 }
+
+html[data-theme="void"] .void-settings-nav {
+  position: relative;
+  z-index: 1;
+}

@@ -34,15 +34,32 @@ describe("void models screens", () => {
 
   test("the scroller keeps bottom and side padding so shadows and the last row are not clipped", () => {
     const rule = body('[data-nav="segmented"] .void-settings-content')
-    expect(rule).toContain("padding: 8px 24px 64px")
-    expect(rule).toContain("margin: -8px -24px 0")
+    expect(rule).toContain("padding: 24px var(--void-shadow-bleed) var(--void-shadow-tail)")
+    expect(rule).toContain("margin: -24px calc(var(--void-shadow-bleed) * -1) 0")
+    expect(rule).toContain("height: calc(100% + 24px)")
   })
 
   test("the connect dialog is a lifted card with a shadow and no fixed empty height", () => {
     const rule = body(".void-connect-dialog")
-    expect(rule).toContain("background: var(--void-card)")
+    expect(rule).toContain("background: var(--void-raised)")
+    expect(rule).toContain("border: 1px solid var(--void-border-strong)")
     expect(rule).toContain("box-shadow: var(--void-shadow)")
     expect(rule).toContain("height: auto !important")
+  })
+
+  test("the connect dialog container has no fixed utility height that beats the stylesheet", () => {
+    const source = readFileSync(
+      new URL("../../../../app/src/components/dialog-connect-provider.tsx", import.meta.url),
+      "utf8",
+    )
+    expect(source).toContain("void-connect-dialog")
+    expect(source).not.toMatch(/containerClass="[^"]*!h-\[/)
+  })
+
+  test("a scrim dims the page behind dialogs and is a token in both schemes", () => {
+    expect(body('[data-component="dialog-overlay"]')).toContain("background-color: var(--void-scrim)")
+    const tokens = readFileSync(new URL("tokens.css", dir), "utf8")
+    expect(tokens.match(/--void-scrim: /g)?.length).toBe(2)
   })
 
   test("the models list fills the canvas and uses a void search field", () => {

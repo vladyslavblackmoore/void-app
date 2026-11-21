@@ -33,6 +33,12 @@ describe("void scroll containers", () => {
     expect(block("scroll.css", `${prefix}.void-settings-content > *`)).toContain("pointer-events: auto")
   })
 
+  test("the settings nav paints above the scroller so card shadows are not cut on it", () => {
+    const body = block("scroll.css", `${prefix}.void-settings-nav`)
+    expect(body).toContain("position: relative")
+    expect(body).toContain("z-index: 1")
+  })
+
   test("the hub scroller keeps room below the last card", () => {
     expect(block("scroll.css", `${prefix}[data-component="void-hub"]`)).toContain(
       "padding-bottom: var(--void-shadow-tail)",

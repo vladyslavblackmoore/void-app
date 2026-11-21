@@ -1,6 +1,7 @@
 html[data-theme="void"] .void-settings-page[data-nav="segmented"] .void-settings-content {
-  margin: -8px -24px 0;
-  padding: 8px 24px 64px;
+  height: calc(100% + 24px);
+  margin: -24px calc(var(--void-shadow-bleed) * -1) 0;
+  padding: 24px var(--void-shadow-bleed) var(--void-shadow-tail);
 }
 
 html[data-theme="void"] .void-providers-layout {
@@ -17,7 +18,7 @@ html[data-theme="void"] .void-providers-layout .void-provider-grid {
 
 html[data-theme="void"] .void-default-model {
   position: sticky;
-  top: 0;
+  top: 24px;
   display: flex;
   box-sizing: border-box;
   flex-direction: column;
@@ -175,10 +176,14 @@ html[data-theme="void"] .void-settings-page[data-nav="segmented"] [data-componen
 html[data-theme="void"] [data-component="dialog-v2"] .void-connect-dialog {
   height: auto !important;
   max-height: min(calc(100vh - 16px), 560px);
-  background: var(--void-card);
-  border: 1px solid var(--void-border);
+  background: var(--void-raised);
+  border: 1px solid var(--void-border-strong);
   border-radius: var(--void-radius-sheet, 26px);
   box-shadow: var(--void-shadow);
+}
+
+html[data-theme="void"] [data-component="dialog-overlay"] {
+  background-color: var(--void-scrim);
 }
 
 html[data-theme="void"] [data-component="dialog-v2"] .void-connect-dialog:has(.void-connect-steps[data-step="provider"]) {
