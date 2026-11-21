@@ -7,9 +7,9 @@ import { Accessibility, AutoScroller, Feedback, PointerActivationConstraints } f
 import { RestrictToHorizontalAxis } from "@dnd-kit/abstract/modifiers"
 import { RestrictToElement } from "@dnd-kit/dom/modifiers"
 import { arrayMove } from "@dnd-kit/helpers"
-import { tabHref, tabKey, type SessionTab, type Tab } from "@/context/tabs"
+import { settingsTabs, tabHref, tabKey, type SessionTab, type StoredTab, type Tab } from "@/context/tabs"
 import { ServerConnection } from "@/context/server"
-import { DraftTabItem, TabNavItem } from "@/components/titlebar-tab-nav"
+import { DraftTabItem, SettingsTabItem, TabNavItem } from "@/components/titlebar-tab-nav"
 import { useGlobal, type ServerCtx } from "@/context/global"
 import { useLanguage } from "@/context/language"
 import { useCommand } from "@/context/command"
@@ -168,7 +168,7 @@ function SessionTabEntry(props: {
 }
 
 function DraftTabSlot(props: {
-  tab: Extract<Tab, { type: "draft" }>
+  tab: Extract<StoredTab, { type: "draft" }>
   id: string
   index: () => number
   active: () => boolean
@@ -210,7 +210,7 @@ function DraftTabSlot(props: {
 }
 
 export function TitlebarTabStrip(props: {
-  tabs: Tab[]
+  tabs: StoredTab[]
   currentTab: () => Tab | undefined
   forceTruncate: boolean
   onNavigate: (tab: Tab, el?: HTMLDivElement) => void
@@ -249,8 +249,12 @@ export function TitlebarTabStrip(props: {
 
   function selectAdjacentTab(offset: -1 | 1) {
     const current = props.currentTab()
-    const key = adjacentTabKey(visibleTabIds(), current ? tabKey(current) : undefined, offset)
-    const next = props.tabs.find((tab) => tabKey(tab) === key)
+    const key = adjacentTabKey(
+      [...visibleTabIds(), ...settingsTabs.map(tabKey)],
+      current ? tabKey(current) : undefined,
+      offset,
+    )
+    const next = [...props.tabs, ...settingsTabs].find((tab) => tabKey(tab) === key)
     if (next) props.onNavigate(next)
   }
 
@@ -285,76 +289,93 @@ export function TitlebarTabStrip(props: {
   })
 
   return (
-    <div data-slot="titlebar-tabs" class="relative min-w-0">
-      <div
-        data-slot="titlebar-tabs-scroll"
-        class="flex min-w-0 flex-row items-center gap-1.5 overflow-x-auto no-scrollbar [app-region:no-drag]"
-        ref={scrollRef}
-      >
-        <DragDropProvider
-          sensors={[
-            PointerSensor.configure({
-              activationConstraints: [new PointerActivationConstraints.Distance({ value: 4 })],
-              preventActivation: (event) =>
-                !canStartTabDrag(event.pointerType) ||
-                isTabCloseTarget(event.target) ||
-                (event.target instanceof Element && !!event.target.closest('[contenteditable="true"]')),
-            }),
-          ]}
-          modifiers={[RestrictToHorizontalAxis, RestrictToElement.configure({ element: () => listRef })]}
-          plugins={(defaults) => [
-            ...defaults.filter((plugin) => plugin !== Accessibility),
-            AutoScroller.configure({ acceleration: 8, threshold: { x: 0.05, y: 0 } }),
-            Feedback.configure({ dropAnimation: null }),
-          ]}
-          onDragStart={(event) => {
-            const source = event.operation.source
-            if (!source) return
-            const tab = props.tabs.find((item) => tabKey(item) === source.id.toString())
-            if (!tab) return
-            const tabEl = source.element?.querySelector<HTMLDivElement>("[data-titlebar-tab]")
-            props.onNavigate(tab, tabEl ?? undefined)
-          }}
-          onDragEnd={(event) => {
-            const current = visibleTabIds()
-            const source = event.operation.source
-            if (event.canceled || !isSortable(source)) return
-
-            const { initialIndex, index } = source
-            if (initialIndex !== index) {
-              props.onReorder(
-                mergeVisibleTabOrder(
-                  props.tabs.map(tabKey),
-                  current,
-                  arrayMove(current, source.initialIndex, source.index),
-                ),
-              )
-            }
-          }}
+    <>
+      <div data-slot="titlebar-tabs" class="relative min-w-0">
+        <div
+          data-slot="titlebar-tabs-scroll"
+          class="flex min-w-0 flex-row items-center gap-1.5 overflow-x-auto no-scrollbar [app-region:no-drag]"
+          ref={scrollRef}
         >
-          <div data-titlebar-tab-list class="flex w-full min-w-0 flex-row items-center" ref={listRef}>
-            <For each={props.tabs}>
-              {(tab) => {
-                const id = tabKey(tab)
-                let ref!: HTMLDivElement
-                const visibleIndex = () => visibleTabs().findIndex((item) => tabKey(item) === id)
-                useTabShortcut(visibleIndex, () => props.onNavigate(tab, ref))
-                const serverCtx = createMemo(() => {
-                  if (tab.type !== "session") return
-                  const conn = global.servers.list().find((item) => ServerConnection.key(item) === tab.server)
-                  if (conn) return global.ensureServerCtx(conn)
-                })
+          <DragDropProvider
+            sensors={[
+              PointerSensor.configure({
+                activationConstraints: [new PointerActivationConstraints.Distance({ value: 4 })],
+                preventActivation: (event) =>
+                  !canStartTabDrag(event.pointerType) ||
+                  isTabCloseTarget(event.target) ||
+                  (event.target instanceof Element && !!event.target.closest('[contenteditable="true"]')),
+              }),
+            ]}
+            modifiers={[RestrictToHorizontalAxis, RestrictToElement.configure({ element: () => listRef })]}
+            plugins={(defaults) => [
+              ...defaults.filter((plugin) => plugin !== Accessibility),
+              AutoScroller.configure({ acceleration: 8, threshold: { x: 0.05, y: 0 } }),
+              Feedback.configure({ dropAnimation: null }),
+            ]}
+            onDragStart={(event) => {
+              const source = event.operation.source
+              if (!source) return
+              const tab = props.tabs.find((item) => tabKey(item) === source.id.toString())
+              if (!tab) return
+              const tabEl = source.element?.querySelector<HTMLDivElement>("[data-titlebar-tab]")
+              props.onNavigate(tab, tabEl ?? undefined)
+            }}
+            onDragEnd={(event) => {
+              const current = visibleTabIds()
+              const source = event.operation.source
+              if (event.canceled || !isSortable(source)) return
 
-                if (tab.type === "session") {
+              const { initialIndex, index } = source
+              if (initialIndex !== index) {
+                props.onReorder(
+                  mergeVisibleTabOrder(
+                    props.tabs.map(tabKey),
+                    current,
+                    arrayMove(current, source.initialIndex, source.index),
+                  ),
+                )
+              }
+            }}
+          >
+            <div data-titlebar-tab-list class="flex w-full min-w-0 flex-row items-center" ref={listRef}>
+              <For each={props.tabs}>
+                {(tab) => {
+                  const id = tabKey(tab)
+                  let ref!: HTMLDivElement
+                  const visibleIndex = () => visibleTabs().findIndex((item) => tabKey(item) === id)
+                  useTabShortcut(visibleIndex, () => props.onNavigate(tab, ref))
+                  const serverCtx = createMemo(() => {
+                    if (tab.type !== "session") return
+                    const conn = global.servers.list().find((item) => ServerConnection.key(item) === tab.server)
+                    if (conn) return global.ensureServerCtx(conn)
+                  })
+
+                  if (tab.type === "session") {
+                    return (
+                      <SessionTabEntry
+                        tab={tab}
+                        id={id}
+                        index={visibleIndex}
+                        active={() => props.currentTab() === tab}
+                        forceTruncate={props.forceTruncate}
+                        serverCtx={serverCtx}
+                        onVisibleChange={(visible) => setVisibility(id, visible)}
+                        onNavigate={(element) => {
+                          ref = element
+                          props.onNavigate(tab, element)
+                        }}
+                        onClose={() => props.onClose(tab)}
+                      />
+                    )
+                  }
+
                   return (
-                    <SessionTabEntry
+                    <DraftTabSlot
                       tab={tab}
                       id={id}
                       index={visibleIndex}
                       active={() => props.currentTab() === tab}
-                      forceTruncate={props.forceTruncate}
-                      serverCtx={serverCtx}
-                      onVisibleChange={(visible) => setVisibility(id, visible)}
+                      title={language.t("command.session.new")}
                       onNavigate={(element) => {
                         ref = element
                         props.onNavigate(tab, element)
@@ -362,38 +383,36 @@ export function TitlebarTabStrip(props: {
                       onClose={() => props.onClose(tab)}
                     />
                   )
-                }
-
-                return (
-                  <DraftTabSlot
-                    tab={tab}
-                    id={id}
-                    index={visibleIndex}
-                    active={() => props.currentTab() === tab}
-                    title={language.t("command.session.new")}
-                    onNavigate={(element) => {
-                      ref = element
-                      props.onNavigate(tab, element)
-                    }}
-                    onClose={() => props.onClose(tab)}
-                  />
-                )
-              }}
-            </For>
-          </div>
-        </DragDropProvider>
+                }}
+              </For>
+            </div>
+          </DragDropProvider>
+        </div>
+        <div
+          data-slot="titlebar-tabs-fade-left"
+          aria-hidden="true"
+          class="pointer-events-none absolute inset-y-0 left-0 z-10 w-6 bg-[linear-gradient(to_right,var(--v2-background-bg-deep),transparent)]"
+        />
+        <div
+          data-slot="titlebar-tabs-fade-right"
+          aria-hidden="true"
+          class="pointer-events-none absolute inset-y-0 right-0 z-10 w-6 bg-[linear-gradient(to_left,var(--v2-background-bg-deep),transparent)]"
+        />
       </div>
-      <div
-        data-slot="titlebar-tabs-fade-left"
-        aria-hidden="true"
-        class="pointer-events-none absolute inset-y-0 left-0 z-10 w-6 bg-[linear-gradient(to_right,var(--v2-background-bg-deep),transparent)]"
-      />
-      <div
-        data-slot="titlebar-tabs-fade-right"
-        aria-hidden="true"
-        class="pointer-events-none absolute inset-y-0 right-0 z-10 w-6 bg-[linear-gradient(to_left,var(--v2-background-bg-deep),transparent)]"
-      />
-    </div>
+      <div class="flex-1" />
+      <div data-slot="titlebar-fixed-tabs" class="flex shrink-0 flex-row items-center gap-1 [app-region:no-drag]">
+        <For each={settingsTabs}>
+          {(tab) => (
+            <SettingsTabItem
+              href={tabHref(tab)}
+              title={language.t(`tab.settings.${tab.page}`)}
+              active={props.currentTab() ? tabKey(props.currentTab()!) === tabKey(tab) : false}
+              onNavigate={() => props.onNavigate(tab)}
+            />
+          )}
+        </For>
+      </div>
+    </>
   )
 }
 

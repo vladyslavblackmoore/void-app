@@ -30,6 +30,7 @@ import { Session } from "@opencode-ai/sdk/v2/client"
 import { usePlatform } from "@/context/platform"
 import { useMajorUpdate } from "@/context/major-update"
 import { useSettings } from "@/context/settings"
+import { settingsTabHref } from "@/context/settings-tabs"
 import { createStore, produce, reconcile } from "solid-js/store"
 import { DragDropProvider, DragDropSensors, DragOverlay, SortableProvider, closestCenter } from "@thisbeyond/solid-dnd"
 import type { DragEvent } from "@thisbeyond/solid-dnd"
@@ -1102,6 +1103,10 @@ export default function LegacyLayout(props: ParentProps) {
   }
 
   function openSettings() {
+    if (settings.general.newLayoutDesigns()) {
+      navigate(settingsTabHref("settings"))
+      return
+    }
     const run = ++dialogRun
     const module = settings.general.newLayoutDesigns()
       ? import("@/components/settings-v2")

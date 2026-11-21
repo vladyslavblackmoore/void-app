@@ -119,7 +119,8 @@ export const dict = {
   "dialog.provider.google.note": "Gemini models for fast, structured responses",
   "dialog.provider.openrouter.note": "Access all supported models from one provider",
   "dialog.provider.vercel.note": "Unified access to AI models with smart routing",
-  "dialog.provider.subscription.note": "Uses your Claude subscription through the official claude CLI. No per-token billing; limited by your subscription usage.",
+  "dialog.provider.subscription.note":
+    "Uses your Claude subscription through the official claude CLI. No per-token billing; limited by your subscription usage.",
 
   "dialog.model.select.title": "Select model",
   "dialog.model.search.placeholder": "Search models",
@@ -1089,11 +1090,13 @@ export const dict = {
   "settings.models.title": "Models",
   "settings.models.description": "Model settings will be configurable here.",
   "settings.secrets.title": "Secrets",
-  "settings.secrets.description": "Secret values are stored encrypted. A value can be saved or replaced, and is never shown again.",
+  "settings.secrets.description":
+    "Secret values are stored encrypted. A value can be saved or replaced, and is never shown again.",
   "settings.secrets.hint": "MCP server env and headers reference a secret as secret:<name>.",
   "settings.secrets.name": "Name",
   "settings.secrets.name.placeholder": "tracker/token",
-  "settings.secrets.name.invalid": "Use lowercase letters, digits, dots, underscores and hyphens, with / between segments.",
+  "settings.secrets.name.invalid":
+    "Use lowercase letters, digits, dots, underscores and hyphens, with / between segments.",
   "settings.secrets.value": "Value",
   "settings.secrets.value.placeholder": "Secret value",
   "settings.secrets.save": "Save secret",
@@ -1177,4 +1180,17 @@ export const dict = {
   "workspace.reset.archived.one": "1 session will be archived.",
   "workspace.reset.archived.many": "{{count}} sessions will be archived.",
   "workspace.reset.note": "This will reset the workspace to match the default branch.",
+  "tab.settings.agents": "Agents",
+  "tab.settings.models": "Models",
+  "tab.settings.settings": "Settings",
+  "agents.title": "Agents",
+  "agents.description": "Each agent has its own provider, model and effort.",
+  "agents.node.main.description": "Primary agent. Starts the extra agents.",
+  "agents.node.subagent.description": "Subagent.",
+  "agents.model.inherits": "Inherits main",
+  "agents.model.default": "Default model",
+  "agents.effort": "Effort",
+  "agents.effort.notSet": "Not set",
+  "agents.note.noToolCalls": "Cannot start subagents on this provider",
+  "agents.empty": "No subagents are available.",
 }

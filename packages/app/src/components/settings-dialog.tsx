@@ -1,4 +1,6 @@
-import { useParams } from "@solidjs/router"
+import { useNavigate, useParams } from "@solidjs/router"
+import { useSettings } from "@/context/settings"
+import { settingsTabHref } from "@/context/settings-tabs"
 import { onCleanup } from "solid-js"
 import { useCommand } from "@/context/command"
 import { useLanguage } from "@/context/language"
@@ -7,6 +9,8 @@ import { useDialog } from "@opencode-ai/ui/context/dialog"
 export function useSettingsDialog(defaultValue?: string) {
   const dialog = useDialog()
   const params = useParams<{ id?: string }>()
+  const navigate = useNavigate()
+  const settings = useSettings()
   let run = 0
   let dead = false
 
@@ -15,6 +19,10 @@ export function useSettingsDialog(defaultValue?: string) {
   })
 
   return () => {
+    if (settings.general.newLayoutDesigns()) {
+      navigate(settingsTabHref("settings"))
+      return
+    }
     const current = ++run
     const sessionID = params.id
     void import("@/components/settings-v2").then((module) => {
