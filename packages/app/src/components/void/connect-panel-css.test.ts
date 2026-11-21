@@ -24,6 +24,16 @@ describe("connect panel and hub styles", () => {
     )
   })
 
+  test("renders Disconnect as a secondary danger outline and Close as the primary", () => {
+    const tsx = read("./connect-panel.tsx")
+    const start = panel.indexOf('[data-slot="void-panel-disconnect"] {\n  background')
+    const rule = start < 0 ? "" : panel.slice(start, panel.indexOf("}", start))
+    expect(rule).toContain("var(--void-red")
+    expect(rule).toContain("background: transparent")
+    expect(tsx).toMatch(/data-slot="void-panel-disconnect"[^>]*onClick=\{props\.onToggle\}/)
+    expect(tsx).toMatch(/data-slot="void-panel-next" onClick=\{props\.onClose\}/)
+  })
+
   test("sizes the panel to its content without a spacer", () => {
     expect(body(panel, '[data-component="void-connect-panel"]')).toContain("align-self: flex-start")
     expect(panel).not.toContain("void-panel-spacer")

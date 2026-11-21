@@ -118,11 +118,11 @@ export function ConnectPanel(props: { tile: ConnectorTile; busy: boolean; onTogg
               </dl>
             </div>
             <div data-slot="void-panel-actions">
-              <button type="button" data-slot="void-panel-back" onClick={props.onClose}>
-                {language.t("hub.panel.close")}
-              </button>
-              <button type="button" data-slot="void-panel-next" disabled={props.busy} onClick={props.onToggle}>
+              <button type="button" data-slot="void-panel-disconnect" disabled={props.busy} onClick={props.onToggle}>
                 {language.t("hub.panel.ready.disconnect")}
+              </button>
+              <button type="button" data-slot="void-panel-next" onClick={props.onClose}>
+                {language.t("hub.panel.close")}
               </button>
             </div>
           </>
