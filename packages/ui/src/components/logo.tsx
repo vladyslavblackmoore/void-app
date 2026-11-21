@@ -5,12 +5,26 @@ export const Mark = (props: { class?: string }) => {
     <svg
       data-component="logo-mark"
       classList={{ [props.class ?? ""]: !!props.class }}
-      viewBox="0 0 16 20"
+      viewBox="0 0 32 40"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <path data-slot="logo-logo-mark-shadow" d="M12 16H4V8H12V16Z" fill="var(--icon-weak-base)" />
-      <path data-slot="logo-logo-mark-o" d="M12 4H4V16H12V4ZM16 20H0V0H16V20Z" fill="var(--icon-strong-base)" />
+      <g transform="translate(0 4)">
+        <rect width="32" height="32" rx="7" fill="#2a2b30" />
+        <g fill="#c9cacf">
+          <rect x="4" y="4" width="4" height="4" rx="1.5" />
+          <rect x="8" y="8" width="2" height="2" fill-opacity="0.6" />
+          <rect x="26" y="14" width="4" height="4" rx="1.5" />
+          <rect x="24" y="16" width="2" height="2" fill-opacity="0.6" />
+          <rect x="12" y="26" width="4" height="4" rx="1.5" />
+          <rect x="14" y="24" width="2" height="2" fill-opacity="0.6" />
+        </g>
+        <g fill="#d4f23a">
+          <rect x="24" y="4" width="4" height="4" rx="1.5" />
+          <rect x="22" y="8" width="2" height="2" fill-opacity="0.75" />
+        </g>
+        <circle cx="16" cy="16" r="8" fill="#050506" />
+      </g>
     </svg>
   )
 }
@@ -21,12 +35,26 @@ export const Splash = (props: Pick<ComponentProps<"svg">, "ref" | "class">) => {
       ref={props.ref}
       data-component="logo-splash"
       classList={{ [props.class ?? ""]: !!props.class }}
-      viewBox="0 0 80 100"
+      viewBox="0 0 32 40"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <path d="M60 80H20V40H60V80Z" fill="var(--icon-base)" />
-      <path d="M60 20H20V80H60V20ZM80 100H0V0H80V100Z" fill="var(--icon-strong-base)" />
+      <g transform="translate(0 4)">
+        <rect width="32" height="32" rx="7" fill="#2a2b30" />
+        <g fill="#c9cacf">
+          <rect x="4" y="4" width="4" height="4" rx="1.5" />
+          <rect x="8" y="8" width="2" height="2" fill-opacity="0.6" />
+          <rect x="26" y="14" width="4" height="4" rx="1.5" />
+          <rect x="24" y="16" width="2" height="2" fill-opacity="0.6" />
+          <rect x="12" y="26" width="4" height="4" rx="1.5" />
+          <rect x="14" y="24" width="2" height="2" fill-opacity="0.6" />
+        </g>
+        <g fill="#d4f23a">
+          <rect x="24" y="4" width="4" height="4" rx="1.5" />
+          <rect x="22" y="8" width="2" height="2" fill-opacity="0.75" />
+        </g>
+        <circle cx="16" cy="16" r="8" fill="#050506" />
+      </g>
     </svg>
   )
 }
@@ -39,14 +67,33 @@ export const Logo = (props: { class?: string }) => {
       fill="none"
       classList={{ [props.class ?? ""]: !!props.class }}
     >
-      <g>
-        <path d="M63 6H69V30H63V6ZM81 6H87V30H81V6ZM69 30H81V36H69V30Z" fill="var(--icon-base)" />
-        <path d="M111 30H99V18H111V30Z" fill="var(--icon-weak-base)" />
-        <path d="M111 12H99V30H111V12ZM117 36H93V6H117V36Z" fill="var(--icon-base)" />
-        <path d="M123 6H141V12H135V30H141V36H123V30H129V12H123V6Z" fill="var(--icon-strong-base)" />
-        <path d="M165 30H153V18H165V30Z" fill="var(--icon-weak-base)" />
-        <path d="M165 12H153V30H165V12ZM165 36H147V6H165V12H171V30H165V36Z" fill="var(--icon-strong-base)" />
+      <g transform="translate(36 0) scale(1.3125)">
+        <rect width="32" height="32" rx="7" fill="#2a2b30" />
+        <g fill="#c9cacf">
+          <rect x="4" y="4" width="4" height="4" rx="1.5" />
+          <rect x="8" y="8" width="2" height="2" fill-opacity="0.6" />
+          <rect x="26" y="14" width="4" height="4" rx="1.5" />
+          <rect x="24" y="16" width="2" height="2" fill-opacity="0.6" />
+          <rect x="12" y="26" width="4" height="4" rx="1.5" />
+          <rect x="14" y="24" width="2" height="2" fill-opacity="0.6" />
+        </g>
+        <g fill="#d4f23a">
+          <rect x="24" y="4" width="4" height="4" rx="1.5" />
+          <rect x="22" y="8" width="2" height="2" fill-opacity="0.75" />
+        </g>
+        <circle cx="16" cy="16" r="8" fill="#050506" />
       </g>
+      <text
+        x="94"
+        y="33"
+        fill="var(--icon-strong-base)"
+        font-family="var(--font-family-sans)"
+        font-size="34"
+        font-weight="700"
+        letter-spacing="6"
+      >
+        VOID
+      </text>
     </svg>
   )
 }
