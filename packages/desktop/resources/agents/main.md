@@ -7,6 +7,7 @@ permission:
   question: allow
   task:
     "*": allow
+  "memory_*": allow
 ---
 
 ## Role

@@ -2,7 +2,8 @@ import { randomUUID } from "node:crypto"
 import { mkdirSync, rmSync } from "node:fs"
 import * as http from "node:http"
 import { homedir, tmpdir } from "node:os"
-import { join } from "node:path"
+import { dirname, join } from "node:path"
+import { fileURLToPath } from "node:url"
 import { getCACertificates, setDefaultCACertificates } from "node:tls"
 import type { Event } from "electron"
 import { app, BrowserWindow } from "electron"
@@ -20,6 +21,7 @@ import subscriptionPlugin from "../../resources/plugin/subscription-auth.js?raw"
 import spaceConfigTemplate from "../../resources/spaces/opencode.jsonc?raw"
 import type { ServerReadyData } from "../preload/types"
 import { seedAgents } from "./agents"
+import { memoryCommand, memoryPluginFile } from "./memory-seed"
 import { seedConfig } from "./config-seed"
 import { checkAppExists, resolveAppPath } from "./apps"
 import { CHANNEL } from "./constants"
@@ -387,6 +389,7 @@ const main = Effect.gen(function* () {
       return yield* Effect.fail(migrationFailure)
     }
 
+    const memorySourceDir = join(dirname(fileURLToPath(import.meta.url)), "../../../void-memory")
     const seed: SpaceSeed = {
       agents: [
         { name: "main", content: mainAgent },
@@ -398,6 +401,17 @@ const main = Effect.gen(function* () {
       wrapper: subscriptionWrapper,
       plugin: subscriptionPlugin,
       config: spaceConfigTemplate,
+      memory: memoryCommand({
+        packaged: app.isPackaged,
+        sourceDir: memorySourceDir,
+        resourcesPath: process.resourcesPath,
+        execPath: process.execPath,
+      }),
+      memoryPlugin: memoryPluginFile({
+        packaged: app.isPackaged,
+        sourceDir: memorySourceDir,
+        resourcesPath: process.resourcesPath,
+      }),
     }
     yield* Effect.promise(() =>
       ensureDefaultSpaces(

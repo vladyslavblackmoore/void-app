@@ -5,6 +5,17 @@ permission:
   bash: allow
   edit: allow
   task: deny
+  "memory_*": deny
+  memory_remember: allow
+  memory_recall: allow
+  memory_open: allow
+  memory_link: allow
+  memory_task_create: allow
+  memory_task_claim: allow
+  memory_task_update: allow
+  memory_task_result: allow
+  memory_task_list: allow
+  memory_board_changes: allow
 ---
 
 You are a worker of VOID. The main agent hands you one task as a brief. The brief is the whole of your instructions.

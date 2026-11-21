@@ -2,11 +2,12 @@ import { readdir, readFile } from "node:fs/promises"
 import { join } from "node:path"
 import { seedAgents } from "./agents"
 import { seedConfig } from "./config-seed"
+import { seedMemory, seedMemoryPlugin, type MemoryRuntime } from "./memory-seed"
 import { createSpace, ensureHomeSpace, isSpaceId, listSpaces, spaceDir, type Space } from "./spaces"
 
 export type SpaceTemplate = Pick<Space, "class" | "sessionMode" | "color">
 export type SpaceTemplates = { personal: SpaceTemplate; company: SpaceTemplate }
-export type SpaceSeed = { agents: Array<{ name: string; content: string; version?: number }>; wrapper: string; plugin?: string; config?: string }
+export type SpaceSeed = { agents: Array<{ name: string; content: string; version?: number }>; wrapper: string; plugin?: string; config?: string; memory?: MemoryRuntime; memoryPlugin?: string }
 
 const VOID_SPACE_ID = "void"
 const WORK_SPACE_ID = "work"
@@ -58,4 +59,6 @@ export async function seedSpace(root: string, id: string, seed: SpaceSeed) {
     plugin: seed.plugin,
     config: seed.config,
   })
+  await seedMemory(dir, configDir, seed.memory)
+  await seedMemoryPlugin(dir, configDir, seed.memoryPlugin)
 }

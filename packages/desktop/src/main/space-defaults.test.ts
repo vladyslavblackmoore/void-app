@@ -118,4 +118,24 @@ describe("space seeder", () => {
     await seedSpace(root, "work", { ...seed, plugin: "p", config: '{"provider":{}}' })
     expect(await readFile(join(dir, "opencode.jsonc"), "utf8")).toBe("{}")
   })
+
+  test("registers the memory server in the config of the space", async () => {
+    await ensureDefaultSpaces(root, templates, legacy)
+    await seedSpace(root, "void", { ...seed, config: "{}", memory: { command: ["bun", "/m/main.ts"], environment: {} } })
+    const dir = spaceDir(root, "void")
+    const written = parse(await readFile(join(dir, "config", "opencode", "opencode.jsonc"), "utf8"))
+    expect(written.mcp.memory.command).toEqual(["bun", "/m/main.ts"])
+    expect(written.mcp.memory.environment.VOID_MEMORY_DB).toBe(join(dir, "data", "memory", "graph.db"))
+    await seedSpace(root, "work", { ...seed, config: "{}" })
+    expect(parse(await readFile(join(spaceDir(root, "work"), "config", "opencode", "opencode.jsonc"), "utf8")).mcp).toBeUndefined()
+  })
+})
+
+describe("memory plugin seeding", () => {
+  test("seedSpace puts the memory plugin shim into the plugins dir of the space", async () => {
+    await ensureDefaultSpaces(root, templates, legacy)
+    await seedSpace(root, "void", { agents: [], wrapper: "w", memoryPlugin: "/src/void-memory/src/plugin.ts" })
+    const shim = join(spaceDir(root, "void"), "config", "opencode", "plugins", "void-memory.js")
+    expect(await readFile(shim, "utf8")).toContain(join(spaceDir(root, "void"), "data", "memory", "graph.db"))
+  })
 })

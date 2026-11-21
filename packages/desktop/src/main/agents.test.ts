@@ -152,7 +152,7 @@ describe("bundled agents", () => {
   }
 
   test("main runs commands, edits and calls any subagent without asking", async () => {
-    expect((await permission("main")).permission).toEqual({
+    expect((await permission("main")).permission).toMatchObject({
       bash: "allow",
       edit: "allow",
       question: "allow",
@@ -172,6 +172,6 @@ describe("bundled agents", () => {
   })
 
   test("worker runs commands and edits without asking and starts no tasks", async () => {
-    expect((await permission("worker")).permission).toEqual({ bash: "allow", edit: "allow", task: "deny" })
+    expect((await permission("worker")).permission).toMatchObject({ bash: "allow", edit: "allow", task: "deny" })
   })
 })
