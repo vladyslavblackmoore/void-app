@@ -67,7 +67,7 @@ export const dict = {
   "desktop.dialog.chooseFile": "Valige fail",
   "desktop.dialog.saveFile": "Salvesta fail",
   "desktop.dialog.files": "Failid",
-  "desktop.server.local": "Kohalik server",
+  "desktop.server.local": "Core server",
   "desktop.wsl.error.windowsOnly": "WSL on saadaval ainult Windows",
   "desktop.wsl.error.unavailable": "WSL pole saadaval",
   "desktop.wsl.error.listInstalled": "Installitud WSL distributsioonide loendisse lisamine nurjus",

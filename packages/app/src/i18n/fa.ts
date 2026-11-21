@@ -68,7 +68,7 @@ export const dict = {
   "desktop.dialog.chooseFile": "یک فایل را انتخاب کنید",
   "desktop.dialog.saveFile": "ذخیره فایل",
   "desktop.dialog.files": "فایل ها",
-  "desktop.server.local": "سرور محلی",
+  "desktop.server.local": "Core server",
   "desktop.wsl.error.windowsOnly": "WSL فقط در Windows موجود است",
   "desktop.wsl.error.unavailable": "WSL در دسترس نیست",
   "desktop.wsl.error.listInstalled": "فهرست توزیع‌های نصب‌شده WSL انجام نشد",

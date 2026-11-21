@@ -67,7 +67,7 @@ export const dict = {
   "desktop.dialog.chooseFile": "ເລືອກໄຟລ໌",
   "desktop.dialog.saveFile": "ບັນທຶກໄຟລ໌",
   "desktop.dialog.files": "ໄຟລ໌",
-  "desktop.server.local": "ເຊີບເວີທ້ອງຖິ່ນ",
+  "desktop.server.local": "Core server",
   "desktop.wsl.error.windowsOnly": "WSL ສາມາດໃຊ້ໄດ້ໃນ Windows ເທົ່ານັ້ນ",
   "desktop.wsl.error.unavailable": "WSL ບໍ່ສາມາດໃຊ້ໄດ້",
   "desktop.wsl.error.listInstalled": "ລົ້ມເຫລວໃນລາຍຊື່ WSL distros ທີ່ຕິດຕັ້ງ",

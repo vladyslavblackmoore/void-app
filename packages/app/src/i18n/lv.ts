@@ -67,7 +67,7 @@ export const dict = {
   "desktop.dialog.chooseFile": "Izvēlieties failu",
   "desktop.dialog.saveFile": "Saglabāt failu",
   "desktop.dialog.files": "Faili",
-  "desktop.server.local": "Lokālais serveris",
+  "desktop.server.local": "Core server",
   "desktop.wsl.error.windowsOnly": "WSL ir pieejams tikai Windows",
   "desktop.wsl.error.unavailable": "WSL nav pieejams",
   "desktop.wsl.error.listInstalled": "Neizdevās uzskaitīt instalētās WSL distribūcijas",

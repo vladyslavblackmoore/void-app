@@ -67,7 +67,7 @@ export const dict = {
   "desktop.dialog.chooseFile": "Välj en fil",
   "desktop.dialog.saveFile": "Spara fil",
   "desktop.dialog.files": "Filer",
-  "desktop.server.local": "Lokal server",
+  "desktop.server.local": "Core server",
   "desktop.wsl.error.windowsOnly": "WSL är endast tillgängligt i Windows",
   "desktop.wsl.error.unavailable": "WSL är inte tillgängligt",
   "desktop.wsl.error.listInstalled": "Det gick inte att lista installerade WSL-distributioner",

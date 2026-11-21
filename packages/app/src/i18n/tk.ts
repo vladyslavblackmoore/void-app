@@ -68,7 +68,7 @@ export const dict = {
   "desktop.dialog.chooseFile": "Faýl saýlaň",
   "desktop.dialog.saveFile": "Faýly ýazdyryň",
   "desktop.dialog.files": "Faýllar",
-  "desktop.server.local": "Serli serwer",
+  "desktop.server.local": "Core server",
   "desktop.wsl.error.windowsOnly": "WSL diňe Windows-de elýeterlidir",
   "desktop.wsl.error.unavailable": "WSL elýeterli däl",
   "desktop.wsl.error.listInstalled": "Gurlan WSL distroslaryny sanap bilmedi",

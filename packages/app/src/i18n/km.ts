@@ -67,7 +67,7 @@ export const dict = {
   "desktop.dialog.chooseFile": "ជ្រើសរើសឯកសារ",
   "desktop.dialog.saveFile": "រក្សាទុកឯកសារ",
   "desktop.dialog.files": "ឯកសារ",
-  "desktop.server.local": "ម៉ាស៊ីនមេក្នុងស្រុក",
+  "desktop.server.local": "Core server",
   "desktop.wsl.error.windowsOnly": "WSL មាននៅលើ Windows ប៉ុណ្ណោះ។",
   "desktop.wsl.error.unavailable": "WSL មិនអាចប្រើបានទេ។",
   "desktop.wsl.error.listInstalled": "បានបរាជ័យក្នុងការរាយបញ្ជីការចែកចាយ WSL ដែលបានដំឡើង",

@@ -67,7 +67,7 @@ export const dict: Record<string, string> = {
   "desktop.dialog.chooseFile": "ගොනුවක් තෝරන්න",
   "desktop.dialog.saveFile": "ගොනුව සුරකින්න",
   "desktop.dialog.files": "ගොනු",
-  "desktop.server.local": "දේශීය සේවාදායකය",
+  "desktop.server.local": "Core server",
   "desktop.wsl.error.windowsOnly": "WSL ඇත්තේ Windows හි පමණි",
   "desktop.wsl.error.unavailable": "WSL නොමැත",
   "desktop.wsl.error.listInstalled": "ස්ථාපිත WSL බෙදාහැරීම් ලැයිස්තුගත කිරීමට අසමත් විය",

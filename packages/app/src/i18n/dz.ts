@@ -68,7 +68,7 @@ export const dict: Record<string, string> = {
   "desktop.dialog.chooseFile": "ཡིག་སྣོད་གདམ་ཁ་རྐྱབས།",
   "desktop.dialog.saveFile": "ཡིག་སྣོད་སྲུངས།",
   "desktop.dialog.files": "ཡིག་སྣོད་ཚུ།",
-  "desktop.server.local": "ཉེ་གནས་སར་བར།",
+  "desktop.server.local": "Core server",
   "desktop.wsl.error.windowsOnly": "WSLའདི་ Windowsནང་རྐྱངམ་ཅིག་འཐོབ་ཚུགས།",
   "desktop.wsl.error.unavailable": "WSL ཐོབ་མི་ཚུགས།",
   "desktop.wsl.error.listInstalled": "གཞི་བཙུགས་འབད་ཡོད་མི་ WSL ཌིསི་ཊོ་ཚུ་ཐོ་ཡིག་འབད་ནི་ལུ་འཐུས་ཤོར་འབྱུང་ཡོདཔ།",

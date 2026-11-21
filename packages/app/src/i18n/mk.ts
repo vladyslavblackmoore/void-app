@@ -68,7 +68,7 @@ export const dict = {
   "desktop.dialog.chooseFile": "Изберете датотека",
   "desktop.dialog.saveFile": "Зачувај датотека",
   "desktop.dialog.files": "Датотеки",
-  "desktop.server.local": "Локален сервер",
+  "desktop.server.local": "Core server",
   "desktop.wsl.error.windowsOnly": "WSL е достапна само на Windows",
   "desktop.wsl.error.unavailable": "WSL е недостапен",
   "desktop.wsl.error.listInstalled": "Не успеа да се наведат инсталираните WSL дистрибуции",

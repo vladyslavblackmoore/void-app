@@ -68,7 +68,7 @@ export const dict = {
   "desktop.dialog.chooseFile": "Файлро интихоб кунед",
   "desktop.dialog.saveFile": "Файлро захира кунед",
   "desktop.dialog.files": "Файлҳо",
-  "desktop.server.local": "Сервери маҳаллӣ",
+  "desktop.server.local": "Core server",
   "desktop.wsl.error.windowsOnly": "WSL танҳо дар Windows дастрас аст",
   "desktop.wsl.error.unavailable": "WSL дастрас нест",
   "desktop.wsl.error.listInstalled": "Рӯйхати WSL дистрибюторҳои насбшуда иҷро нашуд",

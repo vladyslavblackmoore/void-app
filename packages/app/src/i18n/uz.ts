@@ -68,7 +68,7 @@ export const dict = {
   "desktop.dialog.chooseFile": "Faylni tanlang",
   "desktop.dialog.saveFile": "Faylni saqlash",
   "desktop.dialog.files": "Fayllar",
-  "desktop.server.local": "Mahalliy server",
+  "desktop.server.local": "Core server",
   "desktop.wsl.error.windowsOnly": "WSL faqat Windows da mavjud",
   "desktop.wsl.error.unavailable": "WSL mavjud emas",
   "desktop.wsl.error.listInstalled": "Oʻrnatilgan WSL distrolarini roʻyxatga kiritib boʻlmadi",

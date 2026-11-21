@@ -70,7 +70,7 @@ export const dict = {
   "desktop.dialog.chooseFile": "فائل چنو",
   "desktop.dialog.saveFile": "فائل محفوظ کرو",
   "desktop.dialog.files": "فائلاں",
-  "desktop.server.local": "مقامی سرور",
+  "desktop.server.local": "Core server",
 
   "desktop.wsl.error.windowsOnly": "WSL صرف Windows تے دستیاب اے",
   "desktop.wsl.error.unavailable": "WSL دستیاب نئیں",

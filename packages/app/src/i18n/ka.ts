@@ -67,7 +67,7 @@ export const dict = {
   "desktop.dialog.chooseFile": "აირჩიე ფაილი",
   "desktop.dialog.saveFile": "ფაილის შენახვა",
   "desktop.dialog.files": "ფაილები",
-  "desktop.server.local": "ლოკალური სერვერი",
+  "desktop.server.local": "Core server",
   "desktop.wsl.error.windowsOnly": "WSL ხელმისაწვდომია მხოლოდ Windows",
   "desktop.wsl.error.unavailable": "WSL მიუწვდომელია",
   "desktop.wsl.error.listInstalled": "დაინსტალირებული WSL დისტროსიების სია ვერ მოიძებნა",

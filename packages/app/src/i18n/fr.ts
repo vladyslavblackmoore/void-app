@@ -71,7 +71,7 @@ export const dict = {
   "desktop.dialog.chooseFile": "Sélectionner un fichier",
   "desktop.dialog.saveFile": "Enregistrer le fichier",
   "desktop.dialog.files": "Fichiers",
-  "desktop.server.local": "Serveur local",
+  "desktop.server.local": "Core server",
 
   "desktop.wsl.error.windowsOnly": "WSL est disponible uniquement sous Windows",
   "desktop.wsl.error.unavailable": "WSL est indisponible",

@@ -67,7 +67,7 @@ export const dict = {
   "desktop.dialog.chooseFile": "Pilih fail",
   "desktop.dialog.saveFile": "Simpan fail",
   "desktop.dialog.files": "Fail",
-  "desktop.server.local": "Pelayan Tempatan",
+  "desktop.server.local": "Core server",
   "desktop.wsl.error.windowsOnly": "WSL hanya tersedia di Windows",
   "desktop.wsl.error.unavailable": "WSL tidak tersedia",
   "desktop.wsl.error.listInstalled": "Gagal menyenaraikan distro WSL yang dipasang",

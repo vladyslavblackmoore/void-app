@@ -1216,7 +1216,7 @@ export const dict = {
   "desktop.dialog.chooseFile": "Vælg en fil",
   "desktop.dialog.saveFile": "Gem fil",
   "desktop.dialog.files": "Filer",
-  "desktop.server.local": "Lokal server",
+  "desktop.server.local": "Core server",
 
   "desktop.wsl.error.windowsOnly": "WSL er kun tilgængelig i Windows",
   "desktop.wsl.error.unavailable": "WSL er ikke tilgængelig",

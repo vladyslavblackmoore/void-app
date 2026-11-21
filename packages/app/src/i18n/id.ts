@@ -71,7 +71,7 @@ export const dict = {
   "desktop.dialog.saveFile": "Simpan berkas",
   "desktop.dialog.files": "Berkas",
 
-  "desktop.server.local": "Server lokal",
+  "desktop.server.local": "Core server",
 
   "desktop.wsl.error.windowsOnly": "WSL hanya tersedia di Windows",
   "desktop.wsl.error.unavailable": "WSL tidak tersedia",

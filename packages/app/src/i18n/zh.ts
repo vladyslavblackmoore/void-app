@@ -74,7 +74,7 @@ export const dict = {
   "desktop.dialog.chooseFile": "选择文件",
   "desktop.dialog.saveFile": "保存文件",
   "desktop.dialog.files": "文件",
-  "desktop.server.local": "本地服务器",
+  "desktop.server.local": "Core server",
 
   "desktop.wsl.error.windowsOnly": "WSL 仅在 Windows 上可用",
   "desktop.wsl.error.unavailable": "WSL 不可用",

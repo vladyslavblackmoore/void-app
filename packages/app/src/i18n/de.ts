@@ -1158,7 +1158,7 @@ export const dict = {
   "desktop.dialog.chooseFile": "Datei auswählen",
   "desktop.dialog.saveFile": "Datei speichern",
   "desktop.dialog.files": "Dateien",
-  "desktop.server.local": "Lokaler Server",
+  "desktop.server.local": "Core server",
   "desktop.wsl.error.windowsOnly": "WSL ist nur unter Windows verfügbar",
   "desktop.wsl.error.unavailable": "WSL ist nicht verfügbar",
   "desktop.wsl.error.listInstalled": "Installierte WSL-Distributionen konnten nicht aufgelistet werden",

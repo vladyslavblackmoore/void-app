@@ -68,7 +68,7 @@ export const dict = {
   "desktop.dialog.chooseFile": "Zgjidhni një skedar",
   "desktop.dialog.saveFile": "Ruaj skedarin",
   "desktop.dialog.files": "Skedarët",
-  "desktop.server.local": "Server lokal",
+  "desktop.server.local": "Core server",
   "desktop.wsl.error.windowsOnly": "WSL disponohet vetëm në Windows",
   "desktop.wsl.error.unavailable": "WSL është i padisponueshëm",
   "desktop.wsl.error.listInstalled": "Lista e shpërndarjeve të instaluara WSL dështoi",

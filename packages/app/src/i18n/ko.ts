@@ -1154,7 +1154,7 @@ export const dict = {
   "desktop.dialog.chooseFile": "파일 선택",
   "desktop.dialog.saveFile": "파일 저장",
   "desktop.dialog.files": "파일",
-  "desktop.server.local": "로컬 서버",
+  "desktop.server.local": "Core server",
 
   "desktop.wsl.error.windowsOnly": "WSL은 Windows에서만 사용할 수 있습니다",
   "desktop.wsl.error.unavailable": "WSL을 사용할 수 없습니다",

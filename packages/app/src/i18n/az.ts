@@ -68,7 +68,7 @@ export const dict = {
   "desktop.dialog.chooseFile": "Fayl seçin",
   "desktop.dialog.saveFile": "Faylı saxla",
   "desktop.dialog.files": "Fayllar",
-  "desktop.server.local": "Yerli server",
+  "desktop.server.local": "Core server",
   "desktop.wsl.error.windowsOnly": "WSL yalnız Windows-da əlçatandır",
   "desktop.wsl.error.unavailable": "WSL əlçatan deyil",
   "desktop.wsl.error.listInstalled": "Quraşdırılmış WSL distribütivlərini siyahılamaq mümkün olmadı",

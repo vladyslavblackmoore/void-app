@@ -70,7 +70,7 @@ export const dict = {
   "desktop.dialog.chooseFile": "เลือกไฟล์",
   "desktop.dialog.saveFile": "บันทึกไฟล์",
   "desktop.dialog.files": "ไฟล์",
-  "desktop.server.local": "เซิร์ฟเวอร์ภายในเครื่อง",
+  "desktop.server.local": "Core server",
 
   "desktop.wsl.error.windowsOnly": "WSL ใช้งานได้เฉพาะบน Windows เท่านั้น",
   "desktop.wsl.error.unavailable": "WSL ไม่พร้อมใช้งาน",

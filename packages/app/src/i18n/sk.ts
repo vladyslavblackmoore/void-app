@@ -67,7 +67,7 @@ export const dict = {
   "desktop.dialog.chooseFile": "Vyberte súbor",
   "desktop.dialog.saveFile": "Uložiť súbor",
   "desktop.dialog.files": "Súbory",
-  "desktop.server.local": "Lokálny server",
+  "desktop.server.local": "Core server",
   "desktop.wsl.error.windowsOnly": "WSL je dostupné len vo Windows",
   "desktop.wsl.error.unavailable": "WSL nie je dostupné",
   "desktop.wsl.error.listInstalled": "Nepodarilo sa zobraziť nainštalované distribúcie WSL",

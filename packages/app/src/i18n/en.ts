@@ -367,7 +367,7 @@ export const dict = {
   "dialog.server.edit.title": "Edit server",
   "dialog.server.default.title": "Default server",
   "dialog.server.default.description":
-    "Connect to this server on app launch instead of starting a local server. Requires restart.",
+    "Connect to this server on app launch instead of starting the Core server. Requires restart.",
   "dialog.server.default.none": "No server selected",
   "dialog.server.default.set": "Set current server as default",
   "dialog.server.default.clear": "Clear",
@@ -603,7 +603,7 @@ export const dict = {
 
   "error.page.title": "Something went wrong",
   "error.page.description": "An error occurred while loading the application.",
-  "error.page.description.localServerStartup": "An error occurred while starting the local server.",
+  "error.page.description.localServerStartup": "An error occurred while starting the Core server.",
   "error.page.details.label": "Error Details",
   "error.page.action.restart": "Restart",
   "error.page.action.report": "Report Error",

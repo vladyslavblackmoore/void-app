@@ -68,7 +68,7 @@ export const dict = {
   "desktop.dialog.chooseFile": "Файл сонгоно уу",
   "desktop.dialog.saveFile": "Файлыг хадгалах",
   "desktop.dialog.files": "Файлууд",
-  "desktop.server.local": "Орон нутгийн сервер",
+  "desktop.server.local": "Core server",
   "desktop.wsl.error.windowsOnly": "WSL зөвхөн Windows дээр боломжтой",
   "desktop.wsl.error.unavailable": "WSL боломжгүй байна",
   "desktop.wsl.error.listInstalled": "Суулгасан WSL түгээлтийн жагсаалтыг гаргаж чадсангүй",

@@ -68,7 +68,7 @@ export const dict = {
   "desktop.dialog.chooseFile": "ފައިލެއް ހޮވާށެވެ",
   "desktop.dialog.saveFile": "ފައިލް ސޭވްކުރުން",
   "desktop.dialog.files": "ފައިލްތައް",
-  "desktop.server.local": "ލޯކަލް ސަރވަރ އެވެ",
+  "desktop.server.local": "Core server",
   "desktop.wsl.error.windowsOnly": "WSL ލިބެން ހުރީ ހަމައެކަނި Windows އިންނެވެ",
   "desktop.wsl.error.unavailable": "WSL އެއް ނުލިބެއެވެ",
   "desktop.wsl.error.listInstalled": "އިންސްޓޯލްކޮށްފައިވާ WSL ޑިސްޓްރޯތައް ލިސްޓް ނުކުރެވިއްޖެއެވެ",

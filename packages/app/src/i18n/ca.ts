@@ -67,7 +67,7 @@ export const dict = {
   "desktop.dialog.chooseFile": "Trieu un fitxer",
   "desktop.dialog.saveFile": "Desa el fitxer",
   "desktop.dialog.files": "Fitxers",
-  "desktop.server.local": "Servidor local",
+  "desktop.server.local": "Core server",
   "desktop.wsl.error.windowsOnly": "WSL només està disponible a Windows",
   "desktop.wsl.error.unavailable": "WSL no està disponible",
   "desktop.wsl.error.listInstalled": "No s'ha pogut llistar les WSL distribucions instal·lades",

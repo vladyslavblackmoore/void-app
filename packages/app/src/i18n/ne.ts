@@ -68,7 +68,7 @@ export const dict: Record<string, string> = {
   "desktop.dialog.chooseFile": "एउटा फाइल छान्नुहोस्",
   "desktop.dialog.saveFile": "फाइल बचत गर्नुहोस्",
   "desktop.dialog.files": "फाइलहरू",
-  "desktop.server.local": "स्थानीय सर्भर",
+  "desktop.server.local": "Core server",
   "desktop.wsl.error.windowsOnly": "WSL Windows मा मात्र उपलब्ध छ",
   "desktop.wsl.error.unavailable": "WSL उपलब्ध छैन",
   "desktop.wsl.error.listInstalled": "स्थापित WSL distros सूची गर्न असफल",

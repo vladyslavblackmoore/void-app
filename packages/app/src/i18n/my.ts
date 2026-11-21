@@ -68,7 +68,7 @@ export const dict = {
   "desktop.dialog.chooseFile": "ဖိုင်တစ်ခုကို ရွေးပါ။",
   "desktop.dialog.saveFile": "ဖိုင်ကို သိမ်းဆည်းပါ။",
   "desktop.dialog.files": "ဖိုင်များ",
-  "desktop.server.local": "ပြည်တွင်းဆာဗာ",
+  "desktop.server.local": "Core server",
   "desktop.wsl.error.windowsOnly": "WSL ကို Windows တွင်သာ ရနိုင်သည်။",
   "desktop.wsl.error.unavailable": "WSL ကို မရနိုင်ပါ။",
   "desktop.wsl.error.listInstalled": "ထည့်သွင်းထားသော WSL ကွဲပြားမှုများကို စာရင်းပြုစုရန် မအောင်မြင်ပါ။",

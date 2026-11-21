@@ -67,7 +67,7 @@ export const dict = {
   "desktop.dialog.chooseFile": "Alege un fișier",
   "desktop.dialog.saveFile": "Salvează fișierul",
   "desktop.dialog.files": "Fișiere",
-  "desktop.server.local": "Server local",
+  "desktop.server.local": "Core server",
   "desktop.wsl.error.windowsOnly": "WSL este disponibil doar pe Windows",
   "desktop.wsl.error.unavailable": "WSL nu este disponibil",
   "desktop.wsl.error.listInstalled": "Nu s-au putut afișa distribuțiile WSL instalate",

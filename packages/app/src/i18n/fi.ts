@@ -1140,7 +1140,7 @@ export const dict = {
   "desktop.dialog.chooseFile": "Valitse tiedosto",
   "desktop.dialog.saveFile": "Tallenna tiedosto",
   "desktop.dialog.files": "Tiedostot",
-  "desktop.server.local": "Paikallinen palvelin",
+  "desktop.server.local": "Core server",
   "desktop.wsl.error.windowsOnly": "WSL on käytettävissä vain Windowsissa",
   "desktop.wsl.error.unavailable": "WSL ei ole käytettävissä",
   "desktop.wsl.error.listInstalled": "Asennettujen WSL-jakelujen luettelointi epäonnistui",

@@ -67,7 +67,7 @@ export const dict = {
   "desktop.dialog.chooseFile": "ፋይል ምረጥ",
   "desktop.dialog.saveFile": "ፋይሉን አስቀምጥ",
   "desktop.dialog.files": "ፋይሎች",
-  "desktop.server.local": "አካባቢያዊ አገልጋይ",
+  "desktop.server.local": "Core server",
   "desktop.wsl.error.windowsOnly": "WSL የሚገኘው በWindows",
   "desktop.wsl.error.unavailable": "WSL አይገኝም",
   "desktop.wsl.error.listInstalled": "የተጫኑትን WSL distros መዘርዘር አልተሳካም",

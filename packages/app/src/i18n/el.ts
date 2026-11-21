@@ -68,7 +68,7 @@ export const dict = {
   "desktop.dialog.chooseFile": "Επιλογή αρχείου",
   "desktop.dialog.saveFile": "Αποθήκευση αρχείου",
   "desktop.dialog.files": "Αρχεία",
-  "desktop.server.local": "Τοπικός διακομιστής",
+  "desktop.server.local": "Core server",
   "desktop.wsl.error.windowsOnly": "WSL είναι διαθέσιμο μόνο στις Windows",
   "desktop.wsl.error.unavailable": "WSL δεν είναι διαθέσιμο",
   "desktop.wsl.error.listInstalled": "Απέτυχε η λίστα εγκατεστημένων WSL διανομών",

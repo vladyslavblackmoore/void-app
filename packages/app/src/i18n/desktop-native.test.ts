@@ -106,6 +106,18 @@ describe("desktop native translations", () => {
     ).toBeUndefined()
   })
 
+  test("names the local server Core in every locale", async () => {
+    const files = Array.from(new Bun.Glob("*.ts").scanSync(import.meta.dir)).filter(
+      (file) => !file.includes(".test.") && file !== "desktop-native.ts",
+    )
+    for (const file of files) {
+      const text = await Bun.file(`${import.meta.dir}/${file}`).text()
+      const match = text.match(/"desktop\.server\.local": "([^"]*)"/)
+      if (match) expect(match[1], file).toBe("Core server")
+    }
+    expect(DESKTOP_NATIVE_ENGLISH["desktop.server.local"]).toBe("Core server")
+  })
+
   test("interpolates native templates without changing unknown placeholders", () => {
     expect(formatDesktopNativeMessage("{{known}} {{unknown}}", { known: "yes" })).toBe("yes {{unknown}}")
   })
