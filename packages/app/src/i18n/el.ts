@@ -1253,4 +1253,11 @@ export const dict = {
   "void.overview.state.waiting": "waiting for you",
   "void.overview.state.running": "running",
   "void.overview.state.idle": "idle",
+  "void.overview.needs.title": "Needs you",
+  "void.overview.needs.permission": "Permission \u00b7 {{project}}",
+  "void.overview.needs.allow": "Allow",
+  "void.overview.needs.open": "Open",
+  "void.overview.empty.title": "No sessions yet",
+  "void.overview.empty.text": "Start a session to talk to the main agent.",
+  "void.overview.empty.action": "New session",
 }

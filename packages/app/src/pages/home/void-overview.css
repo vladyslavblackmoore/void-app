@@ -174,3 +174,78 @@ html[data-theme="void"] [data-slot="void-overview-empty"] {
   color: var(--void-text-2);
   text-align: center;
 }
+
+html[data-theme="void"] [data-slot="void-overview-needs-item"] {
+  margin-top: 12px;
+}
+
+html[data-theme="void"] [data-slot="void-overview-needs-kind"] {
+  font-size: 13px;
+  color: var(--void-text-2);
+}
+
+html[data-theme="void"] [data-slot="void-overview-needs-title"] {
+  margin-top: 4px;
+  font-size: 15px;
+}
+
+html[data-theme="void"] [data-slot="void-overview-needs-detail"] {
+  margin-top: 6px;
+  overflow: hidden;
+  font-family: var(--void-font-mono);
+  font-size: var(--void-fs-meta);
+  color: var(--void-text-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html[data-theme="void"] [data-slot="void-overview-needs-actions"] {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+html[data-theme="void"] [data-slot="void-overview-needs-actions"] > [data-component="button-v2"] {
+  flex: 1;
+}
+
+html[data-theme="void"] [data-slot="void-overview-empty-card"] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  align-self: center;
+  gap: 8px;
+  max-width: 320px;
+  margin: 80px auto 0;
+  padding: 24px 22px;
+  border: 1px solid var(--void-border);
+  border-radius: var(--void-radius-card);
+  background: var(--void-glass);
+  -webkit-backdrop-filter: blur(var(--void-blur));
+  backdrop-filter: blur(var(--void-blur));
+  box-shadow: var(--void-shadow);
+  text-align: center;
+}
+
+html[data-theme="void"] [data-slot="void-overview-empty-icon"] {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 4px;
+  border-radius: var(--void-radius-sm);
+  background: var(--void-inner);
+  color: var(--void-text-2);
+}
+
+html[data-theme="void"] [data-slot="void-overview-empty-title"] {
+  font-size: 15px;
+  font-weight: var(--void-weight-medium);
+}
+
+html[data-theme="void"] [data-slot="void-overview-empty-text"] {
+  margin-bottom: 6px;
+  font-size: var(--void-fs-small);
+  line-height: 1.5;
+  color: var(--void-text-2);
+}
