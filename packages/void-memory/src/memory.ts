@@ -46,6 +46,14 @@ export const createMemory = (db: Database, expansionCap: number = defaultExpansi
        updated_at = ?7
      where id = ?1`,
   )
+  const reaches = db.query<{ hit: number }, [string, string]>(
+    `with recursive walk(id) as (
+       select ?1
+       union
+       select e.dst from walk w join edge e on e.src = w.id where e.type = 'depends_on' and e.invalidated_at is null
+     )
+     select 1 as hit from walk where id = ?2 limit 1`,
+  )
   const upsertEdge = db.query(
     `insert into edge(src, dst, type, props, created_at) values(?1, ?2, ?3, ?4, ?5)
      on conflict(src, dst, type) do update set props = excluded.props, invalidated_at = null`,
@@ -93,8 +101,14 @@ export const createMemory = (db: Database, expansionCap: number = defaultExpansi
   }
 
   const putEdge = (edge: EdgeInput, now: number): string | undefined => {
-    for (const end of [edge.src, edge.dst]) {
-      if (!findNode.get(end)) throw new Error(`unknown node: ${end}`)
+    const ends = [edge.src, edge.dst].map((end) => {
+      const row = findNode.get(end)
+      if (!row) throw new Error(`unknown node: ${end}`)
+      return row
+    })
+    if (edge.type === "depends_on") {
+      if (ends.some((row) => row.kind !== "task")) throw new Error("depends_on connects tasks only")
+      if (reaches.get(edge.dst, edge.src)) throw new Error(`dependency cycle: ${edge.src} -> ${edge.dst}`)
     }
     upsertEdge.run(edge.src, edge.dst, edge.type, JSON.stringify(edge.props ?? {}), now)
     if (edge.type !== "supersedes") return undefined
