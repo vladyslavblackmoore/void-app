@@ -7,17 +7,16 @@ html[data-theme="void"] .void-providers-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) var(--void-panel-w-lg, 400px);
   gap: var(--void-gap, 14px);
-  align-items: start;
+  align-items: stretch;
 }
 
 html[data-theme="void"] .void-providers-layout .void-provider-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-self: start;
   padding-bottom: 8px;
 }
 
 html[data-theme="void"] .void-default-model {
-  position: sticky;
-  top: 0;
   display: flex;
   box-sizing: border-box;
   flex-direction: column;
@@ -162,7 +161,8 @@ html[data-theme="void"] .void-default-model-chip[data-muted] {
 html[data-theme="void"] .void-default-model-actions {
   display: flex;
   gap: 8px;
-  margin-top: 16px;
+  margin-top: auto;
+  padding-top: 16px;
 }
 
 html[data-theme="void"] .void-default-model-actions > * {

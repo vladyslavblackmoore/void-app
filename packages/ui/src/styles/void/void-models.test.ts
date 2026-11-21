@@ -81,7 +81,6 @@ describe("void models screens", () => {
   })
 
   test("the default model panel starts level with the grid and lists options as radios", () => {
-    expect(body(".void-default-model")).toContain("top: 0")
     expect(body(".void-default-model-option")).toContain("border-radius: var(--void-radius-control")
     expect(body('.void-default-model-option[aria-checked="true"]')).toContain("background: var(--void-pill)")
     expect(body(".void-default-model-options")).toContain("overflow-y: auto")
@@ -117,5 +116,12 @@ describe("void models screens", () => {
     const opacity = Number(/opacity: ([\d.]+)/.exec(rule)?.[1])
     expect(opacity).toBeGreaterThan(0)
     expect(opacity).toBeLessThanOrEqual(0.45)
+  })
+
+  test("the default model panel stretches to the bottom of the providers grid", () => {
+    expect(body(".void-providers-layout")).toContain("align-items: stretch")
+    expect(body(".void-default-model")).not.toContain("position: sticky")
+    expect(body(".void-providers-layout .void-provider-grid")).toContain("align-self: start")
+    expect(body(".void-default-model-actions")).toContain("margin-top: auto")
   })
 })
