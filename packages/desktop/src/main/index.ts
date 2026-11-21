@@ -31,6 +31,7 @@ import { checkAppExists, resolveAppPath } from "./apps"
 import { CHANNEL } from "./constants"
 import { registerIpcHandlers, sendDeepLinks, sendMenuCommand } from "./ipc"
 import { forwardInitializationFailure } from "./initialization"
+import { quitOrigin } from "./quit-origin"
 import { exportDebugLogs, initCrashReporter, initLogging, startNetLog, write as writeLog } from "./logging"
 import { createMenu } from "./menu"
 import {
@@ -196,6 +197,7 @@ const main = Effect.gen(function* () {
     wslServers.stopAll()
   }
   const relaunch = () => {
+    quitOrigin.markUserQuit()
     setAppQuitting()
     void stopSidecars().finally(() => {
       app.relaunch()
@@ -262,6 +264,7 @@ const main = Effect.gen(function* () {
   })
 
   app.on("before-quit", (event) => {
+    quitOrigin.logQuit(writeLog)
     setAppQuitting()
     const stopping = stopSidecars()
     // An armed OpenCode 2 installer starts the moment the app has quit, and it replaces the files the servers run
@@ -292,13 +295,6 @@ const main = Effect.gen(function* () {
   setRelaunchHandler(() => {
     relaunch()
   })
-
-  for (const signal of ["SIGINT", "SIGTERM"] as const) {
-    process.on(signal, () => {
-      setAppQuitting()
-      void stopSidecars().finally(() => app.quit())
-    })
-  }
 
   const serverReady = Deferred.makeUnsafe<ServerReadyData, unknown>()
 
@@ -532,6 +528,7 @@ const main = Effect.gen(function* () {
 
   app.on("window-all-closed", () => {
     if (process.platform === "darwin") return
+    quitOrigin.markUserQuit()
     app.quit()
   })
   app.on("activate", () => {

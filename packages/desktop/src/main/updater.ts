@@ -8,6 +8,7 @@ import {
   type UpdaterReadyRecord,
 } from "./updater-controller"
 import { getLogger } from "./logging"
+import { quitOrigin } from "./quit-origin"
 import { getStore } from "./store"
 import { setAppQuitting } from "./windows"
 import { nativeT } from "./native-translations"
@@ -76,6 +77,7 @@ function quitAndInstall(updater: AppUpdater) {
   // quitAndInstall closes all windows before emitting before-quit, so
   // flag the quit first to keep window ids persisted for restore.
   setAppQuitting()
+  quitOrigin.markUserQuit()
   // electron-updater reports an installer that could not start as an error event and then returns normally.
   const failures: unknown[] = []
   const fail = (error: Error) => {
@@ -93,6 +95,7 @@ function quitAndInstall(updater: AppUpdater) {
   // The install failed and the app keeps running; clear the flag so
   // deliberate window closes prune ids again.
   setAppQuitting(false)
+  quitOrigin.clearUserQuit()
   throw failures[0]
 }
 
