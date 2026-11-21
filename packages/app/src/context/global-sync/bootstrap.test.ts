@@ -5,6 +5,7 @@ import type { Config, OpencodeClient, Project } from "@opencode-ai/sdk/v2/client
 import type { AgentApi, CatalogApi, CommandApi, ReferenceApi } from "@opencode-ai/client/promise"
 import type { NormalizedProviderListResponse } from "@opencode-ai/session-ui/context"
 import {
+  agentsQueryFilter,
   bootstrapDirectory,
   loadAgentsQuery,
   loadCommands,
@@ -326,5 +327,30 @@ describe("query keys", () => {
 
     expect(calls).toEqual([{ location: { directory: "/repo" } }])
     expect(result).toHaveLength(1)
+  })
+})
+
+describe("agentsQueryFilter", () => {
+  test("drops cached agent lists of the scope so the next bootstrap refetches them", async () => {
+    const scope = "scope-a" as ServerScope
+    const other = "scope-b" as ServerScope
+    const client = new QueryClient()
+    client.setQueryData([scope, "/repo", "agents"], [{ name: "old" }])
+    client.setQueryData([scope, "/other", "agents"], [{ name: "old" }])
+    client.setQueryData([other, "/repo", "agents"], [{ name: "keep" }])
+    client.setQueryData([scope, "/repo", "mcp"], { keep: true })
+
+    client.removeQueries(agentsQueryFilter(scope))
+
+    expect(client.getQueryData([scope, "/repo", "agents"])).toBeUndefined()
+    expect(client.getQueryData([scope, "/other", "agents"])).toBeUndefined()
+    expect(client.getQueryData([other, "/repo", "agents"])).toEqual([{ name: "keep" }])
+    expect(client.getQueryData([scope, "/repo", "mcp"])).toEqual({ keep: true })
+
+    const fresh = await client.ensureQueryData({
+      queryKey: [scope, "/repo", "agents"],
+      queryFn: async () => [{ name: "new" }],
+    })
+    expect(fresh).toEqual([{ name: "new" }])
   })
 })

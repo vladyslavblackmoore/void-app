@@ -104,10 +104,35 @@ describe("agents diagram", () => {
     expect(buildAgentsDiagram({ agents, providers }).mainCanStartSubagents).toBe(true)
   })
 
+  test("flags only the diagram main node, also when it falls back to a primary agent", () => {
+    const diagram = buildAgentsDiagram({
+      agents: [
+        { name: "build", mode: "primary" },
+        { name: "doc", mode: "subagent" },
+      ],
+      providers,
+    })
+    expect(diagram.main.name).toBe("build")
+    expect(diagram.main.isMain).toBe(true)
+    expect(diagram.subagents.every((node) => !node.isMain)).toBe(true)
+  })
+
   test("works without a main agent in the list", () => {
     const diagram = buildAgentsDiagram({ agents: [{ name: "doc", mode: "subagent" }], providers })
     expect(diagram.main.name).toBe("main")
     expect(diagram.subagents.map((node) => node.name)).toEqual(["doc"])
+  })
+})
+
+describe("empty config values", () => {
+  test("treat an empty model and effort as unset", () => {
+    const diagram = buildAgentsDiagram({
+      agents: [{ name: "doc", mode: "subagent", variant: "" }],
+      providers,
+      config: { doc: { model: "", variant: "" } },
+    })
+    expect(diagram.subagents[0]?.inherits).toBe(true)
+    expect(diagram.subagents[0]?.variant).toBeUndefined()
   })
 })
 

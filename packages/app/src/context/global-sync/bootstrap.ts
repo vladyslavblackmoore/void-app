@@ -271,6 +271,10 @@ export const loadAgentsQuery = (
       }),
   })
 
+export const agentsQueryFilter = (scope: ServerScope) => ({
+  predicate: (query: { queryKey: readonly unknown[] }) => query.queryKey[0] === scope && query.queryKey[2] === "agents",
+})
+
 export const loadCommands = (
   directory: string,
   api: CommandListApi,

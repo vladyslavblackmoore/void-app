@@ -28,6 +28,7 @@ export type AgentNode = {
   model?: ModelRef
   variant?: string
   inherits: boolean
+  isMain: boolean
   status: "ready" | "unavailable"
 }
 
@@ -67,7 +68,7 @@ export function linkPaths(count: number): AgentLink[] {
 function resolve(agent: AgentInput | undefined, config: AgentConfigInput | undefined) {
   return {
     model: agent?.model ?? parseModelRef(config?.model),
-    variant: agent?.variant ?? config?.variant,
+    variant: agent?.variant || config?.variant || undefined,
   }
 }
 
@@ -92,6 +93,7 @@ export function buildAgentsDiagram(input: {
     model: mainModel,
     variant: mainResolved.variant,
     inherits: false,
+    isMain: true,
     status: status(mainModel),
   }
 
@@ -105,6 +107,7 @@ export function buildAgentsDiagram(input: {
         model: resolved.model,
         variant: resolved.variant,
         inherits: !resolved.model,
+        isMain: false,
         status: status(resolved.model ?? mainModel),
       }
     })
