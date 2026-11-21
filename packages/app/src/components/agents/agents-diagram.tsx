@@ -6,17 +6,17 @@ import { useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
 import { loadSpaceAgentsQuery } from "@/context/global-sync/bootstrap"
 import { useProviders } from "@/hooks/use-providers"
-import { buildAgentsDiagram, formatModelRef, LINK_HEIGHT, linkPaths, type AgentNode } from "./agents-diagram-model"
+import { buildAgentsDiagram, LINK_HEIGHT, linkPaths, type AgentNode } from "./agents-diagram-model"
 import { showToast } from "@/utils/toast"
 import { fileFields, hasRunningSessions, withConfigProviders, type AgentConfigPatch } from "./agent-editor"
 import { AgentEditorPanel } from "./agent-editor-panel"
-import { modelTagKind, modelTagLabel } from "./model-tag"
+import { modelChipLabel, modelTagKind, modelTagLabel } from "./model-tag"
 import "./agents-diagram.css"
 
 function AgentNodeCard(props: { node: AgentNode; main?: boolean; selected: boolean; onSelect: () => void }) {
   const language = useLanguage()
   const model = () => {
-    if (props.node.model) return formatModelRef(props.node.model)
+    if (props.node.model) return modelChipLabel(props.node.model)
     return props.node.inherits ? language.t("agents.model.inherits") : language.t("agents.model.default")
   }
 
@@ -58,7 +58,7 @@ function AgentNodeCard(props: { node: AgentNode; main?: boolean; selected: boole
         </span>
         <span data-slot="agents-chip" class="rounded-md px-2 py-1 text-[11px]">
           {language.t("agents.effort")}{" "}
-          <span class="font-semibold">{props.node.variant ?? language.t("agents.effort.notSet")}</span>
+          <strong class="font-semibold">{props.node.variant ?? language.t("agents.effort.notSet")}</strong>
         </span>
       </div>
     </button>
@@ -88,7 +88,12 @@ export function AgentsDiagram() {
     buildAgentsDiagram({
       agents: agents(),
       config: globalAgents.data?.agent,
-      providers: providers.connected(),
+      providers: [
+        ...providers.connected(),
+        ...Object.keys(globalAgents.data?.provider ?? {})
+          .filter((id) => !providers.connected().some((provider) => provider.id === id))
+          .map((id) => ({ id, models: {} })),
+      ],
       defaultModel: providers.defaultModel(),
     }),
   )
@@ -164,6 +169,12 @@ export function AgentsDiagram() {
             </div>
           </Show>
         </div>
+      </div>
+      <div data-component="agents-legend" aria-hidden="false">
+        <span data-slot="agents-dot" data-status="ready" class="size-2 rounded-full" />
+        <span>{language.t("agents.legend.ready")}</span>
+        <span data-slot="agents-dot" data-status="unavailable" class="size-2 rounded-full" />
+        <span>{language.t("agents.legend.unavailable")}</span>
       </div>
       <Show when={state.selected} keyed>
         {(name) => (

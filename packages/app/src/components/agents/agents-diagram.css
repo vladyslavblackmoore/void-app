@@ -130,8 +130,41 @@ html[data-theme="void"] [data-component="agents-node"][data-selected="true"] {
 html[data-theme="void"] [data-component="agents-node"] [data-slot="agents-chip"],
 html[data-theme="void"] [data-component="agents-panel"] [data-slot="agents-chip"] {
   background: var(--void-inner);
-  color: var(--void-text-2);
+  color: var(--void-text-1);
   border-radius: var(--void-radius-sm);
+}
+
+html[data-theme="void"] [data-component="agents-node"] [data-slot="agents-chip"] strong {
+  font-weight: var(--void-weight-bold);
+}
+
+[data-component="agents-legend"] {
+  display: none;
+}
+
+html[data-theme="void"] [data-component="agents-legend"] {
+  display: flex;
+  position: absolute;
+  left: 36px;
+  bottom: 24px;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--void-card);
+  border: 1px solid var(--void-border);
+  border-radius: var(--void-radius-card);
+  box-shadow: var(--void-shadow);
+  color: var(--void-text-2);
+  font-size: var(--void-fs-small);
+}
+
+html[data-theme="void"] [data-component="agents-legend"] [data-slot="agents-dot"][data-status="ready"] {
+  background: var(--void-green);
+}
+
+html[data-theme="void"] [data-component="agents-legend"] [data-slot="agents-dot"][data-status="unavailable"] {
+  background: var(--void-text-3);
+  margin-left: 8px;
 }
 
 html[data-theme="void"] [data-component="agents-node"] [data-slot="agents-dot"][data-status="ready"],
@@ -176,6 +209,10 @@ html[data-theme="void"] [data-component="agents-node"] [data-slot="agents-model-
   line-height: 1.2;
   color: var(--void-on-tag);
   background: var(--void-blue);
+}
+
+html[data-theme="void"][data-color-scheme="light"] [data-slot="agents-model-tag"][data-kind="other"] {
+  background: #c9b8ff;
 }
 
 html[data-theme="void"] [data-slot="agents-model-tag"][data-kind="opus"] {

@@ -20,3 +20,7 @@ export function modelTagKind(model: ModelRef | undefined): ModelTagKind {
 export function modelTagLabel(model: ModelRef | undefined) {
   return model?.modelID
 }
+
+export function modelChipLabel(model: ModelRef | undefined) {
+  return model?.modelID
+}

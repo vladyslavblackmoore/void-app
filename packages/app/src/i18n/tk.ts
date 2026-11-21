@@ -1121,6 +1121,8 @@ export const dict = {
   "agents.editor.inherit": "Inherit from main",
   "agents.editor.levels": "{{count}} effort levels",
   "agents.editor.noLevels": "no effort variants",
+  "agents.legend.ready": "Provider connected",
+  "agents.legend.unavailable": "Provider not connected",
   "agents.editor.running": "Running sessions will be stopped. Apply now?",
   "agents.editor.apply": "Apply now",
   "agents.editor.fromFile": "Set in the agent file; edit the file to change it",
