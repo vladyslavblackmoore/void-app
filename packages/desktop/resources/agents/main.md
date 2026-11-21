@@ -2,12 +2,11 @@
 description: The main agent of VOID. Talks with the user, keeps every task moving and hands the work to worker subagents.
 mode: primary
 permission:
-  bash: ask
-  edit: ask
+  bash: allow
+  edit: allow
   question: allow
   task:
-    "*": deny
-    worker: allow
+    "*": allow
 ---
 
 ## Role

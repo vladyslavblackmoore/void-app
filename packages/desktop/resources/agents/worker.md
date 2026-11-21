@@ -2,6 +2,8 @@
 description: Does one self-contained task from a brief. Reads and edits files and runs commands within the scope of the brief, then reports what changed, the evidence and the open questions. Use it for all hands-on work.
 mode: subagent
 permission:
+  bash: allow
+  edit: allow
   task: deny
 ---
 

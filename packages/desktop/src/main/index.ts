@@ -13,8 +13,10 @@ import contextMenu from "electron-context-menu"
 
 import mainAgent from "../../resources/agents/main.md?raw"
 import workerAgent from "../../resources/agents/worker.md?raw"
+import subscriptionWrapper from "../../resources/provider/subscription.mjs?raw"
 import type { ServerReadyData } from "../preload/types"
 import { seedAgents } from "./agents"
+import { seedConfig } from "./config-seed"
 import { checkAppExists, resolveAppPath } from "./apps"
 import { CHANNEL } from "./constants"
 import { registerIpcHandlers, sendDeepLinks, sendMenuCommand } from "./ipc"
@@ -356,15 +358,15 @@ const main = Effect.gen(function* () {
   const loadingTask = yield* Effect.gen(function* () {
     logger.log("sidecar connection started", { version: SIDECAR_VERSION })
 
+    const configDir = join(process.env.XDG_CONFIG_HOME ?? voidAppEnv(VOID_HOME, {}).XDG_CONFIG_HOME, "opencode")
     yield* Effect.promise(() =>
-      seedAgents(
-        join(process.env.XDG_CONFIG_HOME ?? voidAppEnv(VOID_HOME, {}).XDG_CONFIG_HOME, "opencode"),
-        app.getPath("userData"),
-        [
-          { name: "main", content: mainAgent },
-          { name: "worker", content: workerAgent },
-        ],
-      ).catch((error) => logger.warn("failed to seed agents", error)),
+      seedAgents(configDir, app.getPath("userData"), [
+        { name: "main", content: mainAgent },
+        { name: "worker", content: workerAgent },
+      ]).catch((error) => logger.warn("failed to seed agents", error)),
+    )
+    yield* Effect.promise(() =>
+      seedConfig(configDir, subscriptionWrapper).catch((error) => logger.warn("failed to seed config", error)),
     )
 
     ensureLoopbackNoProxy()

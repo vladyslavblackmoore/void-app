@@ -87,3 +87,23 @@ describe("seedAgents", () => {
     expect(await readFile(join(dir, "agents", "main.md"), "utf8")).toBe("main prompt")
   })
 })
+
+describe("bundled agents", () => {
+  const permission = async (name: string) => {
+    const text = await readFile(join(import.meta.dir, "../../resources/agents", `${name}.md`), "utf8")
+    return Bun.YAML.parse(text.split("---")[1]) as { permission: Record<string, unknown> }
+  }
+
+  test("main runs commands, edits and calls any subagent without asking", async () => {
+    expect((await permission("main")).permission).toEqual({
+      bash: "allow",
+      edit: "allow",
+      question: "allow",
+      task: { "*": "allow" },
+    })
+  })
+
+  test("worker runs commands and edits without asking and starts no tasks", async () => {
+    expect((await permission("worker")).permission).toEqual({ bash: "allow", edit: "allow", task: "deny" })
+  })
+})
