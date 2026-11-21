@@ -7,10 +7,12 @@ import { useLanguage } from "@/context/language"
 import { useNotification } from "@/context/notification"
 import { usePlatform } from "@/context/platform"
 import { ServerConnection } from "@/context/server"
+import { isSettingsTabPage, settingsTabHref, type SettingsTabPage } from "@/context/settings-tabs"
 import { closeHomeProject, errorMessage, homeProjectDirectories } from "@/pages/layout/helpers"
 import { Persist, persisted } from "@/utils/persist"
 import { showToast } from "@/utils/toast"
 import { useDialog } from "@opencode-ai/ui/context/dialog"
+import { useLocation, useNavigate } from "@solidjs/router"
 import { createResource } from "solid-js"
 import { createStore } from "solid-js/store"
 import type { HomeController } from "./home-controller"
@@ -21,7 +23,9 @@ export function createHomeProjectsController(home: HomeController) {
   const dialog = useDialog()
   const language = useLanguage()
   const notification = useNotification()
-  const openSettings = useSettingsCommand()
+  useSettingsCommand()
+  const navigate = useNavigate()
+  const location = useLocation()
   const serverManagement = useServerManagementController({ navigateOnAdd: false })
   const [_state, setState, _, ready] = persisted(
     Persist.global("home.servers", ["home.servers.v1"]),
@@ -119,7 +123,11 @@ export function createHomeProjectsController(home: HomeController) {
       },
     },
     utility: {
-      settings: openSettings,
+      settingsPage: (): SettingsTabPage | undefined => {
+        const [, root, page] = location.pathname.split("/")
+        return root === "settings" && isSettingsTabPage(page) ? page : undefined
+      },
+      openSettingsPage: (page: SettingsTabPage) => navigate(settingsTabHref(page)),
       help: () => platform.openExternal("https://opencode.ai/desktop-feedback"),
     },
   }

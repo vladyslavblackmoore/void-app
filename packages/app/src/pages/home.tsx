@@ -39,7 +39,8 @@ export function NewHome() {
           <HomeSessions sessions={sessions} search={search} scroll={scroll} />
           <HomeUtilityNav
             class="flex lg:hidden"
-            onOpenSettings={projects.utility.settings}
+            settingsPage={projects.utility.settingsPage}
+            onOpenSettingsPage={projects.utility.openSettingsPage}
             onOpenHelp={projects.utility.help}
             language={projects.copy.language}
           />

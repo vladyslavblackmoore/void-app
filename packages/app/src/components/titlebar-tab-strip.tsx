@@ -7,9 +7,9 @@ import { Accessibility, AutoScroller, Feedback, PointerActivationConstraints } f
 import { RestrictToHorizontalAxis } from "@dnd-kit/abstract/modifiers"
 import { RestrictToElement } from "@dnd-kit/dom/modifiers"
 import { arrayMove } from "@dnd-kit/helpers"
-import { settingsTabs, tabHref, tabKey, type SessionTab, type StoredTab, type Tab } from "@/context/tabs"
+import { tabHref, tabKey, type SessionTab, type StoredTab, type Tab } from "@/context/tabs"
 import { ServerConnection } from "@/context/server"
-import { DraftTabItem, SettingsTabItem, TabNavItem } from "@/components/titlebar-tab-nav"
+import { DraftTabItem, TabNavItem } from "@/components/titlebar-tab-nav"
 import { useGlobal, type ServerCtx } from "@/context/global"
 import { useLanguage } from "@/context/language"
 import { useCommand } from "@/context/command"
@@ -249,12 +249,8 @@ export function TitlebarTabStrip(props: {
 
   function selectAdjacentTab(offset: -1 | 1) {
     const current = props.currentTab()
-    const key = adjacentTabKey(
-      [...visibleTabIds(), ...settingsTabs.map(tabKey)],
-      current ? tabKey(current) : undefined,
-      offset,
-    )
-    const next = [...props.tabs, ...settingsTabs].find((tab) => tabKey(tab) === key)
+    const key = adjacentTabKey(visibleTabIds(), current ? tabKey(current) : undefined, offset)
+    const next = props.tabs.find((tab) => tabKey(tab) === key)
     if (next) props.onNavigate(next)
   }
 
@@ -398,19 +394,6 @@ export function TitlebarTabStrip(props: {
           aria-hidden="true"
           class="pointer-events-none absolute inset-y-0 right-0 z-10 w-6 bg-[linear-gradient(to_left,var(--v2-background-bg-deep),transparent)]"
         />
-      </div>
-      <div class="flex-1" />
-      <div data-slot="titlebar-fixed-tabs" class="flex shrink-0 flex-row items-center gap-1 [app-region:no-drag]">
-        <For each={settingsTabs}>
-          {(tab) => (
-            <SettingsTabItem
-              href={tabHref(tab)}
-              title={language.t(`tab.settings.${tab.page}`)}
-              active={props.currentTab() ? tabKey(props.currentTab()!) === tabKey(tab) : false}
-              onNavigate={() => props.onNavigate(tab)}
-            />
-          )}
-        </For>
       </div>
     </>
   )
