@@ -27,5 +27,6 @@ describe("overview model", () => {
     expect(filterOverview(list, "all").map((item) => item.id)).toEqual(["a", "b", "c", "d"])
     expect(filterOverview(list, "running").map((item) => item.id)).toEqual(["a"])
     expect(filterOverview(list, "waiting").map((item) => item.id)).toEqual(["b", "d"])
+    expect(filterOverview(list, "done").map((item) => item.id)).toEqual(["c"])
   })
 })

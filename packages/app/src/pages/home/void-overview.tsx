@@ -12,13 +12,14 @@ import {
   type OverviewFilter,
   type OverviewSession,
 } from "@/components/void/overview-model"
+import { createOverviewAgents, OverviewAgentMap } from "@/components/void/overview-agent-map"
 import { sessionTitle } from "@/utils/session-title"
 import type { HomeController } from "./home-controller"
 import type { HomeSessionRecord, HomeSessionsController } from "./home-sessions-controller"
 import { createVoidSessionItems } from "./void-session-items"
 import "./void-overview.css"
 
-const filters: OverviewFilter[] = ["all", "running", "waiting"]
+const filters: OverviewFilter[] = ["all", "running", "done"]
 
 export function VoidOverview(props: { home: HomeController; sessions: HomeSessionsController }) {
   const language = useLanguage()
@@ -55,13 +56,20 @@ export function VoidOverview(props: { home: HomeController; sessions: HomeSessio
       })),
     ),
   )
+  const agents = createOverviewAgents()
+  const agentCount = () => 1 + agents().subagents.length
   const stats = createMemo(() => overviewStats(items()))
   const visible = createMemo(() => filterOverview(items(), filter()))
 
   return (
     <div data-component="void-overview">
       <header data-slot="void-overview-head">
-        <h1 data-slot="void-overview-title">{language.t("void.overview.title")}</h1>
+        <div>
+          <h1 data-slot="void-overview-title">{language.t("void.overview.title")}</h1>
+          <div data-slot="void-overview-subtitle">
+            {language.t("void.overview.agents.count", { count: String(agentCount()) })}
+          </div>
+        </div>
         <div data-slot="void-overview-stats">
           <Stat value={stats().sessions} label={language.t("void.overview.stat.sessions")} />
           <Stat value={stats().running} label={language.t("void.overview.stat.running")} />
@@ -129,6 +137,7 @@ export function VoidOverview(props: { home: HomeController; sessions: HomeSessio
             </CardV2>
           </aside>
         </Show>
+        <OverviewAgentMap agents={agents} />
       </div>
     </div>
   )

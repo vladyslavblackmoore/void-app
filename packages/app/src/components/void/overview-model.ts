@@ -1,5 +1,5 @@
 export type OverviewState = "waiting" | "running" | "idle"
-export type OverviewFilter = "all" | "running" | "waiting"
+export type OverviewFilter = "all" | "running" | "waiting" | "done"
 
 export type OverviewSession = {
   id: string
@@ -22,5 +22,6 @@ export function overviewStats(items: OverviewSession[]) {
 
 export function filterOverview<T extends OverviewSession>(items: T[], filter: OverviewFilter) {
   if (filter === "all") return items
-  return items.filter((item) => overviewState(item) === filter)
+  const state = filter === "done" ? "idle" : filter
+  return items.filter((item) => overviewState(item) === state)
 }
