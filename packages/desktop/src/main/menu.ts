@@ -1,4 +1,4 @@
-import { BrowserWindow, Menu } from "electron"
+import { app, BrowserWindow, Menu } from "electron"
 import type { MenuItemConstructorOptions } from "electron"
 import {
   DESKTOP_MENU,
@@ -11,6 +11,7 @@ import { UPDATER_ENABLED } from "./constants"
 import { runDesktopMenuAction } from "./desktop-menu-actions"
 import { openExternalURL } from "./windows"
 import { nativeT } from "./native-translations"
+import { quitOrigin } from "./quit-origin"
 
 type Deps = {
   trigger: (id: string) => void
@@ -36,6 +37,16 @@ export function createMenu(deps: Deps) {
 
 function nativeItem(entry: DesktopMenuEntry, deps: Deps): MenuItemConstructorOptions {
   if (entry.type === "separator") return { type: "separator" }
+  if (entry.role === "quit") {
+    return {
+      label: `Quit ${app.name}`,
+      accelerator: "CmdOrCtrl+Q",
+      click: () => {
+        quitOrigin.markUserQuit()
+        app.quit()
+      },
+    }
+  }
   if (entry.role) return { role: nativeRole(entry.role), label: entry.labelKey ? nativeT(entry.labelKey) : undefined }
 
   const item: MenuItemConstructorOptions = {

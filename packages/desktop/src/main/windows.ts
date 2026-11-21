@@ -9,6 +9,7 @@ import { dirname, isAbsolute, join, relative, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 import type { TitlebarTheme } from "../preload/types"
 import { exportDebugLogs, write as writeLog } from "./logging"
+import { quitOrigin } from "./quit-origin"
 import { getStore, removeStoreFile } from "./store"
 import { PINCH_ZOOM_ENABLED_KEY, WINDOW_IDS_KEY } from "./store-keys"
 import { createUnresponsiveSampler } from "./unresponsive"
@@ -46,6 +47,8 @@ protocol.registerSchemesAsPrivileged([
 
 let backgroundColor: string | undefined
 let relaunchHandler = () => {
+  quitOrigin.markUserQuit()
+  quitOrigin.logQuit(writeLog)
   setAppQuitting()
   app.relaunch()
   app.exit(0)
@@ -361,6 +364,7 @@ function wireWindowRecovery(win: BrowserWindow, name: string) {
     }
     if (action === "quit") {
       sampler.stopAndFlush()
+      quitOrigin.markUserQuit()
       app.quit()
     }
     return false
