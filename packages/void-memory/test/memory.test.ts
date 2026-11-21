@@ -277,3 +277,25 @@ test("the expansion row cap truncates the walk", () => {
   expect(t.store.recall({ query: "hubword", hops: 1, limit: 50 }).nodes).toEqual([])
   capped.close()
 })
+
+test("a hub with ten thousand edges expands to its most recent edges only", () => {
+  const bounded = tempStore({ fanout: 5 })
+  bounded.db.run("begin")
+  bounded.db.run(
+    `insert into node(id, kind, project, scope, title, props, created_at, updated_at) values('hub', 'entity', 'p1', 'shared', 'hubword', '{}', 1, 1)`,
+  )
+  bounded.db.run(
+    `with recursive c(i) as (select 0 union all select i + 1 from c where i < 9999)
+     insert into node(id, kind, project, scope, title, props, created_at, updated_at) select 's' || i, 'entity', 'p1', 'shared', 'spoke', '{}', 1, 1 from c`,
+  )
+  bounded.db.run(
+    `with recursive c(i) as (select 0 union all select i + 1 from c where i < 9999)
+     insert into edge(src, dst, type, props, created_at) select 'hub', 's' || i, 'relates_to', '{}', i + 1 from c`,
+  )
+  bounded.db.run("commit")
+  const result = bounded.store.recall({ query: "hubword", hops: 1, limit: 50 })
+  expect(result.nodes.map((n) => n.id).sort()).toEqual(["hub", "s9995", "s9996", "s9997", "s9998", "s9999"])
+  const two = bounded.store.recall({ query: "hubword", hops: 2, limit: 50 })
+  expect(two.nodes.length).toBe(6)
+  bounded.close()
+})

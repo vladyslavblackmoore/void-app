@@ -5,12 +5,15 @@ import { mkdirSync, rmSync, statSync, writeFileSync } from "node:fs"
 import { homedir } from "node:os"
 import { join } from "node:path"
 import { openDatabase } from "../src/db"
-import { expansionSql } from "../src/memory"
+import { defaultFanout, expansionSql } from "../src/memory"
 import { createStore } from "../src/store"
 
 const outDir = join(homedir(), ".void/spikes/m9-graph-memory")
 const scratch = join(outDir, "scratch")
-const reportPath = join(outDir, "bench-server-report.md")
+const reportPath = process.env.BENCH_REPORT ?? join(outDir, "bench-server-report.md")
+const fanouts = (process.env.BENCH_FANOUT ?? "").split(",").filter((v) => v !== "").map(Number)
+const withAnalyze = process.env.BENCH_ANALYZE !== "0"
+const variants = (process.env.BENCH_VARIANTS ?? "uniform,skewed").split(",")
 const mainPath = join(import.meta.dir, "../src/main.ts")
 
 let seed = 12345
@@ -118,11 +121,11 @@ const rss = (pid: number) => {
   return Number(out) / 1024
 }
 
-const serverRun = async (path: string, skewed: boolean) => {
+const serverRun = async (path: string, skewed: boolean, fanout?: number) => {
   const transport = new StdioClientTransport({
     command: process.execPath,
     args: [mainPath],
-    env: { PATH: process.env.PATH ?? "", VOID_MEMORY_DB: path },
+    env: { PATH: process.env.PATH ?? "", VOID_MEMORY_DB: path, ...(fanout === undefined ? {} : { VOID_MEMORY_FANOUT: String(fanout) }) },
     stderr: "inherit",
   })
   const client = new Client({ name: "bench", version: "0" })
@@ -174,20 +177,21 @@ const plan = (db: Database, sql: string, params: (string | number | null)[]) =>
 
 const seedSql = `select n.id as id, -bm25(node_fts) as rank from node_fts join node n on n.rowid = node_fts.rowid where node_fts match ?1 and (n.scope = 'shared' or n.scope = ?2) and n.invalidated_at is null order by -bm25(node_fts) desc limit ?3`
 
-const inProcess = async (path: string, skewed: boolean) => {
+const inProcess = async (path: string, skewed: boolean, fanout?: number) => {
   const db = new Database(path, { readonly: true })
-  const store = createStore(openDatabase(path).db)
+  const store = createStore(openDatabase(path).db, { fanout })
   const out: Record<string, { p50: number; p95: number }> = {}
   out["in-process recall hops 1"] = await measure(() => store.recall({ query: query(), hops: 1, agent: "bench" }))
   out["in-process recall hops 2"] = await measure(() => store.recall({ query: query(), hops: 2, agent: "bench" }))
   const sql = expansionSql(false, 300)
   const seeds = () => JSON.stringify(Array.from({ length: 10 }, () => `n${ri(N)}`))
+  const bound = fanout ?? defaultFanout
   const q = db.query<{ id: string; d: number; seed: string }, (string | number | null)[]>(sql)
-  out["expansion sql, 10 random seeds, 1 hop"] = await measure(() => q.all(seeds(), 1, null))
-  out["expansion sql, 10 random seeds, 2 hops"] = await measure(() => q.all(seeds(), 2, null))
-  const rows = (hops: number, json: string) => q.all(json, hops, null).length
+  out["expansion sql, 10 random seeds, 1 hop"] = await measure(() => q.all(seeds(), 1, null, bound))
+  out["expansion sql, 10 random seeds, 2 hops"] = await measure(() => q.all(seeds(), 2, null, bound))
+  const rows = (hops: number, json: string) => q.all(json, hops, null, bound).length
   const oneSeed = db.query<{ id: string; d: number; seed: string }, (string | number | null)[]>(sql)
-  out["expansion sql, 1 random seed, 1 hop"] = await measure(() => oneSeed.all(JSON.stringify([`n${ri(N)}`]), 1, null))
+  out["expansion sql, 1 random seed, 1 hop"] = await measure(() => oneSeed.all(JSON.stringify([`n${ri(N)}`]), 1, null, bound))
   const spike = db.query(
     `with recursive walk(id,d) as (select ?1,0 union select e.dst,w.d+1 from walk w join edge e on e.src=w.id where w.d<1 and e.invalidated_at is null union select e.src,w.d+1 from walk w join edge e on e.dst=w.id where w.d<1 and e.invalidated_at is null) select n.id,n.title,w.d from walk w join node n on n.id=w.id limit 200`,
   )
@@ -195,13 +199,13 @@ const inProcess = async (path: string, skewed: boolean) => {
   const extra: string[] = []
   extra.push(`mean rows, 10 random seeds: hops 1 = ${(Array.from({ length: 50 }, () => rows(1, seeds())).reduce((a, b) => a + b, 0) / 50).toFixed(1)}, hops 2 = ${(Array.from({ length: 50 }, () => rows(2, seeds())).reduce((a, b) => a + b, 0) / 50).toFixed(1)}`)
   if (skewed) {
-    out["expansion sql, hub0 seed, 1 hop"] = await measure(() => q.all(JSON.stringify(["hub0"]), 1, null))
-    out["expansion sql, hub0 seed, 2 hops"] = await measure(() => q.all(JSON.stringify(["hub0"]), 2, null))
+    out["expansion sql, hub0 seed, 1 hop"] = await measure(() => q.all(JSON.stringify(["hub0"]), 1, null, bound))
+    out["expansion sql, hub0 seed, 2 hops"] = await measure(() => q.all(JSON.stringify(["hub0"]), 2, null, bound))
     extra.push(`rows for hub0 seed: hops 1 = ${rows(1, JSON.stringify(["hub0"]))}, hops 2 = ${rows(2, JSON.stringify(["hub0"]))} (cap 300)`)
     extra.push(`recall node count for hub0 query hops 2: ${store.recall({ query: "hubword0", hops: 2 }).nodes.length}`)
   }
   const plans = [
-    `expansion (same SQL for 1 and 2 hops; hop depth is the bound parameter ?2):\n${plan(db, sql, [seeds(), 1, null])}`,
+    `expansion (same SQL for 1 and 2 hops; hop depth is the bound parameter ?2):\n${plan(db, sql, [seeds(), 1, null, bound])}`,
     `seed query (fts):\n${plan(db, seedSql, ['"память" "очередь"', null, 10])}`,
   ]
   db.close()
@@ -232,35 +236,31 @@ emit("- Preload: written directly through prepared SQL on the store's schema (no
 emit("- 200 runs after 10 warm-up runs per measure. Thresholds: remember p95 <= 20 ms, recall p95 <= 50 ms.")
 emit("- Recall queries are two random vocabulary words (AND, falling back to OR), limit 10 (default), caller agent bench.")
 
-for (const skewed of [false, true]) {
-  const name = skewed ? "skewed" : "uniform"
+for (const name of variants) {
+  const skewed = name === "skewed"
   const path = join(scratch, `${name}.db`)
   emit()
   emit(`## Variant: ${name}`)
   const built = build(path, skewed)
   emit(`- Loaded ${built.nodes} nodes, ${built.edges} edges in ${(built.loadMs / 1000).toFixed(1)} s; file ${(built.bytes / 1048576).toFixed(1)} MiB${skewed ? `; ${hubs} hub nodes (hub0..hub${hubs - 1}, title word hubword<i>) with about ${hubDegree} edges each` : ""}.`)
-  for (const analyzed of [false, true]) {
-    if (analyzed) analyzeDb(path)
-    const run = await serverRun(path, skewed)
-    emit()
-    emit(`### ${name}, ${analyzed ? "after ANALYZE" : "no ANALYZE (as the server runs it)"}`)
-    emit(`- Server start to initialize: ${run.startMs.toFixed(0)} ms`)
-    emit(`- RSS idle (1 s after start, before any call): ${run.idle.toFixed(1)} MiB; after the benchmark: ${run.after.toFixed(1)} MiB`)
-    for (const [label, value] of Object.entries(run.results)) {
-      const limit = label === "remember" ? 20 : 50
-      emit(`- ${label}: ${fmt(value)} (${value.p95 <= limit ? "within" : "OVER"} ${limit} ms)`)
-    }
-    const direct = await inProcess(path, skewed)
-    emit(`- Direct (no stdio, same file):`)
-    for (const [label, value] of Object.entries(direct.out)) emit(`  - ${label}: ${fmt(value)}`)
-    for (const line of direct.extra) emit(`  - ${line}`)
-    if (analyzed) {
+  for (const fanout of fanouts.length > 0 ? fanouts : [undefined]) {
+    for (const analyzed of withAnalyze ? [false, true] : [false]) {
+      if (analyzed) analyzeDb(path)
+      const run = await serverRun(path, skewed, fanout)
       emit()
-      emit("Query plans (after ANALYZE):")
-      for (const p of direct.plans) emit("```\n" + p + "\n```")
-    } else {
+      emit(`### ${name}, fan-out ${fanout ?? defaultFanout}, ${analyzed ? "after ANALYZE" : "no ANALYZE (as the server runs it)"}`)
+      emit(`- Server start to initialize: ${run.startMs.toFixed(0)} ms`)
+      emit(`- RSS idle (1 s after start, before any call): ${run.idle.toFixed(1)} MiB; after the benchmark: ${run.after.toFixed(1)} MiB`)
+      for (const [label, value] of Object.entries(run.results)) {
+        const limit = label === "remember" ? 20 : 50
+        emit(`- ${label}: ${fmt(value)} (${value.p95 <= limit ? "within" : "OVER"} ${limit} ms)`)
+      }
+      const direct = await inProcess(path, skewed, fanout)
+      emit(`- Direct (no stdio, same file):`)
+      for (const [label, value] of Object.entries(direct.out)) emit(`  - ${label}: ${fmt(value)}`)
+      for (const line of direct.extra) emit(`  - ${line}`)
       emit()
-      emit("Query plans (no ANALYZE):")
+      emit(`Query plans (${analyzed ? "after ANALYZE" : "no ANALYZE"}):`)
       for (const p of direct.plans) emit("```\n" + p + "\n```")
     }
   }
