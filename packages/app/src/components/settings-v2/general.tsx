@@ -7,6 +7,8 @@ import { TextInputV2 } from "@opencode-ai/ui/v2/text-input-v2"
 import { useDialog } from "@opencode-ai/ui/context/dialog"
 import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
+import { useVoidTheme } from "../void/use-void-theme"
+import { useVoidCopy } from "./use-void-copy"
 import { useUpdaterAction } from "../updater-action"
 import { useSettings } from "@/context/settings"
 import { ExternalLink } from "../external-link"
@@ -121,13 +123,15 @@ const ShellSetting: Component<{ controller: ShellSettingsController }> = (props)
 
 const AppearanceSection: Component<{ controller: AppearanceSettingsController }> = (props) => {
   const language = useLanguage()
+  const copy = useVoidCopy()
+  const isVoid = useVoidTheme()
   return (
     <div class="settings-v2-section">
       <h3 class="settings-v2-section-title">{language.t("settings.general.section.appearance")}</h3>
       <SettingsListV2>
         <SettingsRowV2
           title={language.t("settings.general.row.colorScheme.title")}
-          description={language.t("settings.general.row.colorScheme.description")}
+          description={copy("settings.general.row.colorScheme.description")}
         >
           <SelectV2
             appearance="inline"
@@ -149,10 +153,13 @@ const AppearanceSection: Component<{ controller: AppearanceSettingsController }>
           title={language.t("settings.general.row.theme.title")}
           description={
             <>
-              {language.t("settings.general.row.theme.description")}{" "}
-              <ExternalLink class="settings-v2-link" href="https://opencode.ai/docs/themes/">
-                {language.t("common.learnMore")}
-              </ExternalLink>
+              {copy("settings.general.row.theme.description")}
+              <Show when={!isVoid()}>
+                {" "}
+                <ExternalLink class="settings-v2-link" href="https://opencode.ai/docs/themes/">
+                  {language.t("common.learnMore")}
+                </ExternalLink>
+              </Show>
             </>
           }
         >
@@ -245,6 +252,7 @@ const SoundSetting: Component<{
 
 const LanguageSetting = () => {
   const language = useLanguage()
+  const copy = useVoidCopy()
   const options = createMemo(() =>
     language.locales.map((locale) => ({
       value: locale,
@@ -254,7 +262,7 @@ const LanguageSetting = () => {
   return (
     <SettingsRowV2
       title={language.t("settings.general.row.language.title")}
-      description={language.t("settings.general.row.language.description")}
+      description={copy("settings.general.row.language.description")}
     >
       <SelectV2
         appearance="inline"
@@ -284,6 +292,7 @@ export const SettingsGeneralV2: Component<{
   const shell = createShellSettingsController()
   const appearance = createAppearanceSettingsController()
   const sounds = createSoundSettingsController()
+  const isVoid = useVoidTheme()
   const desktop = createMemo(() => platform.platform === "desktop")
 
   const [pinchZoom, { mutate: setPinchZoom }] = createResource(
@@ -326,6 +335,9 @@ export const SettingsGeneralV2: Component<{
 
   const GeneralSection = () => (
     <div class="settings-v2-section">
+      <Show when={isVoid()}>
+        <h3 class="settings-v2-section-title">{language.t("settings.tab.general")}</h3>
+      </Show>
       <SettingsListV2>
         <LanguageSetting />
 

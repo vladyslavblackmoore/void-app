@@ -160,3 +160,50 @@
     pointer-events: none;
   }
 }
+
+html[data-theme="void"] [data-component="switch"] [data-slot="switch-control"] {
+  width: 38px;
+  height: 22px;
+  padding: 3px;
+  border-radius: 14px;
+  background: var(--void-track);
+  box-shadow: none;
+}
+
+html[data-theme="void"] [data-component="switch"] [data-slot="switch-thumb"],
+html[data-theme="void"] [data-component="switch"]:hover:not([data-disabled], [data-readonly]) [data-slot="switch-thumb"] {
+  width: 16px;
+  height: 16px;
+  border: none;
+  border-radius: 50%;
+  background: var(--void-text-2);
+  box-shadow: none;
+  transform: translateX(0);
+}
+
+html[data-theme="void"] [data-component="switch"]:hover:not([data-disabled], [data-readonly]) [data-slot="switch-control"] {
+  background: var(--void-border-strong);
+}
+
+html[data-theme="void"] [data-component="switch"][data-checked] [data-slot="switch-control"],
+html[data-theme="void"]
+  [data-component="switch"][data-checked]:hover:not([data-disabled], [data-readonly])
+  [data-slot="switch-control"] {
+  background: var(--void-green);
+  box-shadow: none;
+}
+
+html[data-theme="void"] [data-component="switch"][data-checked] [data-slot="switch-thumb"],
+html[data-theme="void"]
+  [data-component="switch"][data-checked]:hover:not([data-disabled], [data-readonly])
+  [data-slot="switch-thumb"] {
+  background: var(--void-on-accent);
+  transform: translateX(16px);
+}
+
+html[data-theme="void"] [data-component="switch"][data-checked]:dir(rtl) [data-slot="switch-thumb"],
+html[data-theme="void"]
+  [data-component="switch"][data-checked]:dir(rtl):hover:not([data-disabled], [data-readonly])
+  [data-slot="switch-thumb"] {
+  transform: translateX(-16px);
+}

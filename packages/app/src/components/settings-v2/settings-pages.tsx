@@ -30,7 +30,7 @@ function SettingsSections(props: { sections: Section[]; page: Page }) {
   const isVoid = useVoidTheme()
   const [tab, setTab] = createSignal(props.sections[0]?.value ?? "")
   const active = createMemo(() => props.sections.find((section) => section.value === tab()) ?? props.sections[0])
-  const select = (value: string) => void startTransition(() => setTab(value))
+  const select = (value: string) => setTab(value)
 
   const VoidSections = () => (
     <div class="void-settings-page" data-nav={props.page.nav} data-section={tab()}>

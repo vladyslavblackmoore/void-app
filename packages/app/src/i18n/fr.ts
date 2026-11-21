@@ -1278,4 +1278,7 @@ export const dict = {
   "void.models.noModels": "No models listed",
   "void.models.moreTags": "+{{count}}",
   "void.models.summary": "{{connected}} of {{total}} providers connected",
+  "void.copy.settings.general.row.language.description": "Change the display language",
+  "void.copy.settings.general.row.colorScheme.description": "Choose whether VOID follows the system, light, or dark theme",
+  "void.copy.settings.general.row.theme.description": "Choose how VOID looks.",
 }
