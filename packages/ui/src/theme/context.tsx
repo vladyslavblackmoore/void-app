@@ -6,7 +6,7 @@ import { makeEventListener } from "@solid-primitives/event-listener"
 import { createSimpleContext } from "../context/helper"
 import oc2ThemeJson from "./themes/oc-2.json"
 import voidThemeJson from "./themes/void.json"
-import { resolveThemeId } from "./default-theme"
+import { resolveSystemMode, resolveThemeId } from "./default-theme"
 import { resolveThemeVariant, themeToCss } from "./resolve"
 import { resolveThemeVariantV2, themeV2ToCss } from "./v2/resolve"
 import type { DesktopTheme } from "./types"
@@ -131,8 +131,11 @@ function ensureThemeStyleElement(): HTMLStyleElement {
 }
 
 function getSystemMode(): "light" | "dark" {
-  if (typeof window !== "object") return "light"
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+  if (typeof window !== "object") return "dark"
+  return resolveSystemMode({
+    dark: window.matchMedia("(prefers-color-scheme: dark)").matches,
+    light: window.matchMedia("(prefers-color-scheme: light)").matches,
+  })
 }
 
 function applyThemeCss(theme: DesktopTheme, themeId: string, mode: "light" | "dark") {

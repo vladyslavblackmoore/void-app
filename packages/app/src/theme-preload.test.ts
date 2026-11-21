@@ -4,22 +4,24 @@ const src = await Bun.file(new URL("../public/oc-theme-preload.js", import.meta.
 
 const run = () => Function(src)()
 
+const prefer = (scheme: "dark" | "light" | null) => {
+  Object.defineProperty(window, "matchMedia", {
+    value: (query: string) => ({ matches: scheme !== null && query.includes(scheme) }) as MediaQueryList,
+    configurable: true,
+  })
+}
+
 beforeEach(() => {
   document.head.innerHTML = ""
   document.documentElement.removeAttribute("data-theme")
   document.documentElement.removeAttribute("data-color-scheme")
   localStorage.clear()
-  Object.defineProperty(window, "matchMedia", {
-    value: () =>
-      ({
-        matches: false,
-      }) as MediaQueryList,
-    configurable: true,
-  })
+  prefer(null)
 })
 
 describe("theme preload", () => {
   test("migrates legacy oc-1 to oc-2 before mount", () => {
+    prefer("light")
     localStorage.setItem("opencode-theme-id", "oc-1")
     localStorage.setItem("opencode-theme-css-light", "--background-base:#fff;")
     localStorage.setItem("opencode-theme-css-dark", "--background-base:#000;")
@@ -36,10 +38,17 @@ describe("theme preload", () => {
 
   test("defaults to void with the void canvas when nothing is stored", () => {
     document.head.innerHTML = '<meta name="theme-color" content="#fafafa">'
-    Object.defineProperty(window, "matchMedia", {
-      value: () => ({ matches: true }) as MediaQueryList,
-      configurable: true,
-    })
+    prefer("dark")
+
+    run()
+
+    expect(document.documentElement.dataset.theme).toBe("void")
+    expect(document.documentElement.dataset.colorScheme).toBe("dark")
+    expect(document.querySelector("meta[name='theme-color']")?.getAttribute("content")).toBe("#0c0d0f")
+  })
+
+  test("defaults to dark when the system states no preference", () => {
+    document.head.innerHTML = '<meta name="theme-color" content="#fafafa">'
 
     run()
 
@@ -50,6 +59,7 @@ describe("theme preload", () => {
 
   test("defaults to the void light canvas when the system prefers light", () => {
     document.head.innerHTML = '<meta name="theme-color" content="#fafafa">'
+    prefer("light")
 
     run()
 
@@ -59,6 +69,7 @@ describe("theme preload", () => {
   })
 
   test("applies cached void css when nothing is stored but the cache exists", () => {
+    prefer("light")
     localStorage.setItem("opencode-theme-css-light", "--background-base:#eceef1;")
 
     run()
@@ -67,6 +78,7 @@ describe("theme preload", () => {
   })
 
   test("keeps an explicitly stored oc-2 without cached css", () => {
+    prefer("light")
     localStorage.setItem("opencode-theme-id", "oc-2")
     localStorage.setItem("opencode-theme-css-light", "--background-base:#fff;")
 
@@ -77,6 +89,7 @@ describe("theme preload", () => {
   })
 
   test("keeps cached css for non-default themes", () => {
+    prefer("light")
     localStorage.setItem("opencode-theme-id", "nightowl")
     localStorage.setItem("opencode-theme-css-light", "--background-base:#fff;")
 

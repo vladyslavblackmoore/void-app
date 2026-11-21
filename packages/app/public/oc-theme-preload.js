@@ -10,7 +10,10 @@
   }
 
   var scheme = localStorage.getItem("opencode-color-scheme") || "system"
-  var isDark = scheme === "dark" || (scheme === "system" && matchMedia("(prefers-color-scheme: dark)").matches)
+  var isDark =
+    scheme === "dark" ||
+    (scheme === "system" &&
+      (matchMedia("(prefers-color-scheme: dark)").matches || !matchMedia("(prefers-color-scheme: light)").matches))
   var mode = isDark ? "dark" : "light"
 
   document.documentElement.dataset.theme = themeId

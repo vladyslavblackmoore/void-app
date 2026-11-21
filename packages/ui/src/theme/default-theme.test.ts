@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { DEFAULT_THEME_ID, resolveThemeId } from "./default-theme"
+import { DEFAULT_THEME_ID, resolveSystemMode, resolveThemeId } from "./default-theme"
 
 describe("default theme", () => {
   test("the default theme is void", () => {
@@ -22,5 +22,16 @@ describe("default theme", () => {
 
   test("the legacy oc-1 id maps to oc-2", () => {
     expect(resolveThemeId("oc-1", undefined)).toBe("oc-2")
+  })
+})
+
+describe("system mode", () => {
+  test("follows an explicit operating system preference", () => {
+    expect(resolveSystemMode({ dark: true, light: false })).toBe("dark")
+    expect(resolveSystemMode({ dark: false, light: true })).toBe("light")
+  })
+
+  test("resolves to dark without a preference", () => {
+    expect(resolveSystemMode({ dark: false, light: false })).toBe("dark")
   })
 })
