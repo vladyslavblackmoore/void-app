@@ -1,0 +1,21 @@
+html[data-theme="void"][data-void-glows="off"] [data-component="void-canvas"]::after {
+  display: none;
+}
+
+html[data-theme="void"][data-void-grid="off"] [data-component="void-canvas"]::before {
+  display: none;
+}
+
+html[data-theme="void"][data-void-motion="reduced"] *,
+html[data-theme="void"][data-void-motion="reduced"] *::before,
+html[data-theme="void"][data-void-motion="reduced"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
+html[data-theme="void"][data-void-density="compact"] {
+  --void-gap: 10px;
+  --void-gap-sm: 6px;
+  --void-pad-card: 12px;
+}

@@ -3,6 +3,7 @@ import { batch, createEffect, createMemo, createSignal, onCleanup } from "solid-
 import { createSimpleContext } from "@opencode-ai/ui/context"
 import { persisted } from "@/utils/persist"
 import { usePlatform } from "@/context/platform"
+import { type Density, voidAppearanceAttributes } from "@/context/void-appearance"
 
 export interface NotificationSettings {
   agent: boolean
@@ -45,6 +46,10 @@ export interface Settings {
     mono: string
     sans: string
     terminal: string
+    glows?: boolean
+    dotGrid?: boolean
+    reduceMotion?: boolean
+    density?: Density
   }
   keybinds: Record<string, string>
   permissions: {
@@ -206,6 +211,10 @@ const defaultSettings: Settings = {
     mono: "",
     sans: "",
     terminal: "",
+    glows: true,
+    dotGrid: true,
+    reduceMotion: false,
+    density: "comfortable",
   },
   keybinds: {},
   permissions: {
@@ -358,6 +367,20 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
     })
 
     createEffect(() => {
+      if (typeof document === "undefined") return
+      const attributes = voidAppearanceAttributes({
+        glows: store.appearance?.glows ?? defaultSettings.appearance.glows!,
+        dotGrid: store.appearance?.dotGrid ?? defaultSettings.appearance.dotGrid!,
+        reduceMotion: store.appearance?.reduceMotion ?? defaultSettings.appearance.reduceMotion!,
+        density: store.appearance?.density ?? defaultSettings.appearance.density!,
+      })
+      for (const [name, value] of Object.entries(attributes)) {
+        if (value === undefined) document.documentElement.removeAttribute(name)
+        else document.documentElement.setAttribute(name, value)
+      }
+    })
+
+    createEffect(() => {
       if (store.general?.followup !== "queue") return
       setStore("general", "followup", "steer")
     })
@@ -481,6 +504,22 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
         terminalFont: withFallback(() => store.appearance?.terminal, defaultSettings.appearance.terminal),
         setTerminalFont(value: string) {
           setStore("appearance", "terminal", value.trim() ? value : "")
+        },
+        glows: withFallback(() => store.appearance?.glows, defaultSettings.appearance.glows!),
+        setGlows(value: boolean) {
+          setStore("appearance", "glows", value)
+        },
+        dotGrid: withFallback(() => store.appearance?.dotGrid, defaultSettings.appearance.dotGrid!),
+        setDotGrid(value: boolean) {
+          setStore("appearance", "dotGrid", value)
+        },
+        reduceMotion: withFallback(() => store.appearance?.reduceMotion, defaultSettings.appearance.reduceMotion!),
+        setReduceMotion(value: boolean) {
+          setStore("appearance", "reduceMotion", value)
+        },
+        density: withFallback(() => store.appearance?.density, defaultSettings.appearance.density!),
+        setDensity(value: Density) {
+          setStore("appearance", "density", value)
         },
       },
       keybinds: {
