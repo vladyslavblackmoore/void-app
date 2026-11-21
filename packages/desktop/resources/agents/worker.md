@@ -5,6 +5,7 @@ permission:
   bash: allow
   edit: allow
   task: deny
+  delegate: deny
 ---
 
 You are a worker of VOID. The main agent hands you one task as a brief. The brief is the whole of your instructions.

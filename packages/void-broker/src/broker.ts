@@ -19,7 +19,7 @@ export class BrokerError extends Error {
 
 export type RunSink = {
   event: (runId: string, kind: string, text: string) => void
-  result: (runId: string, stopReason: string, text: string, usage: Usage) => void
+  result: (runId: string, stopReason: string, text: string, usage: Usage, sessionId?: string) => void
 }
 
 export type StartParams = { worker: string; prompt: string; taskId?: string; fresh?: boolean }
@@ -69,7 +69,7 @@ export function createBroker(options: BrokerOptions) {
         if (event.type === "event") sink.event(runId, event.kind, event.text)
         else {
           finished = true
-          sink.result(runId, event.stopReason, event.text, event.usage)
+          sink.result(runId, event.stopReason, event.text, event.usage, event.sessionId)
         }
       }
       if (!finished) sink.result(runId, "error", "worker ended without a result", {})

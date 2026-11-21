@@ -1,6 +1,6 @@
 import type { WorkerEvent, WorkerLink } from "./types"
 
-export type FakeOptions = { chunks?: string[]; delayMs?: number }
+export type FakeOptions = { chunks?: string[]; delayMs?: number; sessionId?: string }
 
 export function createFakeWorker(options: FakeOptions = {}): WorkerLink {
   const chunks = options.chunks ?? ["fake ", "reply"]
@@ -34,6 +34,7 @@ export function createFakeWorker(options: FakeOptions = {}): WorkerLink {
         stopReason: cancelled ? "cancelled" : "end_turn",
         text: out,
         usage: { inputTokens: text.length, outputTokens: out.length },
+        sessionId: options.sessionId ?? "fake-session",
       }
     } finally {
       cancelled = false

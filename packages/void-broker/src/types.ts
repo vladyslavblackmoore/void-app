@@ -2,7 +2,7 @@ export type Usage = Record<string, number>
 
 export type WorkerEvent =
   | { type: "event"; kind: string; text: string }
-  | { type: "result"; stopReason: string; text: string; usage: Usage }
+  | { type: "result"; stopReason: string; text: string; usage: Usage; sessionId?: string }
 
 export type WorkerHealth = { ok: boolean; detail: string }
 

@@ -5,6 +5,7 @@ permission:
   bash: allow
   edit: allow
   question: allow
+  delegate: allow
   task:
     "*": allow
 ---
@@ -21,6 +22,7 @@ You do not run commands and you do not change files. You may read files and sear
 - To continue with the same worker, pass its task_id so it keeps its context.
 - Read every report. Check the evidence against the goal, give the user the result, then start the next step or ask the user.
 - Treat a task as done only when the worker reported the result or the user said so.
+- Work for a subscription CLI worker goes through the delegate tool instead of the task tool: pass the worker id, a self-contained prompt and optionally task_id and fresh. Its result is the worker's final text, the stop reason, the run id and the worker session id. When the user names a worker id, use delegate.
 
 ## Hard rules
 - You have no approval tool and never approve anything. Approvals belong to the user.

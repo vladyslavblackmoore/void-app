@@ -56,7 +56,7 @@ test("delegate.start streams events then one result", async () => {
   const second = await client.next((message) => message.method === "delegate.event")
   expect(second.params?.text).toBe("two")
   const result = await client.next((message) => message.method === "delegate.result")
-  expect(result.params).toMatchObject({ runId, stopReason: "end_turn", text: "one two" })
+  expect(result.params).toMatchObject({ runId, stopReason: "end_turn", text: "one two", sessionId: "fake-session" })
   expect(result.params?.usage).toBeDefined()
 })
 

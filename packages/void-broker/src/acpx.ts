@@ -88,7 +88,7 @@ export class AcpxWorkerLink implements WorkerLink {
     }
     const result = await turn.result
     if (result.status === "failed") throw new Error(result.error.message)
-    yield { type: "result", stopReason: result.stopReason ?? (result.status === "cancelled" ? "cancelled" : "end_turn"), text: out, usage }
+    yield { type: "result", stopReason: result.stopReason ?? (result.status === "cancelled" ? "cancelled" : "end_turn"), text: out, usage, sessionId: this.info().sessionId }
   }
 
   async cancel() {

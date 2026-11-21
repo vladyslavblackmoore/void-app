@@ -43,9 +43,9 @@ export async function startServer(options: ServerOptions): Promise<BrokerServer>
     const sink = {
       event: (runId: string, kind: string, text: string) =>
         write({ method: "delegate.event", params: { runId, kind, text } }),
-      result: (runId: string, stopReason: string, text: string, usage: Record<string, number>) => {
+      result: (runId: string, stopReason: string, text: string, usage: Record<string, number>, sessionId?: string) => {
         runs.delete(runId)
-        write({ method: "delegate.result", params: { runId, stopReason, text, usage } })
+        write({ method: "delegate.result", params: { runId, stopReason, text, usage, sessionId: sessionId ?? "" } })
       },
     }
 
