@@ -2,7 +2,7 @@
   display: flex;
   flex: none;
   flex-direction: column;
-  align-self: stretch;
+  align-self: flex-start;
   gap: 16px;
   width: var(--void-panel-w-lg, 380px);
   min-height: 0;
@@ -159,10 +159,6 @@
   font-size: 14px;
 }
 
-[data-component="void-connect-panel"] [data-slot="void-panel-row"][data-disabled="true"] {
-  opacity: var(--void-disabled-opacity, 0.5);
-}
-
 [data-component="void-connect-panel"] [data-slot="void-panel-row-text"] {
   flex: 1;
   min-width: 0;
@@ -172,26 +168,6 @@
   margin-top: 2px;
   font-size: var(--void-fs-meta, 12px);
   color: var(--void-text-2, var(--v2-text-text-weak));
-}
-
-[data-component="void-connect-panel"] [data-slot="void-panel-avatar"] {
-  display: grid;
-  flex: none;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--void-blue, #6db5ff);
-  color: var(--void-on-accent, #0c0d0f);
-  font-weight: var(--void-weight-medium, 500);
-}
-
-[data-component="void-connect-panel"] [data-slot="void-panel-radio"] {
-  flex: none;
-  width: 16px;
-  height: 16px;
-  border: 1px solid var(--void-border-strong, var(--v2-border-border-base));
-  border-radius: 50%;
 }
 
 [data-component="void-connect-panel"] [data-slot="void-panel-done"] {
@@ -227,13 +203,10 @@
   margin-top: 5px;
 }
 
-[data-component="void-connect-panel"] [data-slot="void-panel-spacer"] {
-  flex: 1;
-}
-
 [data-component="void-connect-panel"] [data-slot="void-panel-actions"] {
   display: flex;
   gap: 8px;
+  margin-top: 4px;
 }
 
 [data-component="void-connect-panel"] [data-slot="void-panel-back"],
@@ -271,4 +244,16 @@
 [data-component="void-connect-panel"] button:disabled {
   opacity: var(--void-disabled-opacity, 0.5);
   cursor: not-allowed;
+}
+
+[data-component="void-connect-panel"] [data-slot="void-panel-next"]:disabled {
+  opacity: 0.6;
+}
+
+[data-component="void-connect-panel"] [data-slot="void-panel-back"] {
+  border-color: var(--void-border-strong, var(--v2-border-border-base));
+}
+
+[data-component="void-connect-panel"] [data-slot="void-panel-back"]:disabled {
+  opacity: 0.6;
 }

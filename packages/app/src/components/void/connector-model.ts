@@ -132,3 +132,16 @@ export function filterTiles(tiles: ConnectorTile[], filter: ConnectorFilter, que
         tile.services.some((service) => service.toLowerCase().includes(needle)),
     )
 }
+
+export function hubSummary(tiles: ConnectorTile[]): { configured: number; connected: number; tone: TileTone } {
+  const configured = tiles.filter((tile) => tile.configured)
+  const connected = configured.filter((tile) => tile.state === "connected").length
+  const tone: TileTone = configured.some((tile) => tile.state === "error")
+    ? "red"
+    : configured.some((tile) => tile.state === "needs_auth")
+      ? "yellow"
+      : connected > 0
+        ? "green"
+        : "grey"
+  return { configured: configured.length, connected, tone }
+}

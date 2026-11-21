@@ -4,6 +4,7 @@ import {
   connectorCatalog,
   filterCounts,
   filterTiles,
+  hubSummary,
   tileAction,
   tileState,
   tileTone,
@@ -98,5 +99,13 @@ describe("connector model", () => {
     expect(filterTiles(tiles, "all", "fil").map((tile) => tile.name)).toEqual(["files"])
     expect(filterTiles(tiles, "all", "gmail").map((tile) => tile.name)).toEqual(["Google Workspace"])
     expect(filterTiles(tiles, "all", "nothing")).toEqual([])
+  })
+
+  test("summarises the hub from configured servers only", () => {
+    expect(hubSummary(buildTiles({}))).toEqual({ configured: 0, connected: 0, tone: "grey" })
+    expect(hubSummary(buildTiles({ a: { status: "connected" } }))).toEqual({ configured: 1, connected: 1, tone: "green" })
+    expect(hubSummary(buildTiles({ a: { status: "connected" }, b: { status: "needs_auth" } })).tone).toBe("yellow")
+    expect(hubSummary(buildTiles({ a: { status: "connected" }, b: { status: "failed" } })).tone).toBe("red")
+    expect(hubSummary(buildTiles({ a: { status: "disabled" } }))).toEqual({ configured: 1, connected: 0, tone: "grey" })
   })
 })
