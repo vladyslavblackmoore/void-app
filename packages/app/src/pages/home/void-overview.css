@@ -1,0 +1,176 @@
+html[data-theme="void"] [data-component="void-overview"] {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-self: stretch;
+  min-height: 0;
+  min-width: 0;
+  padding: 18px var(--void-gutter) 28px;
+  overflow-y: auto;
+  color: var(--void-text-1);
+  user-select: none;
+}
+
+html[data-theme="void"] [data-slot="void-overview-head"] {
+  display: flex;
+  flex: none;
+  align-items: flex-end;
+  gap: 44px;
+}
+
+html[data-theme="void"] [data-slot="void-overview-title"] {
+  margin: 0;
+  font-size: var(--void-fs-title);
+  font-weight: var(--void-weight-thin);
+  letter-spacing: var(--void-ls-title);
+  line-height: 1.1;
+}
+
+html[data-theme="void"] [data-slot="void-overview-stats"] {
+  display: flex;
+  gap: 36px;
+}
+
+html[data-theme="void"] [data-slot="void-overview-stat-num"] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--void-fs-stat);
+  font-weight: var(--void-weight-thin);
+  line-height: 1.15;
+}
+
+html[data-theme="void"] [data-slot="void-overview-stat-label"] {
+  font-size: var(--void-fs-small);
+  color: var(--void-text-2);
+}
+
+html[data-theme="void"] [data-slot="void-overview-main"] {
+  display: flex;
+  flex: 1;
+  gap: var(--void-gap);
+  min-height: 0;
+  margin-top: 28px;
+}
+
+html[data-theme="void"] [data-slot="void-overview-column"] {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: var(--void-gap);
+  width: var(--void-panel-w-sm);
+  min-width: 0;
+}
+
+html[data-theme="void"] [data-slot="void-overview-board"] {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 100%;
+}
+
+html[data-theme="void"] [data-slot="void-overview-card-head"] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+}
+
+html[data-theme="void"] [data-slot="void-overview-card-title"] {
+  flex: 1;
+  font-size: var(--void-fs-card-title);
+  font-weight: var(--void-weight-medium);
+}
+
+html[data-theme="void"] [data-slot="void-overview-filter"] {
+  display: flex;
+  gap: 4px;
+}
+
+html[data-theme="void"] [data-slot="void-overview-filter"] > button {
+  padding: 5px 10px;
+  border: 0;
+  border-radius: var(--void-radius-chip);
+  background: none;
+  color: var(--void-text-2);
+  font: inherit;
+  font-size: var(--void-fs-small);
+  cursor: pointer;
+}
+
+html[data-theme="void"] [data-slot="void-overview-filter"] > button[data-active] {
+  background: var(--void-inner);
+  color: var(--void-text-1);
+}
+
+html[data-theme="void"] [data-slot="void-overview-filter"] > button:not([data-active]):hover {
+  background: var(--void-hover);
+  color: var(--void-text-1);
+}
+
+html[data-theme="void"] [data-slot="void-overview-list"] {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  margin-top: 10px;
+  overflow-y: auto;
+}
+
+html[data-theme="void"] [data-slot="void-overview-task"] {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "dot name meta"
+    ". state state";
+  align-items: center;
+  column-gap: 8px;
+  row-gap: 4px;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: var(--void-radius-inner);
+  background: var(--void-inner);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+html[data-theme="void"] [data-slot="void-overview-task"]:hover {
+  background: var(--void-raised);
+}
+
+html[data-theme="void"] [data-slot="void-overview-task"] > [data-component="status-dot-v2"] {
+  grid-area: dot;
+}
+
+html[data-theme="void"] [data-slot="void-overview-task-name"] {
+  grid-area: name;
+  overflow: hidden;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html[data-theme="void"] [data-slot="void-overview-task-meta"] {
+  grid-area: meta;
+  max-width: 110px;
+  overflow: hidden;
+  font-size: var(--void-fs-small);
+  color: var(--void-text-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html[data-theme="void"] [data-slot="void-overview-task-state"] {
+  grid-area: state;
+  font-size: var(--void-fs-small);
+  color: var(--void-text-3);
+}
+
+html[data-theme="void"] [data-slot="void-overview-empty"] {
+  padding: 18px 8px;
+  font-size: var(--void-fs-small);
+  color: var(--void-text-2);
+  text-align: center;
+}
