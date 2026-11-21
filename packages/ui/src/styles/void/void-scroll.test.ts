@@ -40,6 +40,14 @@ describe("void scroll containers", () => {
     expect(body).toContain("z-index: 1")
   })
 
+  test("the list-nav settings scroller pulls its top padding back so the cards start level with the nav", () => {
+    const base = block("scroll.css", `${prefix}.void-settings-content`)
+    const pad = Number(/padding: (\d+)px/.exec(base)?.[1])
+    const pull = block("scroll.css", `${prefix}.void-settings-page[data-nav="list"] .void-settings-content`)
+    expect(pad).toBeGreaterThan(0)
+    expect(pull).toContain(`margin-top: -${pad}px`)
+  })
+
   test("the hub scroller keeps room below the last card", () => {
     expect(block("scroll.css", `${prefix}[data-component="void-hub"]`)).toContain(
       "padding-bottom: var(--void-shadow-tail)",

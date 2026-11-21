@@ -5,6 +5,10 @@ html[data-theme="void"] .void-settings-content {
   pointer-events: none;
 }
 
+html[data-theme="void"] .void-settings-page[data-nav="list"] .void-settings-content {
+  margin-top: -24px;
+}
+
 html[data-theme="void"] .void-settings-content > * {
   pointer-events: auto;
 }
