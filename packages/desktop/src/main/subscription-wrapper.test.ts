@@ -112,6 +112,18 @@ describe("subscription wrapper effort", () => {
     ])
   })
 
+  test("reads the effort under the provider id the host passes as name", async () => {
+    const model = fake()
+    const provider = wrapper.createSubscription({ name: "second" }, model.factory)
+
+    await provider("sonnet").doGenerate({
+      providerOptions: { subscription: { effort: "low" }, second: { effort: "max" } },
+    })
+    await provider("opus").doGenerate({ providerOptions: { subscription: { effort: "low" } } })
+
+    expect(model.calls.filter((call) => call.settings)).toEqual([{ modelId: "sonnet", settings: { effort: "max" } }])
+  })
+
   test("exposes the properties of the model", () => {
     const provider = wrapper.createSubscription({}, fake().factory)
 

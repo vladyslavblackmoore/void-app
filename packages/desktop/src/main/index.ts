@@ -357,7 +357,7 @@ const main = Effect.gen(function* () {
 
     const configDir = join(process.env.XDG_CONFIG_HOME ?? voidAppEnv(VOID_HOME, {}).XDG_CONFIG_HOME, "opencode")
     yield* Effect.promise(() =>
-      seedConfig(configDir, subscriptionWrapper).catch((error) => logger.warn("failed to seed config", error)),
+      seedConfig(configDir, app.getPath("userData"), subscriptionWrapper).catch((error) => logger.warn("failed to seed config", error)),
     )
 
     ensureLoopbackNoProxy()

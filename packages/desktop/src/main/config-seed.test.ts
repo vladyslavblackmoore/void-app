@@ -29,13 +29,16 @@ const config = `{
 `
 
 let dir = ""
+let data = ""
 
 beforeEach(async () => {
   dir = await mkdtemp(join(tmpdir(), "void-config-"))
+  data = await mkdtemp(join(tmpdir(), "void-data-"))
 })
 
 afterEach(async () => {
   await rm(dir, { recursive: true, force: true })
+  await rm(data, { recursive: true, force: true })
 })
 
 const read = async () => readFile(join(dir, "opencode.jsonc"), "utf8")
@@ -43,7 +46,7 @@ const settings = async () => parse(await read()).provider.subscription.options.d
 
 describe("seedConfig wrapper", () => {
   test("writes the bundled wrapper when it is missing", async () => {
-    await seedConfig(dir, wrapper)
+    await seedConfig(dir, data, wrapper)
 
     expect(await readFile(join(dir, "provider", "subscription.mjs"), "utf8")).toBe(wrapper)
   })
@@ -52,7 +55,7 @@ describe("seedConfig wrapper", () => {
     await mkdir(join(dir, "provider"), { recursive: true })
     await writeFile(join(dir, "provider", "subscription.mjs"), "old")
 
-    await seedConfig(dir, wrapper)
+    await seedConfig(dir, data, wrapper)
 
     expect(await readFile(join(dir, "provider", "subscription.mjs"), "utf8")).toBe(wrapper)
   })
@@ -63,7 +66,7 @@ describe("seedConfig wrapper", () => {
     const before = (await stat(join(dir, "provider", "subscription.mjs"))).mtimeMs
     await Bun.sleep(20)
 
-    await seedConfig(dir, wrapper)
+    await seedConfig(dir, data, wrapper)
 
     expect((await stat(join(dir, "provider", "subscription.mjs"))).mtimeMs).toBe(before)
   })
@@ -73,7 +76,7 @@ describe("seedConfig opencode.jsonc", () => {
   test("lets the subscription run tools without asking when the settings lack a mode", async () => {
     await writeFile(join(dir, "opencode.jsonc"), config)
 
-    await seedConfig(dir, wrapper)
+    await seedConfig(dir, data, wrapper)
 
     expect(await settings()).toEqual({
       settingSources: [],
@@ -88,7 +91,7 @@ describe("seedConfig opencode.jsonc", () => {
       config.replace('"settingSources": []', '"settingSources": [],\n          "permissionMode": "default"'),
     )
 
-    await seedConfig(dir, wrapper)
+    await seedConfig(dir, data, wrapper)
 
     const text = await read()
     expect(text).toContain("// providers the app shows")
@@ -102,20 +105,20 @@ describe("seedConfig opencode.jsonc", () => {
 
   test("does not rewrite a config that has every key", async () => {
     await writeFile(join(dir, "opencode.jsonc"), config)
-    await seedConfig(dir, wrapper)
+    await seedConfig(dir, data, wrapper)
     const seeded = await read()
 
-    await seedConfig(dir, wrapper)
+    await seedConfig(dir, data, wrapper)
 
     expect(await read()).toBe(seeded)
   })
 
   test("leaves a config without the subscription provider and creates none", async () => {
-    await seedConfig(dir, wrapper)
+    await seedConfig(dir, data, wrapper)
     expect(await Bun.file(join(dir, "opencode.jsonc")).exists()).toBe(false)
 
     await writeFile(join(dir, "opencode.jsonc"), '{ "shell": "zsh" }')
-    await seedConfig(dir, wrapper)
+    await seedConfig(dir, data, wrapper)
     expect(await read()).toBe('{ "shell": "zsh" }')
   })
 })
@@ -127,7 +130,7 @@ describe("seedConfig effort variants", () => {
   test("gives every subscription model the effort variants", async () => {
     await writeFile(join(dir, "opencode.jsonc"), config)
 
-    await seedConfig(dir, wrapper)
+    await seedConfig(dir, data, wrapper)
 
     expect(await models()).toEqual({
       opus: { name: "Opus", variants: efforts },
@@ -144,8 +147,20 @@ describe("seedConfig effort variants", () => {
       ),
     )
 
-    await seedConfig(dir, wrapper)
+    await seedConfig(dir, data, wrapper)
 
     expect((await models()).sonnet.variants).toEqual({ ...efforts, high: { effort: "max" }, fast: {} })
+  })
+})
+
+describe("seedConfig once", () => {
+  test("does not put back values the owner removed after the first seed", async () => {
+    await writeFile(join(dir, "opencode.jsonc"), config)
+    await seedConfig(dir, data, wrapper)
+    await writeFile(join(dir, "opencode.jsonc"), config)
+
+    await seedConfig(dir, data, wrapper)
+
+    expect(await read()).toBe(config)
   })
 })
