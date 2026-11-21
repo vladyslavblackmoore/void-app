@@ -9,6 +9,7 @@ import {
   Show,
   Switch,
   untrack,
+  type JSX,
 } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useLocation, useNavigate, useParams } from "@solidjs/router"
@@ -43,6 +44,7 @@ import "./void/void-titlebar.css"
 import { VoidLogo } from "./void/void-logo"
 import { useVoidTheme } from "./void/use-void-theme"
 import { SectionTabs } from "./void/section-tabs"
+import { VoidTitlebarActions } from "./void/void-titlebar-actions"
 import { sectionForRoute, sectionTarget, type VoidSection } from "./void/section-tabs-model"
 import { normalizeSessionInfo } from "@/utils/session"
 
@@ -440,8 +442,17 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
                   </TooltipV2>
                 </Show>
 
-                <SpaceSwitcher />
-                <Show when={!isVoid()} fallback={<div class="min-w-0 flex-1" />}>
+                <Show when={!isVoid()}>
+                  <SpaceSwitcher />
+                </Show>
+                <Show
+                  when={!isVoid()}
+                  fallback={
+                    <div data-component="void-titlebar-center">
+                      <SpaceSwitcher />
+                    </div>
+                  }
+                >
                   <TitlebarTabStrip
                     tabs={tabsStore}
                     currentTab={currentTab}
@@ -458,7 +469,12 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
                     onReorder={(keys) => tabsStoreActions.reorder(keys)}
                   />
                 </Show>
-                <TitlebarV2Right state={v2RightState()} />
+                <TitlebarV2Right
+                  state={v2RightState()}
+                  trailing={
+                    isVoid() ? <VoidTitlebarActions onSearch={command.show} onNewTask={openNewTab} /> : undefined
+                  }
+                />
               </div>
             )
           }}
@@ -633,13 +649,14 @@ type TitlebarV2RightState = {
   update: TitlebarUpdatePillState
 }
 
-function TitlebarV2Right(props: { state: TitlebarV2RightState }) {
+function TitlebarV2Right(props: { state: TitlebarV2RightState; trailing?: JSX.Element }) {
   return (
     <div class="relative z-20 flex shrink-0 items-center justify-end gap-0 overflow-visible">
       <Show when={props.state.update.visible}>
         <TitlebarUpdateIconButton state={props.state.update} />
       </Show>
       <div id="opencode-titlebar-right" class="flex shrink-0 items-center justify-end gap-0" />
+      {props.trailing}
     </div>
   )
 }
