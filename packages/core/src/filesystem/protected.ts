@@ -50,4 +50,13 @@ export function paths(): string[] {
   return []
 }
 
+/** Protected paths strictly inside dir, relative to it with forward slashes. */
+export function inside(dir: string): string[] {
+  return paths().flatMap((item) => {
+    const relative = path.relative(dir, item)
+    if (relative === "" || relative.startsWith("..") || path.isAbsolute(relative)) return []
+    return [relative.split(path.sep).join("/")]
+  })
+}
+
 export * as Protected from "./protected"

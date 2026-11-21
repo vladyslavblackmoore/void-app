@@ -10,6 +10,7 @@ import type { FileSystem } from "../filesystem"
 import { FSUtil } from "../fs-util"
 import { Location } from "../location"
 import { Ripgrep } from "../ripgrep"
+import { Protected } from "./protected"
 import { RelativePath } from "../schema"
 import { Flag } from "../flag/flag"
 
@@ -38,6 +39,7 @@ export const ripgrepLayer = Layer.effect(
         cwd: location.directory,
         pattern: "*",
         limit: location.vcs ? Number.MAX_SAFE_INTEGER : 100_000,
+        exclude: Protected.inside(location.directory),
         onEntry: (entry) =>
           Effect.sync(() => {
             state.files.push(entry.path)
