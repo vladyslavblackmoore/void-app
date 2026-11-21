@@ -9,6 +9,7 @@ import { Icon as IconV2 } from "@opencode-ai/ui/v2/icon"
 import { IconButtonV2 } from "@opencode-ai/ui/v2/icon-button-v2"
 import { KeybindV2 } from "@opencode-ai/ui/v2/keybind-v2"
 import { MenuV2 } from "@opencode-ai/ui/v2/menu-v2"
+import { SegmentedControlItemV2, SegmentedControlV2 } from "@opencode-ai/ui/v2/segmented-control-v2"
 import { TooltipV2 } from "@opencode-ai/ui/v2/tooltip-v2"
 import { AttachmentCardV2 } from "../attachment-card-v2"
 import { CommentCardV2 } from "../comment-card-v2"
@@ -22,6 +23,7 @@ import type {
   PromptInputV2Suggestion,
 } from "./types"
 import type { PromptInputV2Interaction, PromptInputV2SelectControl } from "./interaction"
+import { variantControlKind, type PromptInputV2VariantStyle } from "./variant-control"
 import "./attachments.css"
 
 export type {
@@ -42,6 +44,7 @@ export type PromptInputV2Props = {
   class?: string
   modelControl?: JSX.Element
   variantControlVisible?: boolean
+  variantStyle?: PromptInputV2VariantStyle
   attachKeybind?: string[]
   attachShortcut?: string
 }
@@ -243,15 +246,35 @@ export function PromptInputV2(props: PromptInputV2Props) {
               {props.modelControl}
             </Show>
             <Show when={(props.variantControlVisible ?? true) && view.variant} keyed>
-              {(control) => (
-                <Show when={control.options().length > 1}>
-                  <PromptInputV2ConfiguredSelect
-                    title={i18n.t("ui.promptInput.chooseVariant")}
-                    keybind={["Shift", "Mod", "D"]}
-                    control={control}
-                  />
-                </Show>
-              )}
+              {(control) => {
+                const kind = () => variantControlKind({ style: props.variantStyle, count: control.options().length })
+                return (
+                  <Show when={kind() !== "none"}>
+                    <Show
+                      when={kind() === "segmented"}
+                      fallback={
+                        <PromptInputV2ConfiguredSelect
+                          title={i18n.t("ui.promptInput.chooseVariant")}
+                          keybind={["Shift", "Mod", "D"]}
+                          control={control}
+                        />
+                      }
+                    >
+                      <SegmentedControlV2
+                        aria-label={i18n.t("ui.promptInput.chooseVariant")}
+                        value={control.current()}
+                        onChange={(next) => {
+                          if (next) control.onSelect(next)
+                        }}
+                      >
+                        <For each={control.options()}>
+                          {(option) => <SegmentedControlItemV2 value={option.id}>{option.label}</SegmentedControlItemV2>}
+                        </For>
+                      </SegmentedControlV2>
+                    </Show>
+                  </Show>
+                )
+              }}
             </Show>
           </div>
           <PromptInputV2SubmitButton
