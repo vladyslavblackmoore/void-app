@@ -200,6 +200,7 @@ export const dict = {
   "dialog.provider.google.note": "ແບບ Gemini ສໍາລັບການຕອບສະຫນອງໄວ, ມີໂຄງສ້າງ",
   "dialog.provider.openrouter.note": "ເຂົ້າເຖິງທຸກຮູບແບບທີ່ຮອງຮັບຈາກຜູ້ໃຫ້ບໍລິການດຽວ",
   "dialog.provider.vercel.note": "ການເຂົ້າເຖິງແບບຮວມຕົວແບບ AI ດ້ວຍການກຳນົດເສັ້ນທາງອັດສະລິຍະ",
+  "dialog.provider.subscription.note": "Uses your Claude subscription through the official claude CLI. No per-token billing; limited by your subscription usage.",
   "dialog.model.select.title": "ເລືອກຕົວແບບ",
   "dialog.model.search.placeholder": "ຄົ້ນຫາຕົວແບບ",
   "dialog.model.empty": "ບໍ່ພົບຕົວແບບ",

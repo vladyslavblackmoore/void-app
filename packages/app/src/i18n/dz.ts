@@ -204,6 +204,8 @@ export const dict: Record<string, string> = {
   "dialog.provider.openrouter.note": "བྱིན་མི་གཅིག་ལས་ རྒྱབ་སྐྱོར་འབད་ཡོད་པའི་དཔེ་ཚད་ཚུ་ཆ་མཉམ་འཛུལ་སྤྱོད་འབད།",
   "dialog.provider.vercel.note":
     "རིག་རྩལ་ཅན་གྱི་འགྲུལ་ལམ་དང་གཅིག་ཁར་ བཅོས་མའི་བློ་རིག་དཔེ་ཚད་ཚུ་ལུ་ མཉམ་བསྡོམས་འཛུལ་སྤྱོད་འབད་ནི།",
+  "dialog.provider.subscription.note":
+    "Uses your Claude subscription through the official claude CLI. No per-token billing; limited by your subscription usage.",
   "dialog.model.select.title": "དཔེ་ཚད་སེལ་འཐུ་འབད།",
   "dialog.model.search.placeholder": "དཔེ་ཚད་འཚོལ་ཞིབ་འབད།",
   "dialog.model.empty": "དཔེ་ཚད་གྲུབ་འབྲས་མེད།",

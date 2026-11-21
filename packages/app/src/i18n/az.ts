@@ -203,6 +203,7 @@ export const dict = {
   "dialog.provider.google.note": "Sürətli, strukturlaşdırılmış cavablar üçün Gemini modelləri",
   "dialog.provider.openrouter.note": "Bir provayderdən bütün dəstəklənən modellərə giriş",
   "dialog.provider.vercel.note": "Ağıllı yönləndirmə ilə AI modellərinə vahid giriş",
+  "dialog.provider.subscription.note": "Uses your Claude subscription through the official claude CLI. No per-token billing; limited by your subscription usage.",
   "dialog.model.select.title": "Model seç",
   "dialog.model.search.placeholder": "Modelləri axtar",
   "dialog.model.empty": "Model nəticəsi yoxdur",

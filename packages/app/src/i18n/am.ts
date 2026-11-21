@@ -200,6 +200,7 @@ export const dict = {
   "dialog.provider.google.note": "Gemini ለፈጣን፣ የተዋቀሩ ምላሾች ሞዴሎች",
   "dialog.provider.openrouter.note": "ሁሉንም የሚደገፉ ሞዴሎች ከአንድ አቅራቢ ይድረሱ",
   "dialog.provider.vercel.note": "የተዋሃደ የ AI ሞዴሎች ከስማርት ማዘዋወር ጋር",
+  "dialog.provider.subscription.note": "Uses your Claude subscription through the official claude CLI. No per-token billing; limited by your subscription usage.",
   "dialog.model.select.title": "ሞዴል ምረጥ",
   "dialog.model.search.placeholder": "የፍለጋ ሞዴሎች",
   "dialog.model.empty": "ምንም የሞዴል ውጤቶች የሉም",

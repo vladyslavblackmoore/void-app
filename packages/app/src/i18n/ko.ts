@@ -104,6 +104,7 @@ export const dict = {
   "dialog.provider.google.note": "빠르고 구조화된 응답을 위한 Gemini 모델",
   "dialog.provider.openrouter.note": "모든 지원 모델을 단일 공급자에서 액세스",
   "dialog.provider.vercel.note": "스마트 라우팅을 통한 AI 모델 통합 액세스",
+  "dialog.provider.subscription.note": "Uses your Claude subscription through the official claude CLI. No per-token billing; limited by your subscription usage.",
   "dialog.model.select.title": "모델 선택",
   "dialog.model.search.placeholder": "모델 검색",
   "dialog.model.empty": "모델 결과 없음",

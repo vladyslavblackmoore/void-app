@@ -200,6 +200,7 @@ export const dict = {
   "dialog.provider.google.note": "Gemini modellir til skjót, strukturerað svar",
   "dialog.provider.openrouter.note": "Fá atgongd til øll stuðlað modell frá einum veitara",
   "dialog.provider.vercel.note": "Samlað atgongd til AI-modell við snildum leiðingum",
+  "dialog.provider.subscription.note": "Uses your Claude subscription through the official claude CLI. No per-token billing; limited by your subscription usage.",
   "dialog.model.select.title": "Vel modell",
   "dialog.model.search.placeholder": "Leitimodell",
   "dialog.model.empty": "Eingi modellúrslit",

@@ -201,6 +201,7 @@ export const dict: Record<string, string> = {
   "dialog.provider.google.note": "छिटो, संरचित प्रतिक्रियाहरूको लागि Gemini मोडेलहरू",
   "dialog.provider.openrouter.note": "एक प्रदायकबाट सबै समर्थित मोडेलहरू पहुँच गर्नुहोस्",
   "dialog.provider.vercel.note": "स्मार्ट राउटिङको साथ एआई मोडेलहरूमा एकीकृत पहुँच",
+  "dialog.provider.subscription.note": "Uses your Claude subscription through the official claude CLI. No per-token billing; limited by your subscription usage.",
   "dialog.model.select.title": "मोडेल चयन गर्नुहोस्",
   "dialog.model.search.placeholder": "मोडेलहरू खोज्नुहोस्",
   "dialog.model.empty": "कुनै मोडेल परिणामहरू छैनन्",

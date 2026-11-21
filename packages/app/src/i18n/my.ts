@@ -202,6 +202,7 @@ export const dict = {
   "dialog.provider.google.note": "မြန်ဆန်ပြီး ဖွဲ့စည်းတည်ဆောက်ထားသော တုံ့ပြန်မှုများအတွက် Gemini မော်ဒယ်များ",
   "dialog.provider.openrouter.note": "ပံ့ပိုးပေးသူတစ်ခုတည်းမှ ပံ့ပိုးပေးထားသော မော်ဒယ်အားလုံးကို ဝင်ရောက်ကြည့်ရှုပါ။",
   "dialog.provider.vercel.note": "စမတ်လမ်းကြောင်းဖြင့် AI မော်ဒယ်များသို့ တစ်စုတစ်စည်းတည်း ဝင်ရောက်ခွင့်",
+  "dialog.provider.subscription.note": "Uses your Claude subscription through the official claude CLI. No per-token billing; limited by your subscription usage.",
   "dialog.model.select.title": "မော်ဒယ်ကို ရွေးပါ။",
   "dialog.model.search.placeholder": "မော်ဒယ်များကို ရှာဖွေပါ။",
   "dialog.model.empty": "မော်ဒယ်ရလဒ်များ မရှိပါ။",

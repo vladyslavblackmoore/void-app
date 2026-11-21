@@ -201,6 +201,7 @@ export const dict = {
   "dialog.provider.google.note": "Gemini μοντέλα για γρήγορες, δομημένες απαντήσεις",
   "dialog.provider.openrouter.note": "Πρόσβαση σε όλα τα υποστηριζόμενα μοντέλα από έναν πάροχο",
   "dialog.provider.vercel.note": "Ενοποιημένη πρόσβαση σε μοντέλα τεχνητής νοημοσύνης με έξυπνη δρομολόγηση",
+  "dialog.provider.subscription.note": "Uses your Claude subscription through the official claude CLI. No per-token billing; limited by your subscription usage.",
   "dialog.model.select.title": "Επιλογή μοντέλου",
   "dialog.model.search.placeholder": "Αναζήτηση μοντέλων",
   "dialog.model.empty": "Δεν υπάρχουν αποτελέσματα μοντέλου",

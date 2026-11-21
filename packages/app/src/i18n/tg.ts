@@ -201,6 +201,7 @@ export const dict = {
   "dialog.provider.google.note": "Gemini моделҳо барои посухҳои зуд ва сохторӣ",
   "dialog.provider.openrouter.note": "Ба ҳама моделҳои дастгирӣшаванда аз як провайдер дастрасӣ пайдо кунед",
   "dialog.provider.vercel.note": "Дастрасии ягона ба моделҳои AI бо масири оқилона",
+  "dialog.provider.subscription.note": "Uses your Claude subscription through the official claude CLI. No per-token billing; limited by your subscription usage.",
   "dialog.model.select.title": "Модели интихоб кунед",
   "dialog.model.search.placeholder": "Ҷустуҷӯи моделҳо",
   "dialog.model.empty": "Натоиҷи модел нест",

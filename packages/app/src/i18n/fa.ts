@@ -201,6 +201,7 @@ export const dict = {
   "dialog.provider.google.note": "مدل های Gemini برای پاسخ های سریع و ساختاریافته",
   "dialog.provider.openrouter.note": "به تمام مدل های پشتیبانی شده از یک ارائه دهنده دسترسی داشته باشید",
   "dialog.provider.vercel.note": "دسترسی یکپارچه به مدل های AI با مسیریابی هوشمند",
+  "dialog.provider.subscription.note": "Uses your Claude subscription through the official claude CLI. No per-token billing; limited by your subscription usage.",
   "dialog.model.select.title": "مدل را انتخاب کنید",
   "dialog.model.search.placeholder": "جستجوی مدل ها",
   "dialog.model.empty": "نتیجه مدلی وجود ندارد",
