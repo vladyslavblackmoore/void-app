@@ -8,6 +8,7 @@ const sources = [
   "../../../../app/src/pages/session/composer/session-composer-region.tsx",
   "../../../../app/src/components/prompt-input-v2.tsx",
   "../../v2/components/button-v2.tsx",
+  "../../v2/components/segmented-control-v2.tsx",
 ]
 
 function rules() {
@@ -49,5 +50,15 @@ describe("void chat dock", () => {
     expect(css).toContain("var(--void-glass)")
     expect(css).toContain("width: 44px")
     expect(css).toContain("var(--void-pill)")
+  })
+  test("lets the dock controls wrap and keeps the model chip and effort labels at their full width", () => {
+    const body = (needle: string) => rules().find((rule) => rule.selectors.some((s) => s.includes(needle)))?.body ?? ""
+    expect(body("> div:last-of-type > div:first-child")).toContain("flex-wrap: wrap")
+    expect(body('[data-action="prompt-model"]')).toContain("max-width: none")
+    expect(body('[data-action="prompt-model"]')).toContain("flex: none")
+    expect(body('[data-slot="segmented-control-v2"]')).toContain("width: auto")
+    expect(body('[data-slot="segmented-control-v2-item"]')).toContain("flex: none")
+    expect(body('[data-slot="segmented-control-v2-item"]')).toContain("min-width: max-content")
+    expect(body('[data-slot="segmented-control-v2-item-label"]')).toContain("overflow: visible")
   })
 })

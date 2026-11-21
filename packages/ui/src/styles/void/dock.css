@@ -57,6 +57,8 @@ html[data-theme="void"] [data-component="prompt-input-v2"] [data-component="butt
 }
 
 html[data-theme="void"] [data-component="prompt-input-v2"] [data-action="prompt-model"] {
+  max-width: none;
+  flex: none;
   font-family: var(--void-font-mono);
   font-size: var(--void-fs-small);
   text-transform: none;
@@ -85,4 +87,26 @@ html[data-theme="void"] [data-component="prompt-input-v2"] [data-action="prompt-
 
 html[data-theme="void"] [data-component="prompt-input-v2"] [data-action="prompt-submit"]:disabled {
   opacity: 0.45;
+}
+
+html[data-theme="void"] [data-component="prompt-input-v2"] > div:last-of-type > div:first-child {
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+
+html[data-theme="void"] [data-component="prompt-input-v2"] [data-slot="segmented-control-v2"] {
+  width: auto;
+  max-width: none;
+  flex: none;
+}
+
+html[data-theme="void"] [data-component="prompt-input-v2"] [data-slot="segmented-control-v2-item"] {
+  flex: none;
+  min-width: max-content;
+  padding: 0 10px;
+}
+
+html[data-theme="void"] [data-component="prompt-input-v2"] [data-slot="segmented-control-v2-item-label"] {
+  overflow: visible;
+  text-overflow: clip;
 }
