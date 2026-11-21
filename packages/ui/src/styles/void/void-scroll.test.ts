@@ -28,6 +28,7 @@ describe("void scroll containers", () => {
   test("the settings scroller pads for the card shadow on the sides and bottom", () => {
     const body = block("scroll.css", `${prefix}.void-settings-content`)
     expect(body).toContain("margin-inline: calc(var(--void-shadow-bleed) * -1)")
+    expect(body).not.toMatch(/margin(-block|-top)?:\s*-/)
     expect(body).toContain("padding: 24px var(--void-shadow-bleed) var(--void-shadow-tail)")
     expect(body).toContain("pointer-events: none")
     expect(block("scroll.css", `${prefix}.void-settings-content > *`)).toContain("pointer-events: auto")

@@ -35,8 +35,9 @@ describe("void models screens", () => {
   test("the scroller keeps bottom and side padding so shadows and the last row are not clipped", () => {
     const rule = body('[data-nav="segmented"] .void-settings-content')
     expect(rule).toContain("padding: 24px var(--void-shadow-bleed) var(--void-shadow-tail)")
-    expect(rule).toContain("margin: -24px calc(var(--void-shadow-bleed) * -1) 0")
-    expect(rule).toContain("height: calc(100% + 24px)")
+    expect(rule).toContain("margin: 0 calc(var(--void-shadow-bleed) * -1)")
+    expect(rule).not.toMatch(/margin:\s*-/)
+    expect(rule).not.toContain("height:")
   })
 
   test("the connect dialog is a lifted card with a shadow and no fixed empty height", () => {

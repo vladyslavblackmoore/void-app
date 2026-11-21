@@ -1,6 +1,5 @@
 html[data-theme="void"] .void-settings-page[data-nav="segmented"] .void-settings-content {
-  height: calc(100% + 24px);
-  margin: -24px calc(var(--void-shadow-bleed) * -1) 0;
+  margin: 0 calc(var(--void-shadow-bleed) * -1);
   padding: 24px var(--void-shadow-bleed) var(--void-shadow-tail);
 }
 
