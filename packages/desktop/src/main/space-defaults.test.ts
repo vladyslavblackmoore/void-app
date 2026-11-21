@@ -110,6 +110,13 @@ describe("space seeder", () => {
     expect(written.provider.subscription.models).toEqual({})
   })
 
+  test("seeds the mcp plugin of the subscription provider", async () => {
+    await ensureDefaultSpaces(root, templates, legacy)
+    await seedSpace(root, "work", { ...seed, mcpPlugin: "export default {}" })
+    const dir = join(spaceDir(root, "work"), "config", "opencode")
+    expect(await readFile(join(dir, "plugins", "subscription-mcp.js"), "utf8")).toBe("export default {}")
+  })
+
   test("keeps an existing config", async () => {
     await ensureDefaultSpaces(root, templates, legacy)
     const dir = join(spaceDir(root, "work"), "config", "opencode")

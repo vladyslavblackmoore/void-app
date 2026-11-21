@@ -4,7 +4,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 
 type Part = { type: string; id?: string; delta?: string; error?: unknown }
-type Call = { providerOptions?: Record<string, Record<string, unknown>> }
+type Call = { providerOptions?: Record<string, Record<string, unknown>>; tools?: Array<{ type: string; name: string }> }
 type Model = {
   modelId: string
   doStream: (options: Call) => Promise<{ stream: ReadableStream<Part> }>
@@ -129,6 +129,194 @@ describe("subscription wrapper effort", () => {
     const provider = wrapper.createSubscription({}, fake().factory)
 
     expect(provider.chat("sonnet").modelId).toBe("sonnet")
+  })
+})
+
+type Guard = (input: { tool_name: string }) => Promise<Record<string, any>>
+type Hooked = { mcpServers?: Record<string, unknown>; strictMcpConfig?: boolean; streamingInput?: string; hooks?: { PreToolUse: Array<{ matcher?: string; hooks: Guard[] }> } }
+
+const tool = (name: string) => ({ type: "function", name })
+
+type Rule = { permission: string; pattern: string; action: string }
+
+const allowAll: Rule[] = [{ permission: "*", pattern: "*", action: "allow" }]
+
+const callWith = async (
+  mcp: unknown,
+  tools: string[] | undefined,
+  settings?: Record<string, unknown>,
+  id = "subscription",
+  mcpRules: Rule[] | null = allowAll,
+) => {
+  const model = fake()
+  const provider = wrapper.createSubscription({ name: id }, model.factory)
+  await provider("sonnet", settings).doGenerate({
+    providerOptions: { [id]: { mcp, mcpRules: mcpRules ?? undefined } },
+    tools: tools?.map(tool),
+  })
+  return model.calls.at(-1)!.settings as Hooked | undefined
+}
+
+const memory = {
+  type: "local",
+  command: ["/app/node", "/app/main.mjs"],
+  environment: { ELECTRON_RUN_AS_NODE: "1", VOID_MEMORY_DB: "/space/graph.db" },
+}
+
+describe("subscription wrapper mcp servers", () => {
+  test("maps local and remote servers under their opencode names", async () => {
+    const settings = await callWith(
+      { memory, mail: { type: "remote", url: "https://mail.example/mcp", headers: { A: "1" } }, bare: { type: "local", command: ["tool"] } },
+      ["memory_remember"],
+    )
+    expect(settings?.mcpServers).toEqual({
+      memory: { type: "stdio", command: "/app/node", args: ["/app/main.mjs"], env: memory.environment },
+      mail: { type: "http", url: "https://mail.example/mcp", headers: { A: "1" } },
+      bare: { type: "stdio", command: "tool", args: [] },
+    })
+    expect(settings?.strictMcpConfig).toBe(true)
+    expect(settings?.streamingInput).toBe("always")
+  })
+
+  test("skips disabled servers and servers with secret references", async () => {
+    const settings = await callWith(
+      {
+        memory,
+        off: { type: "local", command: ["x"], enabled: false },
+        keyed: { type: "remote", url: "https://x.example", headers: { Authorization: "secret:mail-token" } },
+        env: { type: "local", command: ["x"], environment: { TOKEN: "secret:t" } },
+        arg: { type: "local", command: ["x", "secret:t"] },
+        broken: { type: "local", command: [] },
+        nothing: null,
+      },
+      ["memory_remember"],
+    )
+    expect(Object.keys(settings?.mcpServers ?? {})).toEqual(["memory"])
+  })
+
+  test("keeps the model settings and merges its own servers and hooks", async () => {
+    const own = { type: "stdio", command: "own" }
+    const hook = async () => ({})
+    const settings = await callWith({ memory }, ["memory_recall"], {
+      maxTurns: 3,
+      mcpServers: { own },
+      hooks: { PreToolUse: [{ hooks: [hook] }], Stop: [{ hooks: [hook] }] },
+    })
+    expect(Object.keys(settings?.mcpServers ?? {})).toEqual(["own", "memory"])
+    expect((settings as Record<string, unknown>).maxTurns).toBe(3)
+    expect(settings?.hooks?.PreToolUse).toHaveLength(2)
+    expect(settings?.hooks?.PreToolUse[0].hooks[0]).toBe(hook)
+    expect(settings?.hooks?.PreToolUse[1].matcher).toBe("mcp__.*")
+    expect((settings?.hooks as Record<string, unknown>).Stop).toBeDefined()
+  })
+
+  test("leaves the settings alone without a config, without servers or without tools", async () => {
+    expect(await callWith(undefined, ["memory_remember"])).toBeUndefined()
+    expect(await callWith({}, ["memory_remember"])).toBeUndefined()
+    expect(await callWith({ memory: { type: "local", command: ["x"], enabled: false } }, ["memory_remember"])).toBeUndefined()
+    expect(await callWith({ memory }, [])).toBeUndefined()
+    expect(await callWith({ memory }, undefined)).toBeUndefined()
+  })
+
+  test("leaves the settings alone when the rules of the agent are not known", async () => {
+    expect(await callWith({ memory }, ["memory_remember"], undefined, "subscription", null)).toBeUndefined()
+  })
+
+  test("drops servers whose names collide and warns about them", async () => {
+    const warned: unknown[][] = []
+    const original = console.warn
+    console.warn = (...args: unknown[]) => void warned.push(args)
+    try {
+      const settings = await callWith(
+        { memory, memory_task: memory, a: memory, a__b: memory, same: memory, "same ": memory, solo: memory },
+        ["solo_x"],
+      )
+      expect(Object.keys(settings?.mcpServers ?? {})).toEqual(["solo"])
+    } finally {
+      console.warn = original
+    }
+    expect(warned.flat().join(" ")).toContain("memory_task")
+    expect(warned.flat().join(" ")).toContain("a__b")
+  })
+
+  test("ignores the config of another provider id", async () => {
+    const model = fake()
+    const provider = wrapper.createSubscription({}, model.factory)
+    await provider("sonnet").doGenerate({ providerOptions: { other: { mcp: { memory } } }, tools: [tool("memory_remember")] })
+    expect(model.calls.at(-1)?.settings).toBeUndefined()
+  })
+
+  test("reads the config under the provider id the host passes as name", async () => {
+    const settings = await callWith({ memory }, ["memory_remember"], undefined, "second")
+    expect(Object.keys(settings?.mcpServers ?? {})).toEqual(["memory"])
+  })
+})
+
+describe("subscription wrapper mcp permissions", () => {
+  const guard = async (tools: string[], mcp: unknown = { memory }, rules: Rule[] = allowAll) => {
+    const settings = await callWith(mcp, tools, undefined, "subscription", rules)
+    const hook = settings?.hooks?.PreToolUse.at(-1)?.hooks[0]
+    return async (name: string) => (await hook!({ tool_name: name })).hookSpecificOutput
+  }
+
+  test("denies the mcp tools that opencode removed from the request", async () => {
+    const check = await guard(["memory_remember", "memory_recall"])
+    expect(await check("mcp__memory__remember")).toBeUndefined()
+    expect(await check("mcp__memory__recall")).toBeUndefined()
+    const denied = await check("mcp__memory__forget")
+    expect(denied?.hookEventName).toBe("PreToolUse")
+    expect(denied?.permissionDecision).toBe("deny")
+    expect(denied?.permissionDecisionReason).toContain("mcp__memory__forget")
+  })
+
+  test("allows ask-ruled tools and refuses deny-ruled ones", async () => {
+    const rules: Rule[] = [
+      { permission: "*", pattern: "*", action: "allow" },
+      { permission: "mail_*", pattern: "*", action: "ask" },
+      { permission: "mail_read", pattern: "*", action: "allow" },
+      { permission: "mail_wipe", pattern: "*", action: "deny" },
+    ]
+    const check = await guard(["mail_read", "mail_send", "mail_wipe", "memory_recall"], { mail: memory, memory }, rules)
+    expect(await check("mcp__mail__read")).toBeUndefined()
+    expect(await check("mcp__memory__recall")).toBeUndefined()
+    expect(await check("mcp__mail__send")).toBeUndefined()
+    const denied = await check("mcp__mail__wipe")
+    expect(denied?.permissionDecision).toBe("deny")
+    expect(denied?.permissionDecisionReason).toContain("mcp__mail__wipe")
+  })
+
+  test("allows a tool without a matching rule", async () => {
+    const check = await guard(["memory_recall"], { memory }, [{ permission: "bash", pattern: "*", action: "allow" }])
+    expect(await check("mcp__memory__recall")).toBeUndefined()
+    expect((await check("mcp__memory__forget"))?.permissionDecision).toBe("deny")
+  })
+
+  test("lets the last matching rule win", async () => {
+    const rules: Rule[] = [
+      { permission: "memory_*", pattern: "*", action: "deny" },
+      { permission: "memory_recall", pattern: "*", action: "allow" },
+    ]
+    const check = await guard(["memory_recall", "memory_forget"], { memory }, rules)
+    expect(await check("mcp__memory__recall")).toBeUndefined()
+    expect((await check("mcp__memory__forget"))?.permissionDecision).toBe("deny")
+  })
+
+  test("leaves the tools of the cli alone", async () => {
+    const check = await guard(["memory_remember"])
+    expect(await check("Read")).toBeUndefined()
+    expect(await check("Bash")).toBeUndefined()
+  })
+
+  test("denies the tools of servers that are not in the config", async () => {
+    const check = await guard(["memory_remember", "other_ping"])
+    expect((await check("mcp__other__ping"))?.permissionDecision).toBe("deny")
+  })
+
+  test("maps sanitized names the way opencode does", async () => {
+    const check = await guard(["my-server_do_it", "my_server_ok"], { "my-server": memory, "my server": memory })
+    expect(await check("mcp__my-server__do_it")).toBeUndefined()
+    expect(await check("mcp__my_server__ok")).toBeUndefined()
+    expect((await check("mcp__my-server__ok"))?.permissionDecision).toBe("deny")
   })
 })
 

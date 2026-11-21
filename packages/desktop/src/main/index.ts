@@ -18,6 +18,7 @@ import docAgent from "../../resources/agents/doc.md?raw"
 import explorerAgent from "../../resources/agents/explorer.md?raw"
 import subscriptionWrapper from "../../resources/provider/subscription.mjs?raw"
 import subscriptionPlugin from "../../resources/plugin/subscription-auth.js?raw"
+import subscriptionMcpPlugin from "../../resources/plugin/subscription-mcp.js?raw"
 import spaceConfigTemplate from "../../resources/spaces/opencode.jsonc?raw"
 import type { ServerReadyData } from "../preload/types"
 import { seedAgents } from "./agents"
@@ -400,6 +401,7 @@ const main = Effect.gen(function* () {
       ],
       wrapper: subscriptionWrapper,
       plugin: subscriptionPlugin,
+      mcpPlugin: subscriptionMcpPlugin,
       config: spaceConfigTemplate,
       memory: memoryCommand({
         packaged: app.isPackaged,

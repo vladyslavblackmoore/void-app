@@ -7,7 +7,7 @@ import { createSpace, ensureHomeSpace, isSpaceId, listSpaces, spaceDir, type Spa
 
 export type SpaceTemplate = Pick<Space, "class" | "sessionMode" | "color">
 export type SpaceTemplates = { personal: SpaceTemplate; company: SpaceTemplate }
-export type SpaceSeed = { agents: Array<{ name: string; content: string; version?: number }>; wrapper: string; plugin?: string; config?: string; memory?: MemoryRuntime; memoryPlugin?: string }
+export type SpaceSeed = { agents: Array<{ name: string; content: string; version?: number }>; wrapper: string; plugin?: string; mcpPlugin?: string; config?: string; memory?: MemoryRuntime; memoryPlugin?: string }
 
 const VOID_SPACE_ID = "void"
 const WORK_SPACE_ID = "work"
@@ -57,6 +57,7 @@ export async function seedSpace(root: string, id: string, seed: SpaceSeed) {
   await seedAgents(configDir, stateDir, seed.agents)
   await seedConfig(configDir, stateDir, seed.wrapper, join(dir, "data", "opencode", "auth.json"), {
     plugin: seed.plugin,
+    mcpPlugin: seed.mcpPlugin,
     config: seed.config,
   })
   await seedMemory(dir, configDir, seed.memory)
