@@ -18,16 +18,14 @@ html[data-theme="void"] [data-slot="dialog-container"]:has([data-void-model-pick
   border-radius: var(--void-radius-sm);
 }
 
-html[data-theme="void"] [data-void-model-picker] [data-slot="free-models-title"] {
-  display: none;
-}
-
 html[data-theme="void"] [data-void-model-picker] [data-slot="view-more-providers"] {
   display: none;
 }
 
 html[data-theme="void"] [data-void-model-picker] [data-provider-id="opencode"],
-html[data-theme="void"] [data-void-model-picker] [data-provider-id="opencode-go"] {
+html[data-theme="void"] [data-void-model-picker] [data-provider-id="opencode-go"],
+html[data-theme="void"] [data-void-model-picker] [data-slot="list-item"]:has([data-provider-id="opencode"]),
+html[data-theme="void"] [data-void-model-picker] [data-slot="list-item"]:has([data-provider-id="opencode-go"]) {
   display: none;
 }
 

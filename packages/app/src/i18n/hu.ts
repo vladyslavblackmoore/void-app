@@ -212,6 +212,7 @@ export const dict = {
   "dialog.model.manage.description": "Testreszabhatja, hogy mely modellek jelenjenek meg a modellválasztóban.",
   "dialog.model.manage.provider.toggle": "Kapcsolja be az összes {{provider}} modellt",
   "dialog.model.unpaid.freeModels.title": "A OpenCode ingyenes modelljei",
+  "dialog.model.unpaid.freeModels.voidTitle": "Free models",
   "dialog.model.unpaid.addMore.title": "Adjon hozzá további modelleket a népszerű szolgáltatóktól",
   "dialog.model.unpaid.viewMoreProviders": "További 70+ szolgáltató megtekintése",
   "dialog.provider.viewAll": "További szolgáltatók megjelenítése",

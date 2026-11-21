@@ -211,6 +211,7 @@ export const dict = {
   "dialog.model.manage.description": "Персонализирайте кои модели да се показват в селектора на модели.",
   "dialog.model.manage.provider.toggle": "Превключване на всички {{provider}} модели",
   "dialog.model.unpaid.freeModels.title": "Безплатни модели, предоставени от OpenCode",
+  "dialog.model.unpaid.freeModels.voidTitle": "Free models",
   "dialog.model.unpaid.addMore.title": "Добавете още модели от популярни доставчици",
   "dialog.model.unpaid.viewMoreProviders": "Вижте още 70+ доставчици",
   "dialog.provider.viewAll": "Показване на още доставчици",

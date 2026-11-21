@@ -208,6 +208,7 @@ export const dict = {
   "dialog.model.manage.description": "Prispôsobte si, ktoré modely sa zobrazia vo výbere modelov.",
   "dialog.model.manage.provider.toggle": "Prepnúť všetky modely poskytovateľa {{provider}}",
   "dialog.model.unpaid.freeModels.title": "Bezplatné modely poskytované OpenCode",
+  "dialog.model.unpaid.freeModels.voidTitle": "Free models",
   "dialog.model.unpaid.addMore.title": "Pridať ďalšie modely od populárnych poskytovateľov",
   "dialog.model.unpaid.viewMoreProviders": "Zobraziť viac ako 70 ďalších poskytovateľov",
   "dialog.provider.viewAll": "Zobraziť viac poskytovateľov",

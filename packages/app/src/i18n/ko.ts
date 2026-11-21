@@ -112,6 +112,7 @@ export const dict = {
   "dialog.model.manage.description": "모델 선택기에 표시할 모델 사용자 지정",
   "dialog.model.manage.provider.toggle": "모든 {{provider}} 모델 토글",
   "dialog.model.unpaid.freeModels.title": "OpenCode에서 제공하는 무료 모델",
+  "dialog.model.unpaid.freeModels.voidTitle": "Free models",
   "dialog.model.unpaid.addMore.title": "인기 공급자의 모델 추가",
   "dialog.model.unpaid.viewMoreProviders": "70개 이상의 공급자 더 보기",
   "dialog.provider.viewAll": "더 많은 공급자 보기",

@@ -212,6 +212,7 @@ export const dict = {
   "dialog.model.manage.description": "Prilagodite koji se modeli pojavljuju u biraču modela.",
   "dialog.model.manage.provider.toggle": "Uključi sve {{provider}} modele",
   "dialog.model.unpaid.freeModels.title": "Besplatne modele nudi OpenCode",
+  "dialog.model.unpaid.freeModels.voidTitle": "Free models",
   "dialog.model.unpaid.addMore.title": "Dodajte još modela popularnih dobavljača",
   "dialog.model.unpaid.viewMoreProviders": "Pogledajte više od 70 pružatelja usluga",
   "dialog.provider.viewAll": "Prikaži više pružatelja usluga",

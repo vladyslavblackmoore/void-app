@@ -209,6 +209,7 @@ export const dict = {
   "dialog.model.manage.description": "Personalizo cilat modele shfaqen në përzgjedhësin e modelit.",
   "dialog.model.manage.provider.toggle": "Ndrysho të gjitha modelet {{provider}}",
   "dialog.model.unpaid.freeModels.title": "Modele falas të ofruara nga OpenCode",
+  "dialog.model.unpaid.freeModels.voidTitle": "Free models",
   "dialog.model.unpaid.addMore.title": "Shtoni më shumë modele nga ofruesit e njohur",
   "dialog.model.unpaid.viewMoreProviders": "Shiko mbi 70 ofrues të tjerë",
   "dialog.provider.viewAll": "Shfaq më shumë ofrues",

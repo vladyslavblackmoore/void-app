@@ -208,6 +208,7 @@ export const dict = {
   "dialog.model.manage.description": "მოარგეთ რომელი მოდელები გამოჩნდება მოდელის ამომრჩეველში.",
   "dialog.model.manage.provider.toggle": "ყველა {{provider}} მოდელის გადართვა",
   "dialog.model.unpaid.freeModels.title": "უფასო მოდელები მოწოდებულია OpenCode",
+  "dialog.model.unpaid.freeModels.voidTitle": "Free models",
   "dialog.model.unpaid.addMore.title": "დაამატე მეტი მოდელები პოპულარული პროვაიდერებისგან",
   "dialog.model.unpaid.viewMoreProviders": "იხილეთ 70+ სხვა პროვაიდერი",
   "dialog.provider.viewAll": "აჩვენე მეტი პროვაიდერი",

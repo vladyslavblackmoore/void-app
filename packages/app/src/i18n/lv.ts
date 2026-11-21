@@ -208,6 +208,7 @@ export const dict = {
   "dialog.model.manage.description": "Pielāgojiet, kuri modeļi tiek rādīti modeļu atlasītājā.",
   "dialog.model.manage.provider.toggle": "Pārslēgt visus {{provider}} modeļus",
   "dialog.model.unpaid.freeModels.title": "Bezmaksas modeļi no OpenCode",
+  "dialog.model.unpaid.freeModels.voidTitle": "Free models",
   "dialog.model.unpaid.addMore.title": "Pievienot vairāk modeļu no populāriem nodrošinātājiem",
   "dialog.model.unpaid.viewMoreProviders": "Skatīt vēl 70+ nodrošinātājus",
   "dialog.provider.viewAll": "Rādīt vairāk nodrošinātāju",

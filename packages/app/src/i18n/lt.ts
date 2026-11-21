@@ -212,6 +212,7 @@ export const dict = {
   "dialog.model.manage.description": "Tinkinkite, kurie modeliai rodomi modelio parinkiklyje.",
   "dialog.model.manage.provider.toggle": "Perjungti visus {{provider}} modelius",
   "dialog.model.unpaid.freeModels.title": "Nemokami OpenCode modeliai",
+  "dialog.model.unpaid.freeModels.voidTitle": "Free models",
   "dialog.model.unpaid.addMore.title": "Pridėkite daugiau populiarių tiekėjų modelių",
   "dialog.model.unpaid.viewMoreProviders": "Žr. daugiau nei 70 tiekėjų",
   "dialog.provider.viewAll": "Rodyti daugiau teikėjų",

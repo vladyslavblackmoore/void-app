@@ -212,6 +212,7 @@ export const dict = {
   "dialog.model.manage.description": "Sérsníddu hvaða gerðir birtast í gerðavalinu.",
   "dialog.model.manage.provider.toggle": "Skiptu um allar {{provider}} gerðir",
   "dialog.model.unpaid.freeModels.title": "Ókeypis gerðir frá OpenCode",
+  "dialog.model.unpaid.freeModels.voidTitle": "Free models",
   "dialog.model.unpaid.addMore.title": "Bættu við fleiri gerðum frá vinsælum veitendum",
   "dialog.model.unpaid.viewMoreProviders": "Sjáðu 70+ þjónustuveitendur í viðbót",
   "dialog.provider.viewAll": "Sýna fleiri veitendur",

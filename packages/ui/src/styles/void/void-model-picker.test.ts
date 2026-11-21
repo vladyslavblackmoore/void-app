@@ -4,6 +4,7 @@ import { existsSync, readFileSync } from "node:fs"
 const dir = new URL("./", import.meta.url)
 const prefix = 'html[data-theme="void"] '
 const picker = readFileSync(new URL("../../../../app/src/components/dialog-select-model-unpaid-v2.tsx", dir), "utf8")
+const pickerV1 = readFileSync(new URL("../../../../app/src/components/dialog-select-model-unpaid.tsx", dir), "utf8")
 const tooltip = readFileSync(new URL("../../../../app/src/components/model-tooltip.tsx", dir), "utf8")
 
 function css() {
@@ -51,13 +52,27 @@ describe("void model picker", () => {
 
   test("hides upstream branding under void only", () => {
     for (const needle of [
-      '[data-slot="free-models-title"]',
       '[data-slot="view-more-providers"]',
       '[data-provider-id="opencode"]',
       '[data-provider-id="opencode-go"]',
     ])
       expect(body(needle)).toContain("display: none")
     for (const rule of rules()) if (rule.body.includes("display: none")) for (const s of rule.selectors) expect(s.startsWith(prefix)).toBe(true)
+  })
+
+  test("keeps the free models title visible and unbranded under void", () => {
+    expect(css()).not.toContain("free-models-title")
+    for (const source of [picker, pickerV1]) {
+      expect(source).toContain("freeModelsTitleKey(theme.themeId())")
+      expect(source).not.toContain('t("dialog.model.unpaid.freeModels.title")')
+    }
+  })
+
+  test("the v1 dialog carries the same data attributes and hides the upstream provider rows", () => {
+    for (const attribute of ["data-void-model-picker", 'data-slot="add-more-models"', "data-provider-id={i.id}"])
+      expect(pickerV1).toContain(attribute)
+    expect(body('[data-slot="list-item"]:has([data-provider-id="opencode"])')).toContain("display: none")
+    expect(body('[data-slot="list-item"]:has([data-provider-id="opencode-go"])')).toContain("display: none")
   })
 
   test("is a 20px glass dialog with 14px option rows and a pill-selected row", () => {

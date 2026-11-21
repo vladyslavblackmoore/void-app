@@ -175,3 +175,8 @@ html[data-theme="void"]
   background: transparent;
   color: var(--void-text-2);
 }
+
+html[data-theme="void"] [data-slot="void-session-main"] [data-slot="new-session-dock"] {
+  top: auto;
+  bottom: 20px;
+}
