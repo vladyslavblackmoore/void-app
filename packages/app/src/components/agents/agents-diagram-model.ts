@@ -79,6 +79,7 @@ export function buildAgentsDiagram(input: {
   config?: Record<string, AgentConfigInput | undefined>
   providers: ProviderInput[]
   defaultModel?: ModelRef | null
+  configModel?: string
 }): AgentsDiagram {
   const visible = input.agents.filter(
     (agent) => !agent.hidden && !(agent.native && BUILT_IN_SUBAGENTS.includes(agent.name)),
@@ -90,7 +91,7 @@ export function buildAgentsDiagram(input: {
 
   const mainName = mainAgent?.name ?? MAIN_AGENT
   const mainResolved = resolve(mainAgent, input.config?.[mainName])
-  const mainModel = mainResolved.model ?? input.defaultModel ?? undefined
+  const mainModel = mainResolved.model ?? input.defaultModel ?? parseModelRef(input.configModel)
   const main: AgentNode = {
     name: mainName,
     description: mainAgent?.description,

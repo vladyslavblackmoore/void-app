@@ -72,9 +72,13 @@ export function AgentsDiagram() {
   const globalAgents = useQuery(() => ({
     queryKey: [serverSDK().scope, "agents-global-config"],
     queryFn: async () => {
-      if ((await serverSDK().protocol) !== "v1") return { agent: {}, provider: {} }
+      if ((await serverSDK().protocol) !== "v1") return { agent: {}, provider: {}, model: undefined }
       const result = await serverSDK().client.global.config.get()
-      return structuredClone({ agent: result.data?.agent ?? {}, provider: result.data?.provider ?? {} })
+      return structuredClone({
+        agent: result.data?.agent ?? {},
+        provider: result.data?.provider ?? {},
+        model: result.data?.model,
+      })
     },
     staleTime: 0,
   }))
@@ -95,6 +99,7 @@ export function AgentsDiagram() {
           .map((id) => ({ id, models: {} })),
       ],
       defaultModel: providers.defaultModel(),
+      configModel: globalAgents.data?.model,
     }),
   )
   const [state, setState] = createStore({ selected: undefined as string | undefined })
