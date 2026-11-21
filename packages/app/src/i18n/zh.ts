@@ -242,6 +242,7 @@ export const dict = {
   "dialog.provider.google.note": "可快速生成结构化回复的 Gemini 模型",
   "dialog.provider.openrouter.note": "通过一个提供商使用所有受支持的模型",
   "dialog.provider.vercel.note": "通过智能路由统一使用 AI 模型",
+  "dialog.provider.subscription.note": "Uses your Claude subscription through the official claude CLI. No per-token billing; limited by your subscription usage.",
 
   "dialog.model.select.title": "选择模型",
   "dialog.model.search.placeholder": "搜索模型",

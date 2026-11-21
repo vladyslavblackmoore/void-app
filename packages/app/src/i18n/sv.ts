@@ -202,6 +202,7 @@ export const dict = {
   "dialog.provider.google.note": "Gemini-modeller för snabba, strukturerade svar",
   "dialog.provider.openrouter.note": "Få tillgång till alla modeller som stöds från en leverantör",
   "dialog.provider.vercel.note": "Enhetlig tillgång till AI-modeller med smart routing",
+  "dialog.provider.subscription.note": "Uses your Claude subscription through the official claude CLI. No per-token billing; limited by your subscription usage.",
   "dialog.model.select.title": "Välj modell",
   "dialog.model.search.placeholder": "Sök efter modeller",
   "dialog.model.empty": "Inga modellresultat",

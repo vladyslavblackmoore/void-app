@@ -204,6 +204,7 @@ export const dict = {
   "dialog.provider.google.note": "Gemini modeliai greitiems, struktūriniams atsakymams",
   "dialog.provider.openrouter.note": "Pasiekite visus palaikomus modelius iš vieno tiekėjo",
   "dialog.provider.vercel.note": "Vieninga prieiga prie AI modelių su išmaniuoju maršruto parinkimu",
+  "dialog.provider.subscription.note": "Uses your Claude subscription through the official claude CLI. No per-token billing; limited by your subscription usage.",
   "dialog.model.select.title": "Pasirinkite modelį",
   "dialog.model.search.placeholder": "Ieškoti modelių",
   "dialog.model.empty": "Nėra modelio rezultatų",

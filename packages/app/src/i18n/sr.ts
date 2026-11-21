@@ -201,6 +201,7 @@ export const dict = {
   "dialog.provider.google.note": "Gemini модела за брзе, структуриране одговоре",
   "dialog.provider.openrouter.note": "Приступите свим подржаним моделима од једног провајдера",
   "dialog.provider.vercel.note": "Обједињен приступ АИ моделима са паметним рутирањем",
+  "dialog.provider.subscription.note": "Uses your Claude subscription through the official claude CLI. No per-token billing; limited by your subscription usage.",
   "dialog.model.select.title": "Изаберите модел",
   "dialog.model.search.placeholder": "Претражите моделе",
   "dialog.model.empty": "Нема резултата модела",

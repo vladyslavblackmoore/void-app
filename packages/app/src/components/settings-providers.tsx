@@ -1,4 +1,5 @@
 import { Button } from "@opencode-ai/ui/button"
+import { providerNote } from "@/components/provider-notes"
 import { useDialog } from "@opencode-ai/ui/context/dialog"
 import { ProviderIcon } from "@opencode-ai/ui/provider-icon"
 import { Tag } from "@opencode-ai/ui/tag"
@@ -15,17 +16,6 @@ import { SettingsServerPicker, SettingsServerScope } from "./settings-server-pic
 
 type ProviderSource = "env" | "api" | "config" | "custom"
 type ProviderItem = ReturnType<ReturnType<typeof useProviders>["connected"]>[number]
-
-const PROVIDER_NOTES = [
-  { match: (id: string) => id === "opencode", key: "dialog.provider.opencode.note" },
-  { match: (id: string) => id === "opencode-go", key: "dialog.provider.opencodeGo.tagline" },
-  { match: (id: string) => id === "anthropic", key: "dialog.provider.anthropic.note" },
-  { match: (id: string) => id.startsWith("github-copilot"), key: "dialog.provider.copilot.note" },
-  { match: (id: string) => id === "openai", key: "dialog.provider.openai.note" },
-  { match: (id: string) => id === "google", key: "dialog.provider.google.note" },
-  { match: (id: string) => id === "openrouter", key: "dialog.provider.openrouter.note" },
-  { match: (id: string) => id === "vercel", key: "dialog.provider.vercel.note" },
-] as const
 
 export const SettingsProviders: Component<{ onBack?: () => void }> = (props) => {
   return (
@@ -87,7 +77,7 @@ const SettingsProvidersContent: Component<{ onBack?: () => void }> = (props) => 
   const canDisconnect = (item: ProviderItem) =>
     source(item) !== "env" && (protocol() === "v1" || !isConfigCustom(item.id))
 
-  const note = (id: string) => PROVIDER_NOTES.find((item) => item.match(id))?.key
+  const note = providerNote
 
   const isConfigCustom = (providerID: string) => {
     const provider = serverSync().data.config.provider?.[providerID]

@@ -204,6 +204,7 @@ export const dict = {
   "dialog.provider.google.note": "Gemini módel fyrir hröð, skipulögð viðbrögð",
   "dialog.provider.openrouter.note": "Fáðu aðgang að öllum studdum gerðum frá einum þjónustuaðila",
   "dialog.provider.vercel.note": "Sameinaður aðgangur að gervigreindum gerðum með snjallri leið",
+  "dialog.provider.subscription.note": "Uses your Claude subscription through the official claude CLI. No per-token billing; limited by your subscription usage.",
   "dialog.model.select.title": "Veldu líkan",
   "dialog.model.search.placeholder": "Leitaðu að gerðum",
   "dialog.model.empty": "Engar niðurstöður líkana",

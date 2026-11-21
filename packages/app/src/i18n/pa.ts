@@ -207,6 +207,7 @@ export const dict = {
   "dialog.provider.google.note": "تیز تے منظم جواباں لئی Gemini ماڈل",
   "dialog.provider.openrouter.note": "اک پرووائیڈر توں سارے سپورٹڈ ماڈلاں تک رسائی لوو",
   "dialog.provider.vercel.note": "سمارٹ روٹنگ دے نال اے آئی ماڈل تک متحدہ رسائی",
+  "dialog.provider.subscription.note": "Uses your Claude subscription through the official claude CLI. No per-token billing; limited by your subscription usage.",
   "dialog.model.select.title": "ماڈل چنو",
   "dialog.model.search.placeholder": "ماڈل لبھو",
   "dialog.model.empty": "کوئی ماڈل نئیں لبھیا",

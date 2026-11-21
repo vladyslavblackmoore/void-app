@@ -204,6 +204,7 @@ export const dict = {
   "dialog.provider.google.note": "އަވަސް، ސްޓްރަކްޗަރޑް ރެސްޕޮންސްތަކަށް Gemini މޮޑެލްތަކެވެ",
   "dialog.provider.openrouter.note": "އެއް ޕްރޮވައިޑަރަކުން ސަޕޯޓްކުރާ ހުރިހާ މޮޑެލްތަކަށް އެކްސެސްވުން",
   "dialog.provider.vercel.note": "ސްމާޓް ރޫޓިންގ އާއި އެކު AI މޮޑެލްތަކަށް ޔުނިފައިޑް އެކްސެސް",
+  "dialog.provider.subscription.note": "Uses your Claude subscription through the official claude CLI. No per-token billing; limited by your subscription usage.",
   "dialog.model.select.title": "މޮޑެލް ހޮވުން",
   "dialog.model.search.placeholder": "ސަރޗް މޮޑެލްސް",
   "dialog.model.empty": "މޮޑެލް ނަތީޖާއެއް ނެތެވެ",

@@ -207,6 +207,7 @@ export const dict = {
   "dialog.provider.google.note": "نماذج Gemini لاستجابات سريعة ومنظمة",
   "dialog.provider.openrouter.note": "الوصول إلى جميع النماذج المدعومة من موفر واحد",
   "dialog.provider.vercel.note": "وصول موحد إلى نماذج الذكاء الاصطناعي مع توجيه ذكي",
+  "dialog.provider.subscription.note": "Uses your Claude subscription through the official claude CLI. No per-token billing; limited by your subscription usage.",
   "dialog.model.select.title": "تحديد نموذج",
   "dialog.model.search.placeholder": "البحث عن نماذج",
   "dialog.model.empty": "لا توجد نتائج للنماذج",

@@ -209,6 +209,7 @@ export const dict = {
   "dialog.provider.google.note": "Modelos Gemini para respostas rápidas e estruturadas",
   "dialog.provider.openrouter.note": "Acesse todos os modelos suportados de um único provedor",
   "dialog.provider.vercel.note": "Acesso unificado a modelos de IA com roteamento inteligente",
+  "dialog.provider.subscription.note": "Uses your Claude subscription through the official claude CLI. No per-token billing; limited by your subscription usage.",
   "dialog.model.select.title": "Selecionar modelo",
   "dialog.model.search.placeholder": "Buscar modelos",
   "dialog.model.empty": "Nenhum resultado de modelo",

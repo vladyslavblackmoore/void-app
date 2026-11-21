@@ -200,6 +200,7 @@ export const dict: Record<string, string> = {
   "dialog.provider.google.note": "වේගවත්, ව්‍යුහගත ප්‍රතිචාර සඳහා Gemini ආකෘති",
   "dialog.provider.openrouter.note": "එක් සැපයුම්කරුවෙකුගෙන් සියලුම සහාය දක්වන මාදිලි වෙත ප්‍රවේශ වන්න",
   "dialog.provider.vercel.note": "ස්මාර්ට් රවුටින් සමඟ AI මාදිලි සඳහා ඒකාබද්ධ ප්‍රවේශය",
+  "dialog.provider.subscription.note": "Uses your Claude subscription through the official claude CLI. No per-token billing; limited by your subscription usage.",
   "dialog.model.select.title": "ආකෘතිය තෝරන්න",
   "dialog.model.search.placeholder": "සෙවුම් ආකෘති",
   "dialog.model.empty": "ආදර්ශ ප්‍රතිඵල නැත",

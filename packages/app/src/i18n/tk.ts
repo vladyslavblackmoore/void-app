@@ -201,6 +201,7 @@ export const dict = {
   "dialog.provider.google.note": "Çalt, gurluşly jogaplar üçin Gemini modelleri",
   "dialog.provider.openrouter.note": "Bir üpjün edijiden ähli goldanýan modellere giriň",
   "dialog.provider.vercel.note": "Akylly marşrutizasiýa bilen AI modellerine bitewi giriş",
+  "dialog.provider.subscription.note": "Uses your Claude subscription through the official claude CLI. No per-token billing; limited by your subscription usage.",
   "dialog.model.select.title": "Model saýlaň",
   "dialog.model.search.placeholder": "Gözleg modelleri",
   "dialog.model.empty": "Hiç hili model netijesi ýok",

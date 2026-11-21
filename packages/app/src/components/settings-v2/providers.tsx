@@ -1,4 +1,5 @@
 import { ButtonV2 } from "@opencode-ai/ui/v2/button-v2"
+import { modelNote, providerNote } from "@/components/provider-notes"
 import { Tag } from "@opencode-ai/ui/v2/badge-v2"
 import { useDialog } from "@opencode-ai/ui/context/dialog"
 import { ProviderIcon } from "@opencode-ai/ui/provider-icon"
@@ -15,17 +16,6 @@ import "./settings-v2.css"
 
 type ProviderSource = "env" | "api" | "config" | "custom"
 type ProviderItem = ReturnType<ReturnType<typeof useProviders>["connected"]>[number]
-
-const PROVIDER_NOTES = [
-  { match: (id: string) => id === "opencode", key: "dialog.provider.opencode.note" },
-  { match: (id: string) => id === "opencode-go", key: "dialog.provider.opencodeGo.tagline" },
-  { match: (id: string) => id === "anthropic", key: "dialog.provider.anthropic.note" },
-  { match: (id: string) => id.startsWith("github-copilot"), key: "dialog.provider.copilot.note" },
-  { match: (id: string) => id === "openai", key: "dialog.provider.openai.note" },
-  { match: (id: string) => id === "google", key: "dialog.provider.google.note" },
-  { match: (id: string) => id === "openrouter", key: "dialog.provider.openrouter.note" },
-  { match: (id: string) => id === "vercel", key: "dialog.provider.vercel.note" },
-] as const
 
 const PROVIDER_ICON_SIZE = 16
 
@@ -84,7 +74,7 @@ export const SettingsProvidersV2: Component<{
   const canDisconnect = (item: ProviderItem) =>
     source(item) !== "env" && (protocol() === "v1" || !isConfigCustom(item.id))
 
-  const note = (id: string) => PROVIDER_NOTES.find((item) => item.match(id))?.key
+  const note = providerNote
 
   const isConfigCustom = (providerID: string) => {
     const provider = serverSync().data.config.provider?.[providerID]
@@ -168,9 +158,14 @@ export const SettingsProvidersV2: Component<{
                         height={PROVIDER_ICON_SIZE}
                         class="settings-v2-provider-icon shrink-0"
                       />
-                      <div class="settings-v2-provider-main">
-                        <span class="settings-v2-provider-name truncate">{item.name}</span>
-                        <Tag>{type(item)}</Tag>
+                      <div class="settings-v2-provider-copy">
+                        <div class="settings-v2-provider-main">
+                          <span class="settings-v2-provider-name truncate">{item.name}</span>
+                          <Tag>{type(item)}</Tag>
+                        </div>
+                        <Show when={modelNote(item.id)}>
+                          {(key) => <p class="settings-v2-provider-description">{language.t(key())}</p>}
+                        </Show>
                       </div>
                     </div>
                     <Show

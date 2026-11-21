@@ -1,4 +1,5 @@
 import { Show, type Component, type JSX } from "solid-js"
+import { modelNote } from "@/components/provider-notes"
 import { useLanguage } from "@/context/language"
 
 type InputKey = "text" | "image" | "audio" | "video" | "pdf"
@@ -8,6 +9,7 @@ type ModelInfo = {
   id: string
   name: string
   provider: {
+    id?: string
     name: string
   }
   capabilities?: {
@@ -92,6 +94,7 @@ export const ModelTooltip: Component<{ model: ModelInfo; latest?: boolean; free?
   }
   const context = () => language.t("model.tooltip.context", { limit: props.model.limit.context.toLocaleString() })
   const contextLimit = () => props.model.limit.context.toLocaleString(language.intl())
+  const note = () => (props.model.provider.id ? modelNote(props.model.provider.id) : undefined)
 
   if (props.v2) {
     return (
@@ -103,6 +106,7 @@ export const ModelTooltip: Component<{ model: ModelInfo; latest?: boolean; free?
         </Show>
         <ModelTooltipRow name={language.t("model.tooltip.reasoning")} value={reasoning()} />
         <ModelTooltipRow name={language.t("model.tooltip.context.label")} value={contextLimit()} />
+        <Show when={note()}>{(key) => <div class="text-v2-text-text-muted">{language.t(key())}</div>}</Show>
       </div>
     )
   }
@@ -119,6 +123,7 @@ export const ModelTooltip: Component<{ model: ModelInfo; latest?: boolean; free?
       </Show>
       <div class="text-12-regular text-text-invert-base">{reasoning()}</div>
       <div class="text-12-regular text-text-invert-base">{context()}</div>
+      <Show when={note()}>{(key) => <div class="text-12-regular text-text-invert-base">{language.t(key())}</div>}</Show>
     </div>
   )
 }

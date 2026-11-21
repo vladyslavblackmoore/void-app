@@ -208,6 +208,7 @@ export const dict = {
   "dialog.provider.google.note": "Các mô hình Gemini cho phản hồi nhanh, có cấu trúc",
   "dialog.provider.openrouter.note": "Truy cập tất cả các mô hình được hỗ trợ từ một nhà cung cấp",
   "dialog.provider.vercel.note": "Truy cập thống nhất vào các mô hình AI với tính năng định tuyến thông minh",
+  "dialog.provider.subscription.note": "Uses your Claude subscription through the official claude CLI. No per-token billing; limited by your subscription usage.",
   "dialog.model.select.title": "Chọn mô hình",
   "dialog.model.search.placeholder": "Tìm kiếm mô hình",
   "dialog.model.empty": "Không có kết quả mô hình",
