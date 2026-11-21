@@ -6,6 +6,8 @@ export type TileTone = "green" | "yellow" | "red" | "grey"
 
 export type TileAction = "manage" | "connect" | "reconnect" | "enable" | "setup"
 
+export type ConnectorKind = "memory" | "google" | "generic"
+
 export type ConnectorFilter = "all" | "connected" | "needs_auth" | "error"
 
 export type CatalogEntry = {
@@ -19,6 +21,7 @@ export type ConnectorTile = {
   id: string
   name: string
   services: string[]
+  kind: ConnectorKind
   state: TileState
   tone: TileTone
   action: TileAction
@@ -26,6 +29,10 @@ export type ConnectorTile = {
   serverName: string | undefined
   error: string | undefined
 }
+
+export const hubServerName = "hub"
+
+export const memoryServerName = "memory"
 
 export const connectorFilters: ConnectorFilter[] = ["all", "connected", "needs_auth", "error"]
 
@@ -61,6 +68,7 @@ function make(input: {
   id: string
   name: string
   services: string[]
+  kind: ConnectorKind
   state: TileState
   serverName?: string
   error?: string
@@ -69,6 +77,7 @@ function make(input: {
     id: input.id,
     name: input.name,
     services: input.services,
+    kind: input.kind,
     state: input.state,
     tone: tileTone(input.state),
     action: tileAction(input.state),
@@ -79,7 +88,9 @@ function make(input: {
 }
 
 export function buildTiles(mcp: Record<string, McpStatusInput> | undefined): ConnectorTile[] {
-  const names = Object.keys(mcp ?? {}).sort((a, b) => a.localeCompare(b))
+  const names = Object.keys(mcp ?? {})
+    .filter((name) => name !== hubServerName)
+    .sort((a, b) => a.localeCompare(b))
   const claimed = new Map<string, string>()
   for (const entry of connectorCatalog) {
     const hit = names.find((name) => !claimed.has(name) && normalize(name).includes(entry.match))
@@ -92,6 +103,7 @@ export function buildTiles(mcp: Record<string, McpStatusInput> | undefined): Con
         id: `mcp:${name}`,
         name,
         services: [],
+        kind: name === memoryServerName ? "memory" : "generic",
         state: tileState(mcp?.[name]?.status),
         serverName: name,
         error: mcp?.[name]?.error,
@@ -99,11 +111,12 @@ export function buildTiles(mcp: Record<string, McpStatusInput> | undefined): Con
     )
   const catalog = connectorCatalog.map((entry) => {
     const serverName = [...claimed.entries()].find(([, id]) => id === entry.id)?.[0]
-    if (!serverName) return make({ id: entry.id, name: entry.name, services: entry.services, state: "available" })
+    if (!serverName) return make({ id: entry.id, name: entry.name, services: entry.services, kind: "google", state: "available" })
     return make({
       id: entry.id,
       name: entry.name,
       services: entry.services,
+      kind: "google",
       state: tileState(mcp?.[serverName]?.status),
       serverName,
       error: mcp?.[serverName]?.error,
@@ -133,7 +146,19 @@ export function filterTiles(tiles: ConnectorTile[], filter: ConnectorFilter, que
     )
 }
 
-export function hubSummary(tiles: ConnectorTile[]): { configured: number; connected: number; tone: TileTone } {
+export function hubServer(mcp: Record<string, McpStatusInput> | undefined): { state: TileState; tone: TileTone } | undefined {
+  const entry = mcp?.[hubServerName]
+  if (!entry) return undefined
+  const state = tileState(entry.status)
+  return { state, tone: tileTone(state) }
+}
+
+export function hubSummary(tiles: ConnectorTile[]): {
+  total: number
+  configured: number
+  connected: number
+  tone: TileTone
+} {
   const configured = tiles.filter((tile) => tile.configured)
   const connected = configured.filter((tile) => tile.state === "connected").length
   const tone: TileTone = configured.some((tile) => tile.state === "error")
@@ -143,5 +168,5 @@ export function hubSummary(tiles: ConnectorTile[]): { configured: number; connec
       : connected > 0
         ? "green"
         : "grey"
-  return { configured: configured.length, connected, tone }
+  return { total: tiles.length, configured: configured.length, connected, tone }
 }

@@ -29,7 +29,15 @@ describe("connect panel and hub styles", () => {
     expect(panel).not.toContain("void-panel-spacer")
   })
 
-  test("does not stretch tiles to the tallest tile in a row", () => {
-    expect(body(hub, '[data-component="void-hub"] [data-slot="void-hub-grid"]')).toContain("align-items: start")
+  test("gives every tile the height of the tallest tile", () => {
+    const grid = body(hub, '[data-component="void-hub"] [data-slot="void-hub-grid"]')
+    expect(grid).toContain("grid-auto-rows: 1fr")
+    expect(grid).toContain("align-items: stretch")
+    expect(grid).not.toContain("align-items: start")
+  })
+
+  test("styles the tile description, the tool count and the manage list", () => {
+    expect(hub).toContain('[data-slot="void-connector-desc"]')
+    expect(panel).toContain('[data-slot="void-panel-facts"]')
   })
 })
