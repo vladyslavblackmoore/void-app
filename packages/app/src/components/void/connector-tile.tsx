@@ -67,7 +67,7 @@ export function ConnectorTileView(props: {
         <button
           type="button"
           data-slot="void-connector-action"
-          disabled={props.busy || props.tile.state === "available"}
+          disabled={props.busy}
           onClick={(event) => {
             event.stopPropagation()
             props.onAction()

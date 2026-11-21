@@ -1,7 +1,6 @@
 import { createMemo, createSignal, For, Show } from "solid-js"
-import { useDialog } from "@opencode-ai/ui/context/dialog"
 import { SegmentedControlItemV2, SegmentedControlV2 } from "@opencode-ai/ui/v2/segmented-control-v2"
-import { DialogSelectMcp } from "@/components/dialog-select-mcp"
+import { ConnectPanel } from "@/components/void/connect-panel"
 import { ConnectorTileView } from "@/components/void/connector-tile"
 import {
   buildTiles,
@@ -12,6 +11,7 @@ import {
   type ConnectorTile,
 } from "@/components/void/connector-model"
 import "@/components/void/hub.css"
+import "@/components/void/connect-panel.css"
 import { useLanguage } from "@/context/language"
 import { useMcpToggle } from "@/context/mcp"
 import { useSync } from "@/context/sync"
@@ -19,7 +19,6 @@ import { useSync } from "@/context/sync"
 function HubBody(props: { query: string }) {
   const language = useLanguage()
   const sync = useSync()
-  const dialog = useDialog()
   const toggle = useMcpToggle()
   const [filter, setFilter] = createSignal<ConnectorFilter>("all")
   const [selected, setSelected] = createSignal<string | undefined>()
@@ -28,48 +27,60 @@ function HubBody(props: { query: string }) {
   const counts = createMemo(() => filterCounts(tiles()))
   const visible = createMemo(() => filterTiles(tiles(), filter(), props.query))
 
-  const act = (tile: ConnectorTile) => {
-    if (!tile.serverName) return
-    if (tile.state === "connected") {
-      void dialog.show(() => <DialogSelectMcp />)
-      return
-    }
-    if (toggle.isPending) return
+  const current = createMemo(() => tiles().find((tile) => tile.id === selected()))
+  const toggleTile = (tile: ConnectorTile) => {
+    if (!tile.serverName || toggle.isPending) return
     toggle.mutate(tile.serverName)
   }
 
   return (
-    <div data-slot="void-hub-body">
-      <div data-slot="void-hub-bar">
-        <span data-slot="void-hub-summary">{language.t("hub.summary", { count: counts().all })}</span>
-        <SegmentedControlV2
-          aria-label={language.t("hub.filter.label")}
-          value={filter()}
-          onChange={(next) => setFilter((next as ConnectorFilter | null) ?? "all")}
-        >
-          <For each={connectorFilters}>
-            {(item) => (
-              <SegmentedControlItemV2 value={item}>
-                {language.t(`hub.filter.${item}`)} {counts()[item]}
-              </SegmentedControlItemV2>
-            )}
-          </For>
-        </SegmentedControlV2>
+    <div data-slot="void-hub-body" data-panel={current() ? "open" : undefined}>
+      <div data-slot="void-hub-main">
+        <div data-slot="void-hub-bar">
+          <span data-slot="void-hub-summary">{language.t("hub.summary", { count: counts().all })}</span>
+          <SegmentedControlV2
+            aria-label={language.t("hub.filter.label")}
+            value={filter()}
+            onChange={(next) => setFilter((next as ConnectorFilter | null) ?? "all")}
+          >
+            <For each={connectorFilters}>
+              {(item) => (
+                <SegmentedControlItemV2 value={item}>
+                  {language.t(`hub.filter.${item}`)} {counts()[item]}
+                </SegmentedControlItemV2>
+              )}
+            </For>
+          </SegmentedControlV2>
+        </div>
+        <Show when={visible().length > 0} fallback={<div data-slot="void-hub-empty">{language.t("hub.empty")}</div>}>
+          <div data-slot="void-hub-grid">
+            <For each={visible()}>
+              {(tile) => (
+                <ConnectorTileView
+                  tile={tile}
+                  selected={selected() === tile.id}
+                  busy={toggle.isPending && toggle.variables === tile.serverName}
+                  onSelect={() => setSelected(tile.id)}
+                  onAction={() => setSelected(tile.id)}
+                />
+              )}
+            </For>
+          </div>
+        </Show>
       </div>
-      <Show when={visible().length > 0} fallback={<div data-slot="void-hub-empty">{language.t("hub.empty")}</div>}>
-        <div data-slot="void-hub-grid">
-          <For each={visible()}>
+      <Show when={selected()} keyed>
+        {(_id) => (
+          <Show when={current()}>
             {(tile) => (
-              <ConnectorTileView
-                tile={tile}
-                selected={selected() === tile.id}
-                busy={toggle.isPending && toggle.variables === tile.serverName}
-                onSelect={() => setSelected(tile.id)}
-                onAction={() => act(tile)}
+              <ConnectPanel
+                tile={tile()}
+                busy={toggle.isPending && toggle.variables === tile().serverName}
+                onToggle={() => toggleTile(tile())}
+                onClose={() => setSelected(undefined)}
               />
             )}
-          </For>
-        </div>
+          </Show>
+        )}
       </Show>
     </div>
   )
