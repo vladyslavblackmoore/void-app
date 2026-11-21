@@ -727,3 +727,32 @@
   line-height: 1;
   color: var(--v2-state-fg-danger);
 }
+
+.settings-v2-secrets-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 440;
+  line-height: 1.4;
+  color: var(--v2-text-text-muted);
+}
+
+.settings-v2-secrets-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.settings-v2-secrets-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-v2-secrets-actions {
+  display: flex;
+  justify-content: flex-end;
+}
