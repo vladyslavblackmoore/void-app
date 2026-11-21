@@ -1339,6 +1339,8 @@ export const dict = {
   "void.models.default.inherited.hint": "Agents using main",
   "void.models.default.inherited.own": "+{{count}} own model",
   "void.models.default.noModels": "Connect a provider to choose a default model.",
+  "void.models.card.custom": "custom",
+  "void.updates.toast.latest.description": "You're running the latest version of VOID.",
   "void.copy.settings.general.row.language.description": "Change the display language",
   "void.copy.settings.general.row.colorScheme.description": "Choose whether VOID follows the system, light, or dark theme",
   "void.copy.settings.general.row.theme.description": "Choose how VOID looks.",

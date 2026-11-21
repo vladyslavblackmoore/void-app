@@ -9,7 +9,7 @@ import { createEffect, createMemo, createSignal, on, type Accessor, type Compone
 import { useQuery } from "@tanstack/solid-query"
 import { SegmentedControlItemV2, SegmentedControlV2 } from "@opencode-ai/ui/v2/segmented-control-v2"
 import { loadSpaceAgentsQuery } from "@/context/global-sync/bootstrap"
-import { buildAgentsDiagram } from "../agents/agents-diagram-model"
+import { buildAgentsDiagram, mainAgentName } from "../agents/agents-diagram-model"
 import { useLanguage } from "@/context/language"
 import { useServerProtocol, useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
@@ -178,11 +178,14 @@ export const SettingsProvidersV2: Component<{
     })),
   )
 
+  const spaceAgents = useQuery(() => loadSpaceAgentsQuery(serverSdk().scope, serverSdk().client, serverSdk().protocol))
+  const mainName = createMemo(() => mainAgentName(spaceAgents.data ?? []))
+
   const panel = createMemo(() => {
     const config = serverSync().data.config
     return defaultModelPanel({
       model: config.model,
-      variant: config.agent?.main?.variant,
+      variant: config.agent?.[mainName()]?.variant,
       providers: choices(),
       isVoid: true,
     })
@@ -191,7 +194,7 @@ export const SettingsProvidersV2: Component<{
   const groups = createMemo(() => defaultModelGroups(choices(), true))
   const saved = createMemo<DefaultDraft>(() => {
     const config = serverSync().data.config
-    return { model: config.model || undefined, variant: config.agent?.main?.variant || undefined }
+    return { model: config.model || undefined, variant: config.agent?.[mainName()]?.variant || undefined }
   })
   const [draft, setDraft] = createSignal<DefaultDraft>(saved())
   createEffect(on(saved, (value) => setDraft(value), { defer: true }))
@@ -200,7 +203,6 @@ export const SettingsProvidersV2: Component<{
   const modelCount = createMemo(() => groups().reduce((total, group) => total + group.models.length, 0))
   const [saving, setSaving] = createSignal(false)
 
-  const spaceAgents = useQuery(() => loadSpaceAgentsQuery(serverSdk().scope, serverSdk().client, serverSdk().protocol))
   const inherited = createMemo(() => {
     const agents = spaceAgents.data
     if (!agents) return undefined
@@ -214,7 +216,7 @@ export const SettingsProvidersV2: Component<{
   })
 
   const saveDefault = () => {
-    const patch = defaultModelPatch(draft())
+    const patch = defaultModelPatch(draft(), mainName())
     if (!patch) return
     setSaving(true)
     serverSync()
@@ -406,7 +408,7 @@ export const SettingsProvidersV2: Component<{
             </div>
             <p class="void-provider-card-line">{language.t("settings.providers.custom.description")}</p>
             <div class="void-provider-card-foot">
-              <span class="void-provider-card-id">custom</span>
+              <span class="void-provider-card-id">{language.t("void.models.card.custom")}</span>
               <ButtonV2
                 size="normal"
                 variant="neutral"

@@ -74,6 +74,18 @@ function resolve(agent: AgentInput | undefined, config: AgentConfigInput | undef
   }
 }
 
+function visibleAgents<T extends AgentInput>(agents: T[]) {
+  return agents.filter((agent) => !agent.hidden && !(agent.native && BUILT_IN_SUBAGENTS.includes(agent.name)))
+}
+
+function findMainAgent<T extends AgentInput>(visible: T[]) {
+  return visible.find((agent) => agent.name === MAIN_AGENT) ?? visible.find((agent) => agent.mode === "primary")
+}
+
+export function mainAgentName(agents: AgentInput[]) {
+  return findMainAgent(visibleAgents(agents))?.name ?? MAIN_AGENT
+}
+
 export function buildAgentsDiagram(input: {
   agents: AgentInput[]
   config?: Record<string, AgentConfigInput | undefined>
@@ -81,11 +93,8 @@ export function buildAgentsDiagram(input: {
   defaultModel?: ModelRef | null
   configModel?: string
 }): AgentsDiagram {
-  const visible = input.agents.filter(
-    (agent) => !agent.hidden && !(agent.native && BUILT_IN_SUBAGENTS.includes(agent.name)),
-  )
-  const mainAgent =
-    visible.find((agent) => agent.name === MAIN_AGENT) ?? visible.find((agent) => agent.mode === "primary")
+  const visible = visibleAgents(input.agents)
+  const mainAgent = findMainAgent(visible)
   const connected = new Set(input.providers.map((provider) => provider.id))
   const status = (model: ModelRef | undefined) => (model && connected.has(model.providerID) ? "ready" : "unavailable")
 

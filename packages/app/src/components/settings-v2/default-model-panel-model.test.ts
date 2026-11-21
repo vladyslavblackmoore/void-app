@@ -105,6 +105,10 @@ describe("default model draft", () => {
   })
 
   test("the patch writes the model and clears an unset effort", () => {
+    expect(defaultModelPatch({ model: "anthropic/opus", variant: "high" }, "lead")).toEqual({
+      model: "anthropic/opus",
+      agent: { lead: { variant: "high" } },
+    })
     expect(defaultModelPatch({ model: "anthropic/opus", variant: "high" })).toEqual({
       model: "anthropic/opus",
       agent: { main: { variant: "high" } },

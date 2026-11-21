@@ -81,9 +81,9 @@ export function isDraftDirty(draft: DefaultDraft, saved: DefaultDraft) {
   )
 }
 
-export function defaultModelPatch(draft: DefaultDraft) {
+export function defaultModelPatch(draft: DefaultDraft, mainName = "main") {
   if (!draft.model) return undefined
-  return { model: draft.model, agent: { main: { variant: draft.variant ?? "" } } }
+  return { model: draft.model, agent: { [mainName]: { variant: draft.variant ?? "" } } }
 }
 
 export function inheritedBy(nodes: { name: string; inherits: boolean; isMain: boolean }[]) {
