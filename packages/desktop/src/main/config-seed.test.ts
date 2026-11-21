@@ -119,3 +119,33 @@ describe("seedConfig opencode.jsonc", () => {
     expect(await read()).toBe('{ "shell": "zsh" }')
   })
 })
+
+describe("seedConfig effort variants", () => {
+  const efforts = Object.fromEntries(["low", "medium", "high", "xhigh", "max"].map((name) => [name, { effort: name }]))
+  const models = async () => parse(await read()).provider.subscription.models
+
+  test("gives every subscription model the effort variants", async () => {
+    await writeFile(join(dir, "opencode.jsonc"), config)
+
+    await seedConfig(dir, wrapper)
+
+    expect(await models()).toEqual({
+      opus: { name: "Opus", variants: efforts },
+      sonnet: { name: "Sonnet", variants: efforts },
+    })
+  })
+
+  test("keeps variants a model already has", async () => {
+    await writeFile(
+      join(dir, "opencode.jsonc"),
+      config.replace(
+        '"sonnet": { "name": "Sonnet" }',
+        '"sonnet": { "name": "Sonnet", "variants": { "high": { "effort": "max" }, "fast": {} } }',
+      ),
+    )
+
+    await seedConfig(dir, wrapper)
+
+    expect((await models()).sonnet.variants).toEqual({ ...efforts, high: { effort: "max" }, fast: {} })
+  })
+})

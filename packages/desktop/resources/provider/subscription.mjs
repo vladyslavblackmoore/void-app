@@ -109,14 +109,16 @@ async function ensureConnected(check) {
   if (!(await check())) throw createAuthenticationError({ message: notConnected })
 }
 
-export function wrapModel(model, check) {
+export function wrapModel(build, check) {
+  const model = build()
+  const call = (options) => build(options?.providerOptions?.subscription?.effort)
   return new Proxy(model, {
     get(target, key) {
       if (key === "doStream")
         return async (options) => {
           await ensureConnected(check)
           try {
-            const result = await target.doStream(options)
+            const result = await call(options).doStream(options)
             return { ...result, stream: result.stream.pipeThrough(cleanStream()) }
           } catch (error) {
             throw mapError(error)
@@ -126,7 +128,7 @@ export function wrapModel(model, check) {
         return async (options) => {
           await ensureConnected(check)
           try {
-            return await target.doGenerate(options)
+            return await call(options).doGenerate(options)
           } catch (error) {
             throw mapError(error)
           }
@@ -137,11 +139,12 @@ export function wrapModel(model, check) {
   })
 }
 
-export function createSubscription(options = {}) {
+export function createSubscription(options = {}, factory = createClaudeCode) {
   const defaultSettings = options.defaultSettings ?? {}
-  const base = createClaudeCode({ defaultSettings })
+  const base = factory({ defaultSettings })
   const check = statusCheck(defaultSettings.pathToClaudeCodeExecutable, defaultSettings.env ?? {})
-  const model = (modelId, settings) => wrapModel(base.languageModel(modelId, settings), check)
+  const model = (modelId, settings) =>
+    wrapModel((effort) => base.languageModel(modelId, effort ? { ...settings, effort } : settings), check)
   const provider = (modelId, settings) => model(modelId, settings)
   return Object.assign(provider, base, { languageModel: model, chat: model, specificationVersion: "v3" })
 }

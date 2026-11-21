@@ -9,6 +9,8 @@ const defaults: Array<[string[], unknown]> = [
   [[...settings, "allowDangerouslySkipPermissions"], true],
 ]
 
+const efforts = ["low", "medium", "high", "xhigh", "max"]
+
 export async function seedConfig(configDir: string, wrapper: string) {
   const target = join(configDir, "provider", "subscription.mjs")
   if ((await readFile(target, "utf8").catch(() => undefined)) !== wrapper) {
@@ -21,7 +23,15 @@ export async function seedConfig(configDir: string, wrapper: string) {
   if (text === undefined) return
   const tree = parseTree(text)
   if (!tree || !findNodeAtLocation(tree, ["provider", "subscription"])) return
-  const next = defaults
+  const next = [
+    ...defaults,
+    ...(findNodeAtLocation(tree, ["provider", "subscription", "models"])?.children ?? []).flatMap((model) =>
+      efforts.map((effort): [string[], unknown] => [
+        ["provider", "subscription", "models", model.children?.[0]?.value, "variants", effort],
+        { effort },
+      ]),
+    ),
+  ]
     .filter(([path]) => !findNodeAtLocation(tree, path))
     .reduce(
       (result, [path, value]) =>
