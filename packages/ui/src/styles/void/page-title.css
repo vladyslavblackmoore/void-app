@@ -1,5 +1,5 @@
 html[data-theme="void"] body {
-  --void-page-title-pad: calc(var(--void-top) - 44px);
+  --void-page-title-pad: calc(var(--void-top) - 66px);
   --void-page-title-line: 40px;
   --void-page-title-gap: 6px;
   --void-page-title-sub: 17px;

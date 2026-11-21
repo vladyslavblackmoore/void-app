@@ -50,9 +50,9 @@ describe("void page title block", () => {
     expect(find('[data-component="agents-canvas"] > p')).toContain("margin-top: var(--void-page-title-gap)")
   })
 
-  test("derives the offsets from the mockup top and a 44px bar", () => {
+  test("derives the offsets from the mockup top and a 66px bar", () => {
     const css = readFileSync(new URL("page-title.css", dir), "utf8")
-    expect(css).toContain("--void-page-title-pad: calc(var(--void-top) - 44px)")
+    expect(css).toContain("--void-page-title-pad: calc(var(--void-top) - 66px)")
     expect(css).toContain("--void-page-title-after: 21px")
   })
 

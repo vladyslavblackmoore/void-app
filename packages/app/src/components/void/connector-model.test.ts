@@ -109,3 +109,12 @@ describe("connector model", () => {
     expect(hubSummary(buildTiles({ a: { status: "disabled" } }))).toEqual({ configured: 1, connected: 0, tone: "grey" })
   })
 })
+
+describe("hub summary plural", () => {
+  test("has singular and plural English variants and no bare key", async () => {
+    const { dict } = await import("../../i18n/en")
+    expect(dict["hub.summary.one"]).toBe("{{count}} connector")
+    expect(dict["hub.summary.other"]).toBe("{{count}} connectors")
+    expect(Object.hasOwn(dict, "hub.summary")).toBe(false)
+  })
+})

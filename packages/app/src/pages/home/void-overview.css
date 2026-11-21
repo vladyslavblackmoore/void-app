@@ -5,7 +5,7 @@ html[data-theme="void"] [data-component="void-overview"] {
   align-self: stretch;
   min-height: 0;
   min-width: 0;
-  padding: 18px var(--void-gutter) 28px 0;
+  padding: calc(var(--void-top) - 66px) var(--void-gutter) 28px 0;
   padding-left: var(--void-page-inset);
   overflow-y: auto;
   color: var(--void-text-1);
@@ -24,12 +24,13 @@ html[data-theme="void"] [data-slot="void-overview-title"] {
   font-size: var(--void-fs-title);
   font-weight: var(--void-weight-thin);
   letter-spacing: var(--void-ls-title);
-  line-height: 1.1;
+  line-height: var(--void-page-title-line);
 }
 
 html[data-theme="void"] [data-slot="void-overview-subtitle"] {
-  margin-top: 4px;
-  font-size: var(--void-fs-small);
+  margin-top: var(--void-page-title-gap);
+  font-size: 13px;
+  line-height: var(--void-page-title-sub);
   color: var(--void-text-2);
 }
 
@@ -57,7 +58,7 @@ html[data-theme="void"] [data-slot="void-overview-main"] {
   flex: 1;
   gap: var(--void-gap);
   min-height: 0;
-  margin-top: 28px;
+  margin-top: var(--void-page-title-after);
 }
 
 html[data-theme="void"] [data-slot="void-overview-column"] {

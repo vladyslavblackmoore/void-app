@@ -42,7 +42,7 @@ function HubBody(props: { query: string }) {
         <div data-slot="void-hub-bar">
           <span data-slot="void-hub-summary">
             <StatusDotV2 tone={summary().tone} />
-            {language.t("hub.summary", { count: summary().configured })}
+            {language.plural("hub.summary", summary().configured)}
           </span>
           <SegmentedControlV2
             aria-label={language.t("hub.filter.label")}
