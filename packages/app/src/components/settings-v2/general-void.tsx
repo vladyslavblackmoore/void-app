@@ -26,6 +26,7 @@ import {
   schemeSegments,
   sessionsKey,
   spaceRows,
+  voidDataFolder,
   voidGeneralLayout,
 } from "./settings-void-model"
 import "./settings-v2.css"
@@ -185,24 +186,21 @@ const DataCard: Component = () => {
   const language = useLanguage()
   const platform = usePlatform()
   const serverSync = useServerSync()
-  const path = createMemo(() => {
-    const home = serverSync().data.path.home
-    return home ? `${home}/.void` : undefined
-  })
+  const folder = createMemo(() => voidDataFolder(serverSync().data.path.home))
   return (
     <Card title={language.t("void.settings.data.title")} slot="data">
       <SettingsListV2>
         <SettingsRowV2
           title={language.t("void.settings.data.folder.title")}
-          description={<span class="void-data-path">~/.void</span>}
+          description={<span class="void-data-path">{folder()?.label ?? language.t("void.settings.data.unknown")}</span>}
         >
           <ButtonV2
             size="normal"
             variant="neutral"
             data-action="settings-reveal-data"
-            disabled={!path()}
+            disabled={!folder()}
             onClick={() => {
-              const target = path()
+              const target = folder()?.path
               if (target) void platform.revealPath?.(target)
             }}
           >

@@ -56,3 +56,8 @@ export function voidGeneralLayout(input: { spaces: boolean; dataFolder: boolean 
     right: [...(input.spaces ? ["spaces", "defaultSpace"] : []), ...(input.dataFolder ? ["data"] : [])],
   }
 }
+
+export function voidDataFolder(home: string | undefined) {
+  if (!home) return undefined
+  return { path: `${home}/void`, label: "~/void" }
+}

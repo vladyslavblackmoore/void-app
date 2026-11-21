@@ -8,6 +8,7 @@ import {
   schemeSegments,
   sessionsKey,
   spaceRows,
+  voidDataFolder,
   voidGeneralLayout,
 } from "./settings-void-model"
 
@@ -117,6 +118,32 @@ describe("void general layout", () => {
     const layout = voidGeneralLayout({ spaces: false, dataFolder: false })
     expect(layout).toEqual({ left: ["general", "appearance"], right: [] })
     expect([...layout.left, ...layout.right]).not.toContain("advanced")
+  })
+})
+
+describe("void data folder", () => {
+  test("is the void home under the user home, shown with a tilde", () => {
+    expect(voidDataFolder("/Users/someone")).toEqual({ path: "/Users/someone/void", label: "~/void" })
+  })
+
+  test("is unknown without a home", () => {
+    expect(voidDataFolder(undefined)).toBeUndefined()
+    expect(voidDataFolder("")).toBeUndefined()
+  })
+})
+
+describe("space labels", () => {
+  const en = readFileSync(new URL("../../i18n/en.ts", import.meta.url), "utf8")
+  const value = (key: string) => new RegExp(`^  "${key.replaceAll(".", "\\.")}": "(.*)",$`, "m").exec(en)?.[1]
+
+  test("the switcher card says it switches the current space", () => {
+    expect(value("void.settings.defaultSpace.title")).toBe("Current space")
+    expect(value("void.settings.defaultSpace.open.title")).toBe("Open space")
+    expect(value("void.settings.defaultSpace.open.description")).toBe("Switch the space you are viewing")
+  })
+
+  test("the tag marks the space that opens at launch", () => {
+    expect(value("void.settings.spaces.default")).toBe("opens at launch")
   })
 })
 
