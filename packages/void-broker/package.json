@@ -5,6 +5,9 @@
   "type": "module",
   "license": "MIT",
   "private": true,
+  "bin": {
+    "void-cli-acp": "./src/shim/main.ts"
+  },
   "scripts": {
     "test": "bun test",
     "typecheck": "tsgo --noEmit"
@@ -13,6 +16,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
+    "@agentclientprotocol/sdk": "1.9.0",
     "zod": "4.4.3"
   },
   "devDependencies": {

@@ -1,0 +1,2 @@
+{"type":"user","message":{"role":"user","content":"Write a 1200-word essay about the history of tea. Plain prose, no tools."},"parent_tool_use_id":null}
+{"type":"control_request","request_id":"req-int-1","request":{"subtype":"interrupt"}}
