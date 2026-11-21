@@ -4,6 +4,7 @@ import { join } from "node:path"
 import type { CoreStart } from "./cores"
 import { coreEnv } from "./void-home"
 import { spaceDir } from "./spaces"
+import type { BrokerStatusStore } from "./broker-status"
 
 const READY_TIMEOUT_MS = 30_000
 const STOP_TIMEOUT_MS = 8_000
@@ -47,6 +48,8 @@ export type BrokerDeps = {
   env: Record<string, string>
   readyTimeoutMs?: number
   stopTimeoutMs?: number
+  onSpawn?: () => void
+  onExit?: (code: number | null) => void
 }
 
 export type RunningBroker = { socket: string; stop: () => Promise<void> }
@@ -77,6 +80,7 @@ export async function startBroker(deps: BrokerDeps): Promise<RunningBroker | und
     stdio: ["pipe", "pipe", "pipe"],
     detached: process.platform !== "win32",
   })
+  deps.onSpawn?.()
   let gone = false
   const exited = new Promise<number | null>((resolve) => {
     child.once("exit", (code) => {
@@ -127,6 +131,7 @@ export async function startBroker(deps: BrokerDeps): Promise<RunningBroker | und
   }
   void exited.then((code) => {
     if (code !== 0) groupKill(child)
+    deps.onExit?.(code)
   })
   return { socket: paths.socket, stop }
 }
@@ -135,6 +140,7 @@ export type WithBrokerDeps = {
   root: string
   runtime: BrokerRuntime
   warn: (message: string, error?: unknown) => void
+  status?: BrokerStatusStore
   readyTimeoutMs?: number
   stopTimeoutMs?: number
 }
@@ -144,6 +150,7 @@ export function withBroker(start: CoreStart, deps: WithBrokerDeps): CoreStart {
   return async (id, options) => {
     await stopping.get(id)
     const socket = brokerPaths(deps.root, id).socket
+    let stopped: Promise<void> | undefined
     const broker = await startBroker({
       root: deps.root,
       id,
@@ -151,11 +158,16 @@ export function withBroker(start: CoreStart, deps: WithBrokerDeps): CoreStart {
       env: options.env,
       readyTimeoutMs: deps.readyTimeoutMs,
       stopTimeoutMs: deps.stopTimeoutMs,
+      onSpawn: () => deps.status?.set({ space: id, state: "starting" }),
+      onExit: (exitCode) => {
+        if (!stopped) deps.status?.set({ space: id, state: "failed", exitCode })
+      },
     }).catch((error) => {
       deps.warn("failed to start the broker", error)
+      deps.status?.set({ space: id, state: "failed" })
       return undefined
     })
-    let stopped: Promise<void> | undefined
+    if (broker) deps.status?.set({ space: id, state: "running" })
     const stopBroker = () => {
       if (!broker) return Promise.resolve()
       if (!stopped) {
@@ -164,6 +176,7 @@ export function withBroker(start: CoreStart, deps: WithBrokerDeps): CoreStart {
         stopping.set(id, current)
         void current.then(() => {
           if (stopping.get(id) === current) stopping.delete(id)
+          deps.status?.set({ space: id, state: "stopped" })
         })
       }
       return stopped

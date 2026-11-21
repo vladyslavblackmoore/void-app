@@ -25,6 +25,7 @@ import { createUpdaterSubscriptions } from "./updater-subscriptions"
 import { createDesktopDraftStore } from "./draft-store"
 import { nativeT } from "./native-translations"
 import type { SpaceService } from "./space-service"
+import type { BrokerStatus } from "./broker-status"
 
 const pickerFilters = (ext?: string[]) => {
   if (!ext || ext.length === 0) return undefined
@@ -54,6 +55,7 @@ type Deps = {
   recordFatalRendererError: (error: FatalRendererError) => Promise<void> | void
   setNativeTranslations: (bundle: DesktopNativeBundle) => void
   spaces: SpaceService
+  getBrokerStatus: (space: string) => BrokerStatus | undefined
 }
 
 export function registerIpcHandlers(deps: Deps) {
@@ -69,6 +71,7 @@ export function registerIpcHandlers(deps: Deps) {
   })
 
   ipcMain.handle("kill-sidecar", () => deps.killSidecar())
+  ipcMain.handle("broker-get-status", (_event: IpcMainInvokeEvent, space: string) => deps.getBrokerStatus(space))
   ipcMain.handle("spaces-list", () => deps.spaces.list())
   ipcMain.handle("spaces-start", (_event: IpcMainInvokeEvent, id: string) => deps.spaces.start(id))
   ipcMain.handle("spaces-get-viewed", () => deps.spaces.getViewed())
