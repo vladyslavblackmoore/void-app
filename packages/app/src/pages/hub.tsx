@@ -1,4 +1,5 @@
 import { createMemo, createSignal, For, Show } from "solid-js"
+import { StatusDotV2 } from "@opencode-ai/ui/v2/status-dot-v2"
 import { SegmentedControlItemV2, SegmentedControlV2 } from "@opencode-ai/ui/v2/segmented-control-v2"
 import { ConnectPanel } from "@/components/void/connect-panel"
 import { ConnectorTileView } from "@/components/void/connector-tile"
@@ -7,6 +8,7 @@ import {
   connectorFilters,
   filterCounts,
   filterTiles,
+  hubSummary,
   type ConnectorFilter,
   type ConnectorTile,
 } from "@/components/void/connector-model"
@@ -25,6 +27,7 @@ function HubBody(props: { query: string }) {
 
   const tiles = createMemo(() => buildTiles(sync().data.mcp))
   const counts = createMemo(() => filterCounts(tiles()))
+  const summary = createMemo(() => hubSummary(tiles()))
   const visible = createMemo(() => filterTiles(tiles(), filter(), props.query))
 
   const current = createMemo(() => tiles().find((tile) => tile.id === selected()))
@@ -37,7 +40,10 @@ function HubBody(props: { query: string }) {
     <div data-slot="void-hub-body" data-panel={current() ? "open" : undefined}>
       <div data-slot="void-hub-main">
         <div data-slot="void-hub-bar">
-          <span data-slot="void-hub-summary">{language.t("hub.summary", { count: counts().all })}</span>
+          <span data-slot="void-hub-summary">
+            <StatusDotV2 tone={summary().tone} />
+            {language.plural("hub.summary", summary().configured)}
+          </span>
           <SegmentedControlV2
             aria-label={language.t("hub.filter.label")}
             value={filter()}

@@ -135,16 +135,6 @@ export function ConnectPanel(props: { tile: ConnectorTile; busy: boolean; onTogg
           <Match when={step() === "account"}>
             <div data-slot="void-panel-card-title">{language.t("hub.panel.account.title")}</div>
             <div data-slot="void-panel-card-text">{language.t("hub.panel.account.description")}</div>
-            <div data-slot="void-panel-row" data-disabled="true">
-              <span data-slot="void-panel-avatar" aria-hidden="true">
-                {name().charAt(0)}
-              </span>
-              <div data-slot="void-panel-row-text">
-                <div>{language.t("hub.panel.account.row", { name: name() })}</div>
-                <div data-slot="void-panel-row-desc">{language.t("hub.panel.account.pending")}</div>
-              </div>
-              <span data-slot="void-panel-radio" aria-hidden="true" />
-            </div>
           </Match>
           <Match when={step() === "access"}>
             <div data-slot="void-panel-card-title">{language.t("hub.panel.access.title")}</div>
@@ -185,7 +175,6 @@ export function ConnectPanel(props: { tile: ConnectorTile; busy: boolean; onTogg
           <span>{language.t("hub.panel.placeholder")}</span>
         </div>
       </Show>
-      <div data-slot="void-panel-spacer" />
       <div data-slot="void-panel-actions">
         <button
           type="button"

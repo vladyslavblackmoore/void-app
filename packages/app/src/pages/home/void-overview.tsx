@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/solid-query"
 import { createMemo, createSignal, For, Show } from "solid-js"
 import { CardV2 } from "@opencode-ai/ui/v2/card-v2"
 import { ButtonV2 } from "@opencode-ai/ui/v2/button-v2"
@@ -12,13 +13,16 @@ import {
   type OverviewFilter,
   type OverviewSession,
 } from "@/components/void/overview-model"
+import { createOverviewAgents, OverviewAgentMap } from "@/components/void/overview-agent-map"
+import { memoryCard } from "@/components/void/overview-memory-model"
+import { pathKey } from "@/utils/path-key"
 import { sessionTitle } from "@/utils/session-title"
 import type { HomeController } from "./home-controller"
 import type { HomeSessionRecord, HomeSessionsController } from "./home-sessions-controller"
 import { createVoidSessionItems } from "./void-session-items"
 import "./void-overview.css"
 
-const filters: OverviewFilter[] = ["all", "running", "waiting"]
+const filters: OverviewFilter[] = ["all", "running", "done"]
 
 export function VoidOverview(props: { home: HomeController; sessions: HomeSessionsController }) {
   const language = useLanguage()
@@ -55,13 +59,32 @@ export function VoidOverview(props: { home: HomeController; sessions: HomeSessio
       })),
     ),
   )
+  const agents = createOverviewAgents()
+  const mcpDirectory = () => {
+    const worktree = props.home.project.newSession()?.worktree
+    return worktree ? pathKey(worktree) : undefined
+  }
+  const mcp = useQuery(() => {
+    const directory = mcpDirectory()
+    return {
+      ...props.home.server.focusedSync().queryOptions.mcp(directory ?? pathKey("")),
+      enabled: !!directory,
+    }
+  })
+  const memory = createMemo(() => memoryCard(mcp.data))
+  const agentCount = () => 1 + agents().subagents.length
   const stats = createMemo(() => overviewStats(items()))
   const visible = createMemo(() => filterOverview(items(), filter()))
 
   return (
     <div data-component="void-overview">
       <header data-slot="void-overview-head">
-        <h1 data-slot="void-overview-title">{language.t("void.overview.title")}</h1>
+        <div>
+          <h1 data-slot="void-overview-title">{language.t("void.overview.title")}</h1>
+          <div data-slot="void-overview-subtitle">
+            {language.t("void.overview.agents.count", { count: String(agentCount()) })}
+          </div>
+        </div>
         <div data-slot="void-overview-stats">
           <Stat value={stats().sessions} label={language.t("void.overview.stat.sessions")} />
           <Stat value={stats().running} label={language.t("void.overview.stat.running")} />
@@ -128,6 +151,22 @@ export function VoidOverview(props: { home: HomeController; sessions: HomeSessio
               </div>
             </CardV2>
           </aside>
+        </Show>
+        <OverviewAgentMap agents={agents} />
+        <Show when={memory()}>
+          {(card) => (
+            <aside data-slot="void-overview-side">
+              <CardV2 data-slot="void-overview-memory">
+                <div data-slot="void-overview-card-head">
+                  <span data-slot="void-overview-card-title">{language.t("void.overview.memory.title")}</span>
+                  <span data-slot="void-overview-memory-state">
+                    <StatusDotV2 tone={card().tone} />
+                    {language.t(`hub.state.${card().state}`)}
+                  </span>
+                </div>
+              </CardV2>
+            </aside>
+          )}
         </Show>
       </div>
     </div>

@@ -6,10 +6,23 @@ import { usePlatform } from "@/context/platform"
 import { ServerConnection, useServer } from "@/context/server"
 import { applyCoreStatus, menuSpaces, switchToSpace, visibleCoreState } from "@/spaces/model"
 import { useVoidTheme } from "./void/use-void-theme"
-import { spaceChipColor, spaceCore } from "./void/space-chip-model"
+import { spaceIdentityColor, spaceRowCore } from "./void/space-chip-model"
+import "./void/void-space-menu.css"
 
 const itemClass =
   "h-7 gap-2 rounded-sm px-3 text-[13px] font-[440] leading-5 tracking-[-0.04px] text-v2-text-text-base [font-family:var(--v2-font-family-sans)] data-[highlighted]:!bg-v2-overlay-simple-overlay-hover"
+
+const iconProps = {
+  width: 14,
+  height: 14,
+  viewBox: "0 0 16 16",
+  fill: "none",
+  stroke: "currentColor",
+  "stroke-width": 1.4,
+  "stroke-linecap": "round",
+  "stroke-linejoin": "round",
+  "aria-hidden": true,
+} as const
 
 function Dot(props: { color: string }) {
   return (
@@ -40,9 +53,11 @@ export function SpaceSwitcher() {
   )
   const items = () => menuSpaces(spaces.latest ?? known.latest ?? [], viewed())
   const label = () => items().find((item) => item.viewed)
-  const core = () => spaceCore((spaces.latest ?? known.latest ?? []).find((item) => item.id === viewed()))
   const [coreStatus, setCoreStatus] = createSignal<{ space: string; state: "restarting" | "up" | "failed" }>()
   const coreState = () => visibleCoreState(coreStatus(), viewed())
+  const rowCore = (id: string | undefined) =>
+    spaceRowCore((spaces.latest ?? known.latest ?? []).find((item) => item.id === id), id === viewed() ? coreState() : undefined)
+  const core = () => rowCore(viewed())
   let clear: ReturnType<typeof setTimeout> | undefined
 
   createEffect(() => {
@@ -110,7 +125,7 @@ export function SpaceSwitcher() {
             data-component="space-switcher"
             data-void-chip={isVoid() ? "" : undefined}
             data-core={isVoid() ? core() : undefined}
-            style={isVoid() ? { "--space": spaceChipColor(current().color) } : undefined}
+            style={isVoid() ? { "--space": spaceIdentityColor(current()) } : undefined}
             title={isVoid() ? language.t(`void.space.core.${core()}`) : undefined}
             class={
               isVoid()
@@ -129,6 +144,7 @@ export function SpaceSwitcher() {
               }
             >
               <span data-slot="void-space-dot" aria-hidden="true" />
+              <span data-slot="void-space-label">{language.t("void.space.label")}</span>
               <span class="max-w-[140px] truncate">{current().name}</span>
               <span data-slot="void-space-sep" aria-hidden="true" />
               <span data-slot="void-space-core" aria-hidden="true" />
@@ -160,25 +176,50 @@ export function SpaceSwitcher() {
             )}
           </Show>
           <DropdownMenu.Portal>
-            <DropdownMenu.Content class="min-w-[200px] overflow-hidden rounded-md border-0 bg-v2-background-bg-layer-01 p-0.5 shadow-[var(--v2-elevation-floating)] focus:outline-none">
+            <DropdownMenu.Content
+              data-void-space-menu={isVoid() ? "" : undefined}
+              class="min-w-[200px] overflow-hidden rounded-md border-0 bg-v2-background-bg-layer-01 p-0.5 shadow-[var(--v2-elevation-floating)] focus:outline-none"
+            >
               <DropdownMenu.Group>
                 <DropdownMenu.GroupLabel class="px-3 py-1 text-[11px] text-v2-text-text-weak">
                   {language.t("space.switcher.heading")}
                 </DropdownMenu.GroupLabel>
                 <For each={items()}>
                   {(item) => (
-                    <DropdownMenu.Item class={itemClass} onSelect={() => choose(item.id)}>
-                      <Dot color={item.color} />
-                      <DropdownMenu.ItemLabel class="min-w-0 flex-1 truncate leading-5">
-                        {item.name}
-                      </DropdownMenu.ItemLabel>
-                      <Show when={item.busy}>
-                        <span data-slot="space-busy" class="text-[11px] text-v2-text-text-weak">
-                          {language.t("space.switcher.running")}
-                        </span>
-                      </Show>
-                      <Show when={item.viewed}>
-                        <span aria-hidden="true">{"✓"}</span>
+                    <DropdownMenu.Item
+                      class={isVoid() ? undefined : itemClass}
+                      data-void-selected={isVoid() && item.viewed ? "" : undefined}
+                      onSelect={() => choose(item.id)}
+                    >
+                      <Show
+                        when={isVoid()}
+                        fallback={
+                          <>
+                            <Dot color={item.color} />
+                            <DropdownMenu.ItemLabel class="min-w-0 flex-1 truncate leading-5">
+                              {item.name}
+                            </DropdownMenu.ItemLabel>
+                            <Show when={item.busy}>
+                              <span data-slot="space-busy" class="text-[11px] text-v2-text-text-weak">
+                                {language.t("space.switcher.running")}
+                              </span>
+                            </Show>
+                            <Show when={item.viewed}>
+                              <span aria-hidden="true">{"✓"}</span>
+                            </Show>
+                          </>
+                        }
+                      >
+                        <span
+                          data-slot="void-space-dot"
+                          style={{ "--space": spaceIdentityColor(item) }}
+                          aria-hidden="true"
+                        />
+                        <DropdownMenu.ItemLabel class="min-w-0 flex-1 truncate leading-5">
+                          {item.name}
+                        </DropdownMenu.ItemLabel>
+                        <span data-slot="void-space-status">{language.t(`void.space.status.${rowCore(item.id)}`)}</span>
+                        <span data-slot="void-space-core" data-state={rowCore(item.id)} aria-hidden="true" />
                       </Show>
                     </DropdownMenu.Item>
                   )}
@@ -188,10 +229,25 @@ export function SpaceSwitcher() {
                 <div class="px-3 py-1 text-[12px] text-v2-text-text-weak">{language.t("space.switcher.failed")}</div>
               </Show>
               <DropdownMenu.Separator />
-              <DropdownMenu.Item class={itemClass} disabled>
+              <DropdownMenu.Item class={isVoid() ? undefined : itemClass} disabled>
+                <Show when={isVoid()}>
+                  <span data-slot="void-space-tile" aria-hidden="true">
+                    <svg {...iconProps}>
+                      <path d="M8 3v10M3 8h10" />
+                    </svg>
+                  </span>
+                </Show>
                 <DropdownMenu.ItemLabel>{language.t("space.switcher.new")}</DropdownMenu.ItemLabel>
               </DropdownMenu.Item>
-              <DropdownMenu.Item class={itemClass} disabled>
+              <DropdownMenu.Item class={isVoid() ? undefined : itemClass} disabled>
+                <Show when={isVoid()}>
+                  <span data-slot="void-space-tile" aria-hidden="true">
+                    <svg {...iconProps}>
+                      <circle cx="8" cy="8" r="2.2" />
+                      <path d="M8 1.8v2M8 12.2v2M1.8 8h2M12.2 8h2M3.6 3.6l1.4 1.4M11 11l1.4 1.4M3.6 12.4L5 11M11 5l1.4-1.4" />
+                    </svg>
+                  </span>
+                </Show>
                 <DropdownMenu.ItemLabel>{language.t("space.switcher.manage")}</DropdownMenu.ItemLabel>
               </DropdownMenu.Item>
             </DropdownMenu.Content>
