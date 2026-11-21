@@ -178,5 +178,5 @@ html[data-theme="void"]
 
 html[data-theme="void"] [data-slot="void-session-main"] [data-slot="new-session-dock"] {
   top: auto;
-  bottom: 20px;
+  bottom: 26px;
 }

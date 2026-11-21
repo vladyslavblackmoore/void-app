@@ -93,9 +93,38 @@ describe("void chat dock", () => {
     const body = rules().find((rule) =>
       rule.selectors.some((s) => s.endsWith('[data-action="prompt-submit"]:disabled')),
     )?.body
-    expect(body).toContain("background-color: var(--void-pill)")
+    expect(body).toContain("background-color: color-mix(in srgb, var(--void-pill) 40%, transparent)")
     expect(body).toContain("color: var(--void-pill-text)")
-    expect(body).toContain("opacity: 0.4")
+    expect(body).toContain("opacity: 1")
+  })
+
+  test("gives both dock states the same 680px box at 26px from the bottom", () => {
+    const css = readFileSync(new URL("dock.css", dir), "utf8")
+    const chat = readFileSync(new URL("chat.css", dir), "utf8")
+    const body = (needle: string) => rules().find((rule) => rule.selectors.some((s) => s.endsWith(needle)))?.body ?? ""
+    const session = body('[data-component="session-prompt-dock"] > div')
+    expect(session).toContain("max-width: 680px")
+    expect(session).toContain("padding-left: 0")
+    expect(session).toContain("padding-right: 0")
+    expect(session).toContain("margin-left: auto")
+    expect(session).toContain("margin-right: auto")
+    expect(body('[data-component="session-prompt-dock"]')).toContain("padding-bottom: 26px")
+    const empty = body('[data-component="session-new-design"] > div:first-child')
+    expect(empty).toContain("bottom: 26px")
+    expect(empty).toContain("padding-left: 0")
+    expect(empty).toContain("padding-right: 0")
+    expect(chat).toContain('[data-slot="new-session-dock"] {\n  top: auto;\n  bottom: 26px;')
+    expect(chat).not.toContain("bottom: 20px")
+    expect(body('[data-component="prompt-input-v2"]')).toContain("box-shadow: var(--void-shadow)")
+    expect(css).toContain("[data-dock-border-underlay]")
+  })
+
+  test("keeps the plus menu shortcut hints legible", () => {
+    const body = rules().find((rule) =>
+      rule.selectors.some((s) => s.endsWith('[data-menu="prompt-add"] [data-slot="menu-v2-item-shortcut"]')),
+    )?.body
+    expect(body).toContain("color: var(--void-text-2)")
+    expect(body).toContain("font-size: 12px")
   })
 
   test("styles the agent and plus menus as glass with trigger-wide min-width, 14px rows and pill selection", () => {
