@@ -62,6 +62,7 @@ import { spawnWslSidecar } from "./wsl/sidecar"
 import { cleanupStoreFiles } from "./store-cleanup"
 import { startBackgroundCli } from "./background-cli"
 import { brokerRuntime, withBroker } from "./broker"
+import { createBrokerStatus } from "./broker-status"
 import { createCores, type Cores, type CoreStart, type CoreStatus } from "./cores"
 import { createSpaceService, type SpaceService } from "./space-service"
 import { ensureDefaultSpaces, seedSpace, type SpaceSeed } from "./space-defaults"
@@ -87,6 +88,12 @@ const jsCallStackFeature = "DocumentPolicyIncludeJSCallStacksInCrashReports"
 
 let logger: ReturnType<typeof initLogging>
 let cores: Cores | undefined
+const brokerStatus = createBrokerStatus()
+brokerStatus.subscribe((status) => {
+  for (const win of BrowserWindow.getAllWindows()) {
+    if (!win.isDestroyed()) win.webContents.send("broker-status", status)
+  }
+})
 const spaceService = Promise.withResolvers<SpaceService>()
 spaceService.promise.catch(() => undefined)
 
@@ -363,6 +370,7 @@ const main = Effect.gen(function* () {
     setBackgroundColor: (color) => setBackgroundColor(color),
     exportDebugLogs: () => exportDebugLogs(),
     recordFatalRendererError: (error) => writeLog("renderer", "fatal renderer error", { ...error }, "error"),
+    getBrokerStatus: (space) => brokerStatus.get(space),
     spaces: {
       list: async () => (await spaceService.promise).list(),
       start: async (id) => (await spaceService.promise).start(id),
@@ -464,6 +472,7 @@ const main = Effect.gen(function* () {
       start: withBroker(startCore, {
         root: appRoot,
         runtime: brokerRuntimeChoice,
+        status: brokerStatus,
         warn: (message, error) => logger.warn(message, error),
       }),
     })

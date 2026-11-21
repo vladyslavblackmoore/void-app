@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer, webUtils } from "electron"
 import type { ElectronAPI, WslServersEvent } from "./types"
-import type { CoreStatus } from "@opencode-ai/app/spaces/types"
+import type { BrokerStatus, CoreStatus } from "@opencode-ai/app/spaces/types"
 import type { MajorUpdateState, UpdaterState } from "@opencode-ai/app/updater"
 
 const updaterCallbacks = new Set<(state: UpdaterState) => void>()
@@ -45,6 +45,12 @@ const api: ElectronAPI = {
       const handler = (_: unknown, status: CoreStatus) => cb(status)
       ipcRenderer.on("spaces-core-status", handler)
       return () => ipcRenderer.removeListener("spaces-core-status", handler)
+    },
+    getBrokerStatus: (space) => ipcRenderer.invoke("broker-get-status", space),
+    onBrokerStatus: (cb) => {
+      const handler = (_: unknown, status: BrokerStatus) => cb(status)
+      ipcRenderer.on("broker-status", handler)
+      return () => ipcRenderer.removeListener("broker-status", handler)
     },
   },
   wslServers: {

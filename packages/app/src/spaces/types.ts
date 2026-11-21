@@ -23,10 +23,20 @@ export type CoreStatus = {
   endpoint?: SpaceEndpoint
 }
 
+export type BrokerState = "starting" | "running" | "stopped" | "failed"
+
+export type BrokerStatus = {
+  space: string
+  state: BrokerState
+  exitCode?: number | null
+}
+
 export type SpacesPlatform = {
   list(): Promise<SpaceSummary[]>
   start(id: string): Promise<SpaceEndpoint>
   getViewed(): Promise<string>
   setViewed(id: string): Promise<SpaceEndpoint>
   onCoreStatus?(callback: (status: CoreStatus) => void): () => void
+  getBrokerStatus?(space: string): Promise<BrokerStatus | undefined>
+  onBrokerStatus?(callback: (status: BrokerStatus) => void): () => void
 }

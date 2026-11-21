@@ -1,9 +1,12 @@
 import { useQuery } from "@tanstack/solid-query"
-import { createMemo, createSignal, For, Show } from "solid-js"
+import { createEffect, createMemo, createSignal, For, onCleanup, Show } from "solid-js"
 import { CardV2 } from "@opencode-ai/ui/v2/card-v2"
 import { ButtonV2 } from "@opencode-ai/ui/v2/button-v2"
 import { StatusDotV2 } from "@opencode-ai/ui/v2/status-dot-v2"
 import { useLanguage } from "@/context/language"
+import { usePlatform } from "@/context/platform"
+import { ServerConnection, useServer } from "@/context/server"
+import type { BrokerStatus } from "@/spaces/types"
 import { showToast } from "@/utils/toast"
 import { needsYouCards, type NeedsYouCard } from "@/components/void/needs-you-model"
 import {
@@ -15,6 +18,7 @@ import {
 } from "@/components/void/overview-model"
 import { createOverviewAgents, OverviewAgentMap } from "@/components/void/overview-agent-map"
 import { memoryCard } from "@/components/void/overview-memory-model"
+import { brokerCard } from "@/components/void/overview-broker-model"
 import { pathKey } from "@/utils/path-key"
 import { sessionTitle } from "@/utils/session-title"
 import type { HomeController } from "./home-controller"
@@ -72,6 +76,30 @@ export function VoidOverview(props: { home: HomeController; sessions: HomeSessio
     }
   })
   const memory = createMemo(() => memoryCard(mcp.data))
+  const platform = usePlatform()
+  const server = useServer()
+  const [brokerStatus, setBrokerStatus] = createSignal<BrokerStatus>()
+  createEffect(() => {
+    const space = ServerConnection.space(server.current)
+    const spaces = platform.spaces
+    setBrokerStatus(undefined)
+    if (!spaces?.getBrokerStatus || !space) return
+    let live = true
+    void spaces
+      .getBrokerStatus(space)
+      .then((status) => {
+        if (live && status) setBrokerStatus(status)
+      })
+      .catch(() => undefined)
+    const off = spaces.onBrokerStatus?.((status) => {
+      if (status.space === space) setBrokerStatus(status)
+    })
+    onCleanup(() => {
+      live = false
+      off?.()
+    })
+  })
+  const broker = createMemo(() => brokerCard(brokerStatus()))
   const agentCount = () => 1 + agents().subagents.length
   const stats = createMemo(() => overviewStats(items()))
   const visible = createMemo(() => filterOverview(items(), filter()))
@@ -153,20 +181,35 @@ export function VoidOverview(props: { home: HomeController; sessions: HomeSessio
           </aside>
         </Show>
         <OverviewAgentMap agents={agents} />
-        <Show when={memory()}>
-          {(card) => (
-            <aside data-slot="void-overview-side">
-              <CardV2 data-slot="void-overview-memory">
-                <div data-slot="void-overview-card-head">
-                  <span data-slot="void-overview-card-title">{language.t("void.overview.memory.title")}</span>
-                  <span data-slot="void-overview-memory-state">
-                    <StatusDotV2 tone={card().tone} />
-                    {language.t(`hub.state.${card().state}`)}
-                  </span>
-                </div>
-              </CardV2>
-            </aside>
-          )}
+        <Show when={memory() || broker()}>
+          <aside data-slot="void-overview-side">
+            <Show when={memory()}>
+              {(card) => (
+                <CardV2 data-slot="void-overview-memory">
+                  <div data-slot="void-overview-card-head">
+                    <span data-slot="void-overview-card-title">{language.t("void.overview.memory.title")}</span>
+                    <span data-slot="void-overview-memory-state">
+                      <StatusDotV2 tone={card().tone} />
+                      {language.t(`hub.state.${card().state}`)}
+                    </span>
+                  </div>
+                </CardV2>
+              )}
+            </Show>
+            <Show when={broker()}>
+              {(card) => (
+                <CardV2 data-slot="void-overview-broker">
+                  <div data-slot="void-overview-card-head">
+                    <span data-slot="void-overview-card-title">{language.t("void.overview.broker.title")}</span>
+                    <span data-slot="void-overview-memory-state">
+                      <StatusDotV2 tone={card().tone} />
+                      {language.t(`void.overview.broker.${card().state}`)}
+                    </span>
+                  </div>
+                </CardV2>
+              )}
+            </Show>
+          </aside>
         </Show>
       </div>
     </div>
