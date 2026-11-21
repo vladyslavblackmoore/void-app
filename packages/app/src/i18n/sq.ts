@@ -1191,4 +1191,10 @@ export const dict = {
   "dialog.update.major.action.quit": "Përditëso në dalje",
   "dialog.update.major.action.restart": "Rinis për të përditësuar",
   "dialog.update.major.action.restartNow": "Rinis tani",
+  "space.switcher.ariaLabel": "Switch space",
+  "space.switcher.heading": "Spaces",
+  "space.switcher.running": "Running",
+  "space.switcher.failed": "Could not open that space.",
+  "space.switcher.new": "New space\u2026",
+  "space.switcher.manage": "Manage spaces",
 }

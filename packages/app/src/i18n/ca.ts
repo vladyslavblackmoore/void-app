@@ -1200,4 +1200,10 @@ export const dict = {
   "dialog.update.major.action.quit": "Actualitza en sortir",
   "dialog.update.major.action.restart": "Reinicia per actualitzar",
   "dialog.update.major.action.restartNow": "Reinicia ara",
+  "space.switcher.ariaLabel": "Switch space",
+  "space.switcher.heading": "Spaces",
+  "space.switcher.running": "Running",
+  "space.switcher.failed": "Could not open that space.",
+  "space.switcher.new": "New space\u2026",
+  "space.switcher.manage": "Manage spaces",
 }

@@ -1157,4 +1157,10 @@ export const dict = {
   "dialog.update.major.action.quit": "ሲዘጋ አዘምን",
   "dialog.update.major.action.restart": "ለማዘመን ዳግም አስጀምር",
   "dialog.update.major.action.restartNow": "አሁን ዳግም አስጀምር",
+  "space.switcher.ariaLabel": "Switch space",
+  "space.switcher.heading": "Spaces",
+  "space.switcher.running": "Running",
+  "space.switcher.failed": "Could not open that space.",
+  "space.switcher.new": "New space\u2026",
+  "space.switcher.manage": "Manage spaces",
 }

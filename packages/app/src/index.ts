@@ -27,4 +27,5 @@ export {
   type WslServersState,
 } from "./wsl/types"
 export { ServerConnection } from "./context/server"
+export { type SpaceEndpoint, type SpaceSummary, type SpacesPlatform } from "./spaces/types"
 export { createDraftStore, type DraftStore } from "./utils/draft-store"

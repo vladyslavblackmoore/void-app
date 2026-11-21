@@ -1199,4 +1199,10 @@ export const dict = {
   "dialog.update.major.action.quit": "Chiqishda yangilash",
   "dialog.update.major.action.restart": "Yangilash uchun qayta ishga tushirish",
   "dialog.update.major.action.restartNow": "Hozir qayta ishga tushirish",
+  "space.switcher.ariaLabel": "Switch space",
+  "space.switcher.heading": "Spaces",
+  "space.switcher.running": "Running",
+  "space.switcher.failed": "Could not open that space.",
+  "space.switcher.new": "New space\u2026",
+  "space.switcher.manage": "Manage spaces",
 }

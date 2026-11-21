@@ -1182,4 +1182,10 @@ export const dict = {
   "dialog.update.major.action.quit": "ارتقا هنگام خروج",
   "dialog.update.major.action.restart": "راه‌اندازی مجدد برای ارتقا",
   "dialog.update.major.action.restartNow": "اکنون راه‌اندازی مجدد کنید",
+  "space.switcher.ariaLabel": "Switch space",
+  "space.switcher.heading": "Spaces",
+  "space.switcher.running": "Running",
+  "space.switcher.failed": "Could not open that space.",
+  "space.switcher.new": "New space\u2026",
+  "space.switcher.manage": "Manage spaces",
 }

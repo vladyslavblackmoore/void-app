@@ -1186,4 +1186,10 @@ export const dict = {
   "dialog.update.major.action.quit": "Aktualizovať pri ukončení",
   "dialog.update.major.action.restart": "Reštartovať a aktualizovať",
   "dialog.update.major.action.restartNow": "Reštartovať teraz",
+  "space.switcher.ariaLabel": "Switch space",
+  "space.switcher.heading": "Spaces",
+  "space.switcher.running": "Running",
+  "space.switcher.failed": "Could not open that space.",
+  "space.switcher.new": "New space\u2026",
+  "space.switcher.manage": "Manage spaces",
 }

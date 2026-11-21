@@ -243,3 +243,46 @@ describe("migrateCanonicalLocalServerState", () => {
     })
   })
 })
+
+describe("space connections", () => {
+  const sidecar = (space?: string, url = "http://127.0.0.1:1"): ServerConnection.Any => ({
+    type: "sidecar",
+    variant: "base",
+    ...(space === undefined ? {} : { space }),
+    http: { url, username: "opencode", password: "pw" },
+  })
+
+  test("keeps the legacy key for the home core and a key per other space", () => {
+    expect(ServerConnection.key(sidecar()) as string).toBe("sidecar")
+    expect(ServerConnection.key(sidecar("home")) as string).toBe("sidecar")
+    expect(ServerConnection.key(sidecar("void")) as string).toBe("sidecar:void")
+    expect(ServerConnection.key(sidecar("work")) as string).toBe("sidecar:work")
+  })
+
+  test("gives every space its own project scope and keeps home on the local scope", () => {
+    const scope = (conn: ServerConnection.Any) => String(ServerScope.fromServerKey(ServerConnection.key(conn)))
+    expect(scope(sidecar())).toBe("local")
+    expect(scope(sidecar("void"))).toBe("sidecar:void")
+    expect(scope(sidecar("void"))).not.toBe(scope(sidecar("work")))
+  })
+
+  test("treats every space core as the builtin local server", () => {
+    expect(ServerConnection.builtin(sidecar("void"))).toBe(true)
+    expect(ServerConnection.local(sidecar("void"))).toBe(true)
+  })
+
+  test("lists one connection per space and lets a restarted core replace its endpoint", () => {
+    const list = resolveServerList({
+      stored: [],
+      props: [sidecar(), sidecar("void", "http://127.0.0.1:2"), sidecar("void", "http://127.0.0.1:3")],
+    })
+    expect(list.map((item) => ServerConnection.key(item) as string)).toEqual(["sidecar", "sidecar:void"])
+    expect(list[1]?.http.url).toBe("http://127.0.0.1:3")
+  })
+
+  test("reads the space id of a connection", () => {
+    expect(ServerConnection.space(sidecar())).toBe("home")
+    expect(ServerConnection.space(sidecar("void"))).toBe("void")
+    expect(ServerConnection.space({ type: "http", http: { url: "http://x" } })).toBeUndefined()
+  })
+})

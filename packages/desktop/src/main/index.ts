@@ -51,6 +51,7 @@ import { spawnWslSidecar } from "./wsl/sidecar"
 import { cleanupStoreFiles } from "./store-cleanup"
 import { startBackgroundCli } from "./background-cli"
 import { createCores, type Cores } from "./cores"
+import { createSpaceService, type SpaceService } from "./space-service"
 import { ensureDefaultSpaces, seedSpace, type SpaceSeed } from "./space-defaults"
 import { HOME_SPACE_ID, ensureHomeSpace, spaceDir } from "./spaces"
 import personalSpaceTemplate from "../../resources/spaces/personal/space.json?raw"
@@ -74,6 +75,7 @@ const jsCallStackFeature = "DocumentPolicyIncludeJSCallStacksInCrashReports"
 
 let logger: ReturnType<typeof initLogging>
 let cores: Cores | undefined
+const spaceService = Promise.withResolvers<SpaceService>()
 
 const pendingDeepLinks: string[] = []
 
@@ -348,6 +350,12 @@ const main = Effect.gen(function* () {
     setBackgroundColor: (color) => setBackgroundColor(color),
     exportDebugLogs: () => exportDebugLogs(),
     recordFatalRendererError: (error) => writeLog("renderer", "fatal renderer error", { ...error }, "error"),
+    spaces: {
+      list: async () => (await spaceService.promise).list(),
+      start: async (id) => (await spaceService.promise).start(id),
+      getViewed: async () => (await spaceService.promise).getViewed(),
+      setViewed: async (id) => (await spaceService.promise).setViewed(id),
+    },
     setNativeTranslations: (bundle) => {
       if (setNativeTranslations(bundle)) createMenu(menuDeps)
     },
@@ -405,7 +413,9 @@ const main = Effect.gen(function* () {
       },
     })
     cores = spaces
-    spaces.setViewed(HOME_SPACE_ID)
+    const service = createSpaceService({ root: appRoot, cores: spaces })
+    spaceService.resolve(service)
+    spaces.setViewed(yield* Effect.promise(() => service.getViewed()))
 
     ensureLoopbackNoProxy()
     useEnvProxy()

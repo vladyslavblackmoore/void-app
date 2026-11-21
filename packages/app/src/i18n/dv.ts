@@ -1205,4 +1205,10 @@ export const dict = {
   "dialog.update.major.action.quit": "ބަންދުކުރާއިރު އަޕްގްރޭޑް ކުރުން",
   "dialog.update.major.action.restart": "އަޕްގްރޭޑް ކުރުމަށް ރީސްޓާޓް ކުރުން",
   "dialog.update.major.action.restartNow": "މިހާރު ރީސްޓާޓް ކުރުން",
+  "space.switcher.ariaLabel": "Switch space",
+  "space.switcher.heading": "Spaces",
+  "space.switcher.running": "Running",
+  "space.switcher.failed": "Could not open that space.",
+  "space.switcher.new": "New space\u2026",
+  "space.switcher.manage": "Manage spaces",
 }

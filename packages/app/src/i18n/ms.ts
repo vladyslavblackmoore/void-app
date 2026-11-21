@@ -1185,4 +1185,10 @@ export const dict = {
   "dialog.update.major.action.quit": "Naik taraf semasa keluar",
   "dialog.update.major.action.restart": "Mulakan semula untuk naik taraf",
   "dialog.update.major.action.restartNow": "Mulakan semula sekarang",
+  "space.switcher.ariaLabel": "Switch space",
+  "space.switcher.heading": "Spaces",
+  "space.switcher.running": "Running",
+  "space.switcher.failed": "Could not open that space.",
+  "space.switcher.new": "New space\u2026",
+  "space.switcher.manage": "Manage spaces",
 }

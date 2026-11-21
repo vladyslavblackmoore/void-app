@@ -1178,4 +1178,10 @@ export const dict = {
   "dialog.update.major.action.quit": "ដំឡើងកំណែពេលចេញ",
   "dialog.update.major.action.restart": "ចាប់ផ្តើមឡើងវិញដើម្បីដំឡើងកំណែ",
   "dialog.update.major.action.restartNow": "ចាប់ផ្តើមឡើងវិញឥឡូវនេះ",
+  "space.switcher.ariaLabel": "Switch space",
+  "space.switcher.heading": "Spaces",
+  "space.switcher.running": "Running",
+  "space.switcher.failed": "Could not open that space.",
+  "space.switcher.new": "New space\u2026",
+  "space.switcher.manage": "Manage spaces",
 }

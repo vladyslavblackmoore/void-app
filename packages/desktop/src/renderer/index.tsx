@@ -28,6 +28,7 @@ import { DesktopFirstLaunchOnboarding } from "./onboarding"
 import { resetZoom, setPinchZoomEnabled, webviewZoom, zoomIn, zoomOut } from "./webview-zoom"
 import { windowFullscreen } from "./window-fullscreen"
 import { availableStartupServer, readyWslConnections } from "./wsl/connections"
+import { loadViewedSpace, startupServerKey } from "./spaces"
 import "./styles.css"
 import { Splash } from "@opencode-ai/ui/logo"
 import { useTheme } from "@opencode-ai/ui/theme/context"
@@ -292,6 +293,8 @@ const createPlatform = (windowState: DesktopWindowState): Platform => {
 
     wslServers: wslServersApi,
 
+    spaces: window.api.spaces,
+
     getDisplayBackend: async () => {
       return window.api.getDisplayBackend().catch(() => null)
     },
@@ -356,6 +359,7 @@ function DesktopRoot(props: { windowState: DesktopWindowState }) {
   // Fetch sidecar credentials (available immediately, before health check)
   const [sidecar] = createResource(() => window.api.awaitInitialization())
 
+  const [viewedSpace] = createResource(() => loadViewedSpace(window.api.spaces))
   const [defaultServer] = createResource(() => platform.getDefaultServer?.())
   const [locale] = createResource(loadLocale)
   const router = (props: BaseRouterProps) => (
@@ -385,7 +389,7 @@ function DesktopRoot(props: { windowState: DesktopWindowState }) {
     const wslServers = useWslServers()
     const language = useLanguage()
     const ready = createMemo(
-      () => !defaultServer.loading && !sidecar.loading && !locale.loading && !wslServers.isLoading,
+      () => !defaultServer.loading && !viewedSpace.loading && !sidecar.loading && !locale.loading && !wslServers.isLoading,
     )
     const servers = createMemo(() => {
       const data = initializationData(sidecar)
@@ -402,11 +406,15 @@ function DesktopRoot(props: { windowState: DesktopWindowState }) {
           },
         })
       }
+      const viewed = viewedSpace.latest
+      if (viewed) list.push(viewed)
       list.push(...readyWslConnections(wslServers.data, language.t("wsl.server.label")))
       return list
     })
     const effectiveDefaultServer = createMemo(() =>
-      ServerConnection.Key.make(availableStartupServer(defaultServer.latest, wslServers.data)),
+      ServerConnection.Key.make(
+        availableStartupServer(startupServerKey(defaultServer.latest, viewedSpace.latest), wslServers.data),
+      ),
     )
     return (
       <Show when={ready()} fallback={<LoadingSplash />}>

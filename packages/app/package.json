@@ -9,6 +9,8 @@
     "./i18n/desktop-native": "./src/i18n/desktop-native.ts",
     "./updater": "./src/updater.ts",
     "./wsl/types": "./src/wsl/types.ts",
+    "./spaces/types": "./src/spaces/types.ts",
+    "./spaces/connection": "./src/spaces/connection.ts",
     "./vite": "./vite.js",
     "./index.css": "./src/index.css"
   },

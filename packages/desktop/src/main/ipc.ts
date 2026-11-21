@@ -24,6 +24,7 @@ import type { UpdaterController } from "./updater-controller"
 import { createUpdaterSubscriptions } from "./updater-subscriptions"
 import { createDesktopDraftStore } from "./draft-store"
 import { nativeT } from "./native-translations"
+import type { SpaceService } from "./space-service"
 
 const pickerFilters = (ext?: string[]) => {
   if (!ext || ext.length === 0) return undefined
@@ -52,6 +53,7 @@ type Deps = {
   exportDebugLogs: () => Promise<string>
   recordFatalRendererError: (error: FatalRendererError) => Promise<void> | void
   setNativeTranslations: (bundle: DesktopNativeBundle) => void
+  spaces: SpaceService
 }
 
 export function registerIpcHandlers(deps: Deps) {
@@ -63,6 +65,10 @@ export function registerIpcHandlers(deps: Deps) {
   app.on("browser-window-created", (_event, win) => win.on("session-end", () => drafts.flush()))
 
   ipcMain.handle("kill-sidecar", () => deps.killSidecar())
+  ipcMain.handle("spaces-list", () => deps.spaces.list())
+  ipcMain.handle("spaces-start", (_event: IpcMainInvokeEvent, id: string) => deps.spaces.start(id))
+  ipcMain.handle("spaces-get-viewed", () => deps.spaces.getViewed())
+  ipcMain.handle("spaces-set-viewed", (_event: IpcMainInvokeEvent, id: string) => deps.spaces.setViewed(id))
   ipcMain.handle("await-initialization", () => deps.awaitInitialization())
   ipcMain.handle("consume-initial-deep-links", () => deps.consumeInitialDeepLinks())
   ipcMain.handle("get-default-server-url", () => deps.getDefaultServerUrl())
