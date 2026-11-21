@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { overviewDockRequest, overviewSubtitle, overviewTagKind, overviewTelemetry } from "./overview-extras-model"
+import { overviewDockRequest, overviewSubtitle, overviewTelemetry } from "./overview-extras-model"
 
 const model = { providerID: "anthropic", modelID: "claude-haiku-4" }
 
@@ -55,13 +55,5 @@ describe("overview telemetry", () => {
         { key: "agents", count: 1 },
       ],
     })
-  })
-})
-
-describe("overview tag kind", () => {
-  test("gives haiku its own kind and keeps the others", () => {
-    expect(overviewTagKind(model)).toBe("haiku")
-    expect(overviewTagKind({ providerID: "anthropic", modelID: "claude-opus-4" })).toBe("opus")
-    expect(overviewTagKind(undefined)).toBe("other")
   })
 })

@@ -10,9 +10,9 @@ const body = (source: string, selector: string) => {
 }
 
 describe("overview styles", () => {
-  test("haiku tags use a model tier colour", () => {
+  test("haiku tags use the agents tag colour", () => {
     expect(body(css, 'html[data-theme="void"] [data-slot="void-agent-tag"][data-kind="haiku"]')).toContain(
-      "var(--void-model-tier-2)",
+      "var(--void-model-tier-other)",
     )
   })
 

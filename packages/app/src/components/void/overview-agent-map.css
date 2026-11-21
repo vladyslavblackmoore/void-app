@@ -148,7 +148,7 @@ html[data-theme="void"] [data-slot="void-agent-empty"] {
 }
 
 html[data-theme="void"] [data-slot="void-agent-tag"][data-kind="haiku"] {
-  background: var(--void-model-tier-2);
+  background: var(--void-model-tier-other);
   color: var(--void-on-tag);
 }
 

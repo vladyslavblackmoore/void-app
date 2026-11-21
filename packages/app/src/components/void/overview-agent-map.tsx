@@ -6,8 +6,7 @@ import { useServerSDK } from "@/context/server-sdk"
 import { loadSpaceAgentsQuery } from "@/context/global-sync/bootstrap"
 import { useProviders } from "@/hooks/use-providers"
 import { buildAgentsDiagram, LINK_HEIGHT, linkPaths, type AgentNode } from "@/components/agents/agents-diagram-model"
-import { modelChipLabel } from "@/components/agents/model-tag"
-import { overviewTagKind } from "@/components/void/overview-extras-model"
+import { modelChipLabel, modelTagKind } from "@/components/agents/model-tag"
 import "./overview-agent-map.css"
 
 export function createOverviewAgents() {
@@ -55,7 +54,7 @@ function AgentCard(props: { node: AgentNode }) {
   return (
     <div data-slot="void-agent-node" data-main={props.node.isMain ? "true" : undefined}>
       <Show when={props.node.model}>
-        <span data-slot="void-agent-tag" data-kind={overviewTagKind(props.node.model)}>
+        <span data-slot="void-agent-tag" data-kind={modelTagKind(props.node.model)}>
           {modelChipLabel(props.node.model)}
         </span>
       </Show>

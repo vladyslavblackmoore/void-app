@@ -1,5 +1,4 @@
 import type { BrokerState } from "@/spaces/types"
-import { modelTagKind, type ModelTagKind } from "@/components/agents/model-tag"
 import type { ModelRef } from "@/components/agents/agents-diagram-model"
 
 export type OverviewDockRequest = { agent: string; model: ModelRef; text: string; directory: string }
@@ -48,10 +47,4 @@ export function overviewTelemetry(input: {
     { key: "agents", count: input.agents },
   ]
   return { left, right }
-}
-
-export function overviewTagKind(model: ModelRef | undefined): ModelTagKind | "haiku" {
-  const kind = modelTagKind(model)
-  if (kind === "other" && model?.modelID.toLowerCase().includes("haiku")) return "haiku"
-  return kind
 }
