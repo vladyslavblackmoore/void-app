@@ -328,3 +328,9 @@ html[data-theme="void"] [data-component="agents-panel"] [data-slot="agents-foote
   border-radius: var(--void-radius-control);
   font-size: var(--void-fs-body);
 }
+
+html[data-theme="void"] [data-component="agents-panel"] [data-slot="segmented-control-v2-item"] {
+  flex: 1 1 auto;
+  min-width: max-content;
+  padding: 0 8px;
+}

@@ -43,4 +43,13 @@ describe("agents screen void styles", () => {
       "color: var(--void-text-1)",
     )
   })
+
+  test("effort segments size to their content", () => {
+    const body = bodyOf(
+      'html[data-theme="void"] [data-component="agents-panel"] [data-slot="segmented-control-v2-item"]',
+    )
+    expect(body).toContain("flex: 1 1 auto")
+    expect(body).toContain("min-width: max-content")
+    expect(body).toContain("padding: 0 8px")
+  })
 })
