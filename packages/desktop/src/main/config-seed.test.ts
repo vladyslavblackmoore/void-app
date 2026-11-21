@@ -126,6 +126,11 @@ describe("seedConfig opencode.jsonc", () => {
 
 describe("seedConfig agents", () => {
   const agents = async () => parse(await read()).agent
+  const roles = {
+    architect: { model: "subscription/opus", variant: "high" },
+    doc: { model: "subscription/sonnet", variant: "medium" },
+    explorer: { model: "subscription/haiku" },
+  }
   const auth = async (providers: string[]) => {
     const file = join(dir, "auth.json")
     await writeFile(file, JSON.stringify(Object.fromEntries(providers.map((id) => [id, { type: "api", key: "x" }]))))
@@ -140,6 +145,7 @@ describe("seedConfig agents", () => {
     expect(await agents()).toEqual({
       main: { model: "openai/gpt-6.2-sol", variant: "medium" },
       worker: { model: "subscription/sonnet", variant: "medium" },
+      ...roles,
     })
   })
 
@@ -164,7 +170,7 @@ describe("seedConfig agents", () => {
 
     await seedConfig(dir, data, wrapper, await auth(["subscription"]))
 
-    expect(await agents()).toEqual({ worker: { model: "subscription/sonnet", variant: "medium" } })
+    expect(await agents()).toEqual({ worker: { model: "subscription/sonnet", variant: "medium" }, ...roles })
     expect(await Bun.file(join(data, "main-seeded-1")).exists()).toBe(false)
 
     await writeFile(join(dir, "opencode.jsonc"), remove(await read(), ["agent", "worker", "variant"]))
@@ -173,6 +179,7 @@ describe("seedConfig agents", () => {
     expect(await agents()).toEqual({
       main: { model: "openai/gpt-6.2-sol", variant: "medium" },
       worker: { model: "subscription/sonnet" },
+      ...roles,
     })
   })
 
@@ -190,7 +197,40 @@ describe("seedConfig agents", () => {
     expect(await agents()).toEqual({
       main: { model: "anthropic/x", steps: 3 },
       worker: { model: "subscription/sonnet", variant: "low" },
+      ...roles,
     })
+  })
+
+  test("seeds the role defaults without touching a role the owner already set", async () => {
+    await writeFile(
+      join(dir, "opencode.jsonc"),
+      config.replace('"mcp":', '"agent": { "doc": { "model": "openai/x" }, "explorer": { "steps": 2 } },\n  "mcp":'),
+    )
+
+    await seedConfig(dir, data, wrapper)
+
+    expect((await agents()).architect).toEqual(roles.architect)
+    expect((await agents()).doc).toEqual({ model: "openai/x" })
+    expect((await agents()).explorer).toEqual({ steps: 2, model: "subscription/haiku" })
+  })
+
+  test("gives a profile stamped before the roles existed the role defaults once", async () => {
+    await writeFile(join(dir, "opencode.jsonc"), config)
+    await seedConfig(dir, data, wrapper)
+    await rm(join(data, "roles-seeded-1"))
+    const old = ["architect", "doc", "explorer"].reduce(
+      (text, name) => remove(text, ["agent", name]),
+      remove(await read(), ["agent", "worker", "variant"]),
+    )
+    await writeFile(join(dir, "opencode.jsonc"), old.replace('"model": "subscription/sonnet"', '"model": "own/model"'))
+
+    await seedConfig(dir, data, wrapper)
+
+    expect(await agents()).toEqual({ worker: { model: "own/model" }, ...roles })
+    const once = await read()
+    await writeFile(join(dir, "opencode.jsonc"), remove(once, ["agent", "doc"]))
+    await seedConfig(dir, data, wrapper)
+    expect((await agents()).doc).toBeUndefined()
   })
 })
 
@@ -255,6 +295,18 @@ describe("seedConfig once", () => {
     await seedConfig(dir, data, wrapper)
 
     expect((await settings()).permissionMode).toBe("bypassPermissions")
+  })
+
+  test("seeds a config with trailing commas, as the opencode loader accepts them", async () => {
+    await writeFile(
+      join(dir, "opencode.jsonc"),
+      config.replace('"mcp":', '"shell": "zsh",\n  "mcp":').replace("\n}\n", ",\n}\n"),
+    )
+
+    await seedConfig(dir, data, wrapper)
+
+    expect((await settings()).permissionMode).toBe("bypassPermissions")
+    expect(await Bun.file(join(data, "config-seeded-1")).exists()).toBe(true)
   })
 
   test("writes no stamp while the subscription provider is missing", async () => {

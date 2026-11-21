@@ -5,12 +5,14 @@ import { Switch } from "@opencode-ai/ui/v2/switch-v2"
 import { useLanguage } from "@/context/language"
 import {
   buildAgentPatch,
+  canSave,
   groupModels,
   initialDraft,
   selectModel,
   variantsFor,
   type AgentConfigPatch,
   type AgentDraft,
+  type FileFields,
 } from "./agent-editor"
 import { formatModelRef, type AgentNode } from "./agents-diagram-model"
 
@@ -18,6 +20,7 @@ type ProviderList = Parameters<typeof groupModels>[0]
 
 export function AgentEditorPanel(props: {
   node: AgentNode
+  locked: FileFields
   providers: ProviderList
   running: boolean
   onSave: (patch: AgentConfigPatch) => Promise<void>
@@ -28,13 +31,13 @@ export function AgentEditorPanel(props: {
   const [state, setState] = createStore({ confirming: false, saving: false })
   const groups = createMemo(() => groupModels(props.providers))
   const variants = createMemo(() => variantsFor(props.providers, draft.model))
-  const canInherit = () => !props.node.isMain
+  const canInherit = () => !props.node.isMain && !props.locked.model
   const selectedRef = () => (draft.inherit || !draft.model ? undefined : formatModelRef(draft.model))
 
   const apply = async () => {
     setState("saving", true)
     try {
-      await props.onSave(buildAgentPatch(props.node.name, { ...draft }))
+      await props.onSave(buildAgentPatch(props.node.name, { ...draft }, props.locked))
     } finally {
       setState({ saving: false, confirming: false })
     }
@@ -70,6 +73,11 @@ export function AgentEditorPanel(props: {
           <span>{language.t("agents.editor.model")}</span>
           <span>{language.t("agents.editor.model.hint")}</span>
         </div>
+        <Show when={props.locked.model}>
+          <p data-slot="agents-warning" class="rounded-xl px-3 py-2 text-[12px]">
+            {language.t("agents.editor.fromFile")}
+          </p>
+        </Show>
         <div role="radiogroup" aria-label={language.t("agents.editor.model")} class="flex flex-col gap-1.5">
           <For each={groups()}>
             {(group) => (
@@ -83,7 +91,7 @@ export function AgentEditorPanel(props: {
                       aria-checked={selectedRef() === model.ref}
                       data-slot="agents-option"
                       data-selected={selectedRef() === model.ref}
-                      disabled={draft.inherit}
+                      disabled={draft.inherit || props.locked.model}
                       class="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-mono text-[13px]"
                       onClick={() =>
                         setDraft(
@@ -115,6 +123,11 @@ export function AgentEditorPanel(props: {
             </p>
           }
         >
+          <Show when={props.locked.variant}>
+            <p data-slot="agents-warning" class="rounded-xl px-3 py-2 text-[12px]">
+              {language.t("agents.editor.fromFile")}
+            </p>
+          </Show>
           <div role="radiogroup" aria-label={language.t("agents.editor.effort")} class="flex flex-wrap gap-1.5">
             <For each={variants()}>
               {(variant) => (
@@ -124,6 +137,7 @@ export function AgentEditorPanel(props: {
                   aria-checked={draft.variant === variant}
                   data-slot="agents-option"
                   data-selected={draft.variant === variant}
+                  disabled={props.locked.variant}
                   class="rounded-xl px-3 py-1.5 text-[13px]"
                   onClick={() => setDraft("variant", draft.variant === variant ? undefined : variant)}
                 >
@@ -156,7 +170,7 @@ export function AgentEditorPanel(props: {
         <ButtonV2 variant="outline" class="flex-1" disabled={state.saving} onClick={props.onClose}>
           {language.t("common.cancel")}
         </ButtonV2>
-        <ButtonV2 variant="contrast" class="flex-1" disabled={state.saving} onClick={save}>
+        <ButtonV2 variant="contrast" class="flex-1" disabled={state.saving || !canSave(props.locked)} onClick={save}>
           {state.confirming ? language.t("agents.editor.apply") : language.t("common.save")}
         </ButtonV2>
       </div>

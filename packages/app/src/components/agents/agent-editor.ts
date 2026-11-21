@@ -32,8 +32,15 @@ export type AgentDraft = {
 }
 
 export type AgentConfigPatch = {
-  agent: Record<string, { model: string; variant: string }>
+  agent: Record<string, { model?: string; variant?: string }>
 }
+
+export type FileFields = {
+  model: boolean
+  variant: boolean
+}
+
+export const NO_FILE_FIELDS: FileFields = { model: false, variant: false }
 
 export function groupModels(providers: ProviderInput[]): ModelGroup[] {
   return providers
@@ -65,9 +72,38 @@ export function selectModel(draft: AgentDraft, model: ModelRef, providers: Provi
   return { inherit: false, model, variant: keep ? draft.variant : undefined }
 }
 
-export function buildAgentPatch(name: string, draft: AgentDraft): AgentConfigPatch {
-  if (draft.inherit || !draft.model) return { agent: { [name]: { model: "", variant: "" } } }
-  return { agent: { [name]: { model: formatModelRef(draft.model), variant: draft.variant ?? "" } } }
+export function fileFields(
+  agent: { model?: ModelRef; variant?: string } | undefined,
+  config: { model?: string; variant?: string } | undefined,
+): FileFields {
+  return {
+    model: !!agent?.model && formatModelRef(agent.model) !== config?.model,
+    variant: !!agent?.variant && agent.variant !== config?.variant,
+  }
+}
+
+export function canSave(locked: FileFields) {
+  return !(locked.model && locked.variant)
+}
+
+export function buildAgentPatch(
+  name: string,
+  draft: AgentDraft,
+  locked: FileFields = NO_FILE_FIELDS,
+): AgentConfigPatch {
+  const clear = draft.inherit || !draft.model
+  const values = {
+    model: clear ? "" : formatModelRef(draft.model!),
+    variant: clear ? "" : (draft.variant ?? ""),
+  }
+  return {
+    agent: {
+      [name]: {
+        ...(locked.model ? {} : { model: values.model }),
+        ...(locked.variant ? {} : { variant: values.variant }),
+      },
+    },
+  }
 }
 
 export function hasRunningSessions(statuses: Record<string, { type: string } | undefined>) {

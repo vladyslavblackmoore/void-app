@@ -1141,6 +1141,7 @@ export const dict: Record<string, string> = {
   "agents.editor.inherit": "Inherit from main",
   "agents.editor.running": "Running sessions will be stopped. Apply now?",
   "agents.editor.apply": "Apply now",
+  "agents.editor.fromFile": "Set in the agent file; edit the file to change it",
   "settings.agents.title": "ལས་ཚབ་ཚུ།",
   "settings.agents.description": "ལས་ཚབ་སྒྲིག་སྟངས་ཚུ་ནཱ་ལུ་རིམ་སྒྲིག་འབད་བཏུབ་འོང་།",
   "settings.commands.title": "བརྡ་བཀོད་ཚུ།",

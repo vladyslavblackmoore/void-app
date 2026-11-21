@@ -1,12 +1,14 @@
-import { createMemo, For, Show } from "solid-js"
+import { createEffect, createMemo, For, on, Show } from "solid-js"
 import { createStore } from "solid-js/store"
+import { useQuery } from "@tanstack/solid-query"
 import { useLanguage } from "@/context/language"
 import { useLayout } from "@/context/layout"
+import { useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
 import { useProviders } from "@/hooks/use-providers"
 import { buildAgentsDiagram, formatModelRef, LINK_HEIGHT, linkPaths, type AgentNode } from "./agents-diagram-model"
 import { showToast } from "@/utils/toast"
-import { hasRunningSessions, type AgentConfigPatch } from "./agent-editor"
+import { fileFields, hasRunningSessions, type AgentConfigPatch } from "./agent-editor"
 import { AgentEditorPanel } from "./agent-editor-panel"
 import "./agents-diagram.css"
 
@@ -52,6 +54,16 @@ export function AgentsDiagram() {
   const language = useLanguage()
   const layout = useLayout()
   const serverSync = useServerSync()
+  const serverSDK = useServerSDK()
+  const globalAgents = useQuery(() => ({
+    queryKey: [serverSDK().scope, "agents-global-config"],
+    queryFn: async () => {
+      if ((await serverSDK().protocol) !== "v1") return {}
+      const result = await serverSDK().client.global.config.get()
+      return structuredClone(result.data?.agent ?? {})
+    },
+    staleTime: 0,
+  }))
   const directory = createMemo(() => layout.projects.list()[0]?.worktree)
   const providers = useProviders(directory)
   const agents = createMemo(() => {
@@ -62,18 +74,25 @@ export function AgentsDiagram() {
   const diagram = createMemo(() =>
     buildAgentsDiagram({
       agents: agents(),
-      config: serverSync().data.config.agent,
+      config: globalAgents.data,
       providers: providers.connected(),
       defaultModel: providers.defaultModel(),
     }),
   )
   const [state, setState] = createStore({ selected: undefined as string | undefined })
   const nodes = createMemo(() => [diagram().main, ...diagram().subagents])
+  createEffect(
+    on(
+      () => state.selected,
+      (selected) => selected && void globalAgents.refetch(),
+    ),
+  )
   const running = () => hasRunningSessions(serverSync().session.data.session_status)
 
   const save = async (patch: AgentConfigPatch) => {
     try {
       await serverSync().updateConfig(patch)
+      await globalAgents.refetch()
       setState("selected", undefined)
     } catch (error) {
       showToast({
@@ -139,6 +158,10 @@ export function AgentsDiagram() {
             {(node) => (
               <AgentEditorPanel
                 node={node()}
+                locked={fileFields(
+                  agents().find((agent) => agent.name === node().name),
+                  globalAgents.data?.[node().name],
+                )}
                 providers={providers.connected()}
                 running={running()}
                 onSave={save}

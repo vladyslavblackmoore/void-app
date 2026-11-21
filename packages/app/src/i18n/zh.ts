@@ -1101,6 +1101,7 @@ export const dict = {
   "agents.editor.inherit": "Inherit from main",
   "agents.editor.running": "Running sessions will be stopped. Apply now?",
   "agents.editor.apply": "Apply now",
+  "agents.editor.fromFile": "Set in the agent file; edit the file to change it",
 
   "settings.agents.title": "智能体",
   "settings.agents.description": "可在此处配置智能体设置。",

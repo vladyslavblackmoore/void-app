@@ -1134,6 +1134,7 @@ export const dict = {
   "agents.editor.inherit": "Inherit from main",
   "agents.editor.running": "Running sessions will be stopped. Apply now?",
   "agents.editor.apply": "Apply now",
+  "agents.editor.fromFile": "Set in the agent file; edit the file to change it",
   "settings.agents.title": "Πράκτορες",
   "settings.agents.description": "Οι ρυθμίσεις πρακτόρων μπορούν να διαμορφωθούν εδώ.",
   "settings.commands.title": "Εντολές",

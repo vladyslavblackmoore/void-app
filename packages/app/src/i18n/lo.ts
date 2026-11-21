@@ -1110,6 +1110,7 @@ export const dict = {
   "agents.editor.inherit": "Inherit from main",
   "agents.editor.running": "Running sessions will be stopped. Apply now?",
   "agents.editor.apply": "Apply now",
+  "agents.editor.fromFile": "Set in the agent file; edit the file to change it",
   "settings.agents.title": "ຕົວແທນ",
   "settings.agents.description": "ການຕັ້ງຄ່າຕົວແທນຈະຖືກຕັ້ງຄ່າໄດ້ທີ່ນີ້.",
   "settings.commands.title": "ຄໍາສັ່ງ",

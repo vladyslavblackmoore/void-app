@@ -1,6 +1,8 @@
 import { describe, expect, test } from "bun:test"
 import {
   buildAgentPatch,
+  canSave,
+  fileFields,
   groupModels,
   hasRunningSessions,
   initialDraft,
@@ -131,5 +133,56 @@ describe("hasRunningSessions", () => {
 
   test("ignores undefined entries", () => {
     expect(hasRunningSessions({ a: undefined })).toBe(false)
+  })
+})
+
+describe("fileFields", () => {
+  const model = { providerID: "subscription", modelID: "opus" }
+
+  test("flags a field the agent has but the global config does not", () => {
+    expect(fileFields({ model, variant: "high" }, undefined)).toEqual({ model: true, variant: true })
+    expect(fileFields({ model, variant: "high" }, { model: "subscription/sonnet", variant: "low" })).toEqual({
+      model: true,
+      variant: true,
+    })
+  })
+
+  test("does not flag a field that matches the global config", () => {
+    expect(fileFields({ model, variant: "high" }, { model: "subscription/opus", variant: "high" })).toEqual({
+      model: false,
+      variant: false,
+    })
+  })
+
+  test("flags each field on its own", () => {
+    expect(fileFields({ model, variant: "high" }, { model: "subscription/opus" })).toEqual({
+      model: false,
+      variant: true,
+    })
+  })
+
+  test("flags nothing for an agent without model and variant", () => {
+    expect(fileFields({}, { model: "subscription/opus", variant: "high" })).toEqual({ model: false, variant: false })
+    expect(fileFields(undefined, undefined)).toEqual({ model: false, variant: false })
+    expect(fileFields({ variant: "" }, { variant: "" })).toEqual({ model: false, variant: false })
+  })
+})
+
+describe("locked fields in the patch", () => {
+  const draft = { inherit: false, model: { providerID: "api", modelID: "big" }, variant: "max" }
+
+  test("leaves out the fields set in the agent file", () => {
+    expect(buildAgentPatch("doc", draft, { model: true, variant: false })).toEqual({
+      agent: { doc: { variant: "max" } },
+    })
+    expect(buildAgentPatch("doc", draft, { model: false, variant: true })).toEqual({
+      agent: { doc: { model: "api/big" } },
+    })
+  })
+
+  test("can save unless both fields are locked", () => {
+    expect(canSave({ model: true, variant: false })).toBe(true)
+    expect(canSave({ model: false, variant: false })).toBe(true)
+    expect(canSave({ model: true, variant: true })).toBe(false)
   })
 })

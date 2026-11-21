@@ -1136,6 +1136,7 @@ export const dict = {
   "agents.editor.inherit": "Inherit from main",
   "agents.editor.running": "Running sessions will be stopped. Apply now?",
   "agents.editor.apply": "Apply now",
+  "agents.editor.fromFile": "Set in the agent file; edit the file to change it",
   "settings.agents.title": "အေးဂျင့်များ",
   "settings.agents.description": "အေးဂျင့်ဆက်တင်များကို ဤနေရာတွင် ပြင်ဆင်သတ်မှတ်နိုင်ပါမည်။",
   "settings.commands.title": "အမိန့်များ",

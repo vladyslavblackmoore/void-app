@@ -766,6 +766,7 @@ export const dict = {
   "agents.editor.inherit": "Inherit from main",
   "agents.editor.running": "Running sessions will be stopped. Apply now?",
   "agents.editor.apply": "Apply now",
+  "agents.editor.fromFile": "Set in the agent file; edit the file to change it",
   "settings.agents.title": "에이전트",
   "settings.agents.description": "에이전트 설정은 여기서 구성할 수 있습니다.",
   "settings.commands.title": "명령어",

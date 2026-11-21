@@ -42,6 +42,33 @@ describe("model refs", () => {
   })
 })
 
+describe("agents diagram built-ins", () => {
+  test("hides the built-in explore and general but keeps explorer and custom agents", () => {
+    const diagram = buildAgentsDiagram({
+      agents: [
+        { name: "main", mode: "primary" },
+        { name: "general", mode: "subagent", native: true },
+        { name: "explore", mode: "subagent", native: true },
+        { name: "explorer", mode: "subagent", native: false },
+        { name: "worker", mode: "subagent", native: false },
+      ],
+      providers,
+    })
+    expect(diagram.subagents.map((node) => node.name)).toEqual(["explorer", "worker"])
+  })
+
+  test("keeps a user-defined agent that reuses a built-in name", () => {
+    const diagram = buildAgentsDiagram({
+      agents: [
+        { name: "main", mode: "primary" },
+        { name: "explore", mode: "subagent", native: false },
+      ],
+      providers,
+    })
+    expect(diagram.subagents.map((node) => node.name)).toEqual(["explore"])
+  })
+})
+
 describe("agents diagram", () => {
   test("puts main on top and one node per visible subagent below", () => {
     const diagram = buildAgentsDiagram({ agents, providers })

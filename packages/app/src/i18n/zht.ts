@@ -1098,6 +1098,7 @@ export const dict = {
   "agents.editor.inherit": "Inherit from main",
   "agents.editor.running": "Running sessions will be stopped. Apply now?",
   "agents.editor.apply": "Apply now",
+  "agents.editor.fromFile": "Set in the agent file; edit the file to change it",
   "settings.agents.title": "代理程式",
   "settings.agents.description": "代理程式設定將在此處可設定。",
   "settings.commands.title": "命令",

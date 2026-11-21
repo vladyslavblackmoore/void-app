@@ -1113,6 +1113,7 @@ export const dict = {
   "agents.editor.inherit": "Inherit from main",
   "agents.editor.running": "Running sessions will be stopped. Apply now?",
   "agents.editor.apply": "Apply now",
+  "agents.editor.fromFile": "Set in the agent file; edit the file to change it",
   "settings.agents.title": "ភ្នាក់ងារ",
   "settings.agents.description": "ការកំណត់ភ្នាក់ងារនឹងអាចកំណត់បាននៅទីនេះ។",
   "settings.commands.title": "ពាក្យបញ្ជា",

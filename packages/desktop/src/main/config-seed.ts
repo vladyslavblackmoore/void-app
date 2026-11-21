@@ -5,6 +5,7 @@ import { applyEdits, findNodeAtLocation, modify, parseTree, type ParseError } fr
 
 const CONFIG_STAMP = "config-seeded-1"
 const MAIN_STAMP = "main-seeded-1"
+const ROLES_STAMP = "roles-seeded-1"
 
 const settings = ["provider", "subscription", "options", "defaultSettings"]
 
@@ -16,6 +17,12 @@ const defaults: Array<[string[], unknown]> = [
 const efforts = ["low", "medium", "high", "xhigh", "max"]
 
 const worker = { model: "subscription/sonnet", variant: "medium" }
+
+const roles: Array<[string, Record<string, string>]> = [
+  ["architect", { model: "subscription/opus", variant: "high" }],
+  ["doc", { model: "subscription/sonnet", variant: "medium" }],
+  ["explorer", { model: "subscription/haiku" }],
+]
 
 const mains: Array<[string, Record<string, string>]> = [
   ["anthropic", { model: "anthropic/claude-sonnet-5-5", variant: "medium" }],
@@ -38,13 +45,14 @@ export async function seedConfig(configDir: string, userDataDir: string, wrapper
   const connected = Object.keys(JSON.parse((await readFile(authFile, "utf8").catch(() => undefined)) ?? "{}"))
   const main = mains.find(([provider]) => connected.includes(provider))?.[1]
   const mainSeeded = existsSync(join(userDataDir, MAIN_STAMP))
-  if (seeded && (mainSeeded || !main)) return
+  const rolesSeeded = existsSync(join(userDataDir, ROLES_STAMP))
+  if (seeded && rolesSeeded && (mainSeeded || !main)) return
 
   const file = join(configDir, "opencode.jsonc")
   const text = await readFile(file, "utf8").catch(() => undefined)
   if (text === undefined) return
   const errors: ParseError[] = []
-  const tree = parseTree(text, errors)
+  const tree = parseTree(text, errors, { allowTrailingComma: true })
   if (!tree || errors.length > 0 || !findNodeAtLocation(tree, ["provider", "subscription"])) return
   const missing = (path: string[]) => !findNodeAtLocation(tree, path)
   const next = [
@@ -60,6 +68,9 @@ export async function seedConfig(configDir: string, userDataDir: string, wrapper
           ),
           ...(missing(["agent", "worker", "model"]) ? agent("worker", worker) : []),
         ]),
+    ...(rolesSeeded
+      ? []
+      : roles.flatMap(([name, values]) => (missing(["agent", name, "model"]) ? agent(name, values) : []))),
     ...(main && !mainSeeded && missing(["agent", "main", "model"]) ? agent("main", main) : []),
   ]
     .filter(([path]) => missing(path))
@@ -71,5 +82,6 @@ export async function seedConfig(configDir: string, userDataDir: string, wrapper
   if (next !== text) await writeFile(file, next)
   await mkdir(userDataDir, { recursive: true })
   if (!seeded) await writeFile(join(userDataDir, CONFIG_STAMP), new Date().toISOString())
+  if (!rolesSeeded) await writeFile(join(userDataDir, ROLES_STAMP), new Date().toISOString())
   if (main && !mainSeeded) await writeFile(join(userDataDir, MAIN_STAMP), new Date().toISOString())
 }

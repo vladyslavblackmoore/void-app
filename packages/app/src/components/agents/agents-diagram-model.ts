@@ -8,6 +8,7 @@ type AgentInput = {
   description?: string
   mode: "subagent" | "primary" | "all"
   hidden?: boolean
+  native?: boolean
   model?: ModelRef
   variant?: string
 }
@@ -44,6 +45,7 @@ export type AgentLink = {
 }
 
 export const MAIN_AGENT = "main"
+const BUILT_IN_SUBAGENTS = ["explore", "general"]
 export const LINK_HEIGHT = 100
 
 export function parseModelRef(value: string | undefined): ModelRef | undefined {
@@ -78,7 +80,9 @@ export function buildAgentsDiagram(input: {
   providers: ProviderInput[]
   defaultModel?: ModelRef | null
 }): AgentsDiagram {
-  const visible = input.agents.filter((agent) => !agent.hidden)
+  const visible = input.agents.filter(
+    (agent) => !agent.hidden && !(agent.native && BUILT_IN_SUBAGENTS.includes(agent.name)),
+  )
   const mainAgent =
     visible.find((agent) => agent.name === MAIN_AGENT) ?? visible.find((agent) => agent.mode === "primary")
   const connected = new Set(input.providers.map((provider) => provider.id))

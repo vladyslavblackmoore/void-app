@@ -182,6 +182,66 @@ describe("bootstrapDirectory", () => {
 
     expect(store.status).toBe("complete")
   })
+
+  test("keeps the global config unchanged when the directory config is merged into the child store", async () => {
+    const [query] = createStore({
+      data: { agent: { doc: { model: "mock/m-b", variant: "low", options: {}, permission: {} } } } as Config,
+    })
+    const [global] = createStore({
+      get config() {
+        return query.data
+      },
+    })
+    const [store, setStore] = directoryState()
+    const merged = {
+      agent: {
+        doc: {
+          model: "mock/m-a",
+          variant: "low",
+          options: {},
+          permission: { edit: "allow" },
+          prompt: "from the markdown file",
+        },
+      },
+    } as Config
+
+    await bootstrapDirectory({
+      directory: "/project",
+      scope: ServerScope.local,
+      mcp: true,
+      global: {
+        config: global.config,
+        path: { state: "", config: "", worktree: "/project", directory: "/project", home: "/home" },
+        project: [{ id: "project", worktree: "/project" } as Project],
+        provider,
+      },
+      sdk: {
+        app: { agents: async () => ({ data: [] }) },
+        config: { get: async () => ({ data: merged }) },
+        session: { status: async () => ({ data: {} }) },
+        vcs: { get: async () => ({ data: undefined }) },
+        command: { list: async () => ({ data: [] }) },
+        permission: { list: async () => ({ data: [] }) },
+        question: { list: async () => ({ data: [] }) },
+        v2: { reference: { list: async () => ({ data: { data: [] } }) } },
+        mcp: { status: async () => ({ data: {} }) },
+        experimental: { resource: { list: async () => ({ data: {} }) } },
+        provider: { list: async () => ({ data: { all: [], connected: [], default: {} } }) },
+      } as unknown as OpencodeClient,
+      api,
+      store,
+      setStore,
+      vcsCache: { setStore() {} } as unknown as VcsCache,
+      loadSessions() {},
+      translate: (key) => key,
+      queryClient: new QueryClient(),
+      protocol: Promise.resolve("v1"),
+    })
+    await new Promise((resolve) => setTimeout(resolve, 80))
+
+    expect(store.config.agent?.doc?.model).toBe("mock/m-a")
+    expect(global.config.agent?.doc).toEqual({ model: "mock/m-b", variant: "low", options: {}, permission: {} })
+  })
 })
 
 describe("config queries", () => {
