@@ -1,7 +1,6 @@
 import { randomUUID } from "node:crypto"
 import { mkdirSync, rmSync } from "node:fs"
 import * as http from "node:http"
-import { createServer } from "node:net"
 import { homedir, tmpdir } from "node:os"
 import { join } from "node:path"
 import { getCACertificates, setDefaultCACertificates } from "node:tls"
@@ -34,7 +33,6 @@ import {
   preferAppEnv,
   setDefaultServerUrl,
   spawnLocalServer,
-  type SidecarListener,
 } from "./server"
 import { setupAutoUpdater, showUpdaterDialog } from "./updater"
 import { safeWebContentsURL } from "./window-state"
@@ -52,7 +50,11 @@ import { registerWslIpcHandlers } from "./wsl/ipc"
 import { spawnWslSidecar } from "./wsl/sidecar"
 import { cleanupStoreFiles } from "./store-cleanup"
 import { startBackgroundCli } from "./background-cli"
-import { ensureHomeSpace } from "./spaces"
+import { createCores, type Cores } from "./cores"
+import { ensureDefaultSpaces, seedSpace, type SpaceSeed } from "./space-defaults"
+import { HOME_SPACE_ID, ensureHomeSpace, spaceDir } from "./spaces"
+import personalSpaceTemplate from "../../resources/spaces/personal/space.json?raw"
+import companySpaceTemplate from "../../resources/spaces/company/space.json?raw"
 import { VOID_HOME, voidAppEnv, voidUserData } from "./void-home"
 import { setNativeTranslations } from "./native-translations"
 
@@ -71,7 +73,7 @@ const SIDECAR_VERSION = process.env.OPENCODE_SIDECAR_V2 === "1" ? "v2" : "v1"
 const jsCallStackFeature = "DocumentPolicyIncludeJSCallStacksInCrashReports"
 
 let logger: ReturnType<typeof initLogging>
-let server: SidecarListener | null = null
+let cores: Cores | undefined
 
 const pendingDeepLinks: string[] = []
 
@@ -92,10 +94,7 @@ function emitDeepLinks(urls: string[]) {
 }
 
 async function killSidecar() {
-  if (!server) return
-  const current = server
-  server = null
-  await current.stop()
+  await cores?.stopAll()
 }
 
 function ensureLoopbackNoProxy() {
@@ -370,27 +369,50 @@ const main = Effect.gen(function* () {
     logger.log("sidecar connection started", { version: SIDECAR_VERSION })
     if (migrationFailure !== undefined) return yield* Effect.fail(migrationFailure)
 
-    const configDir = join(process.env.XDG_CONFIG_HOME ?? voidAppEnv(VOID_HOME, {}).XDG_CONFIG_HOME, "opencode")
-    yield* Effect.promise(() =>
-      seedAgents(configDir, app.getPath("userData"), [
+    const seed: SpaceSeed = {
+      agents: [
         { name: "main", content: mainAgent },
         { name: "worker", content: workerAgent },
-      ]).catch((error) => logger.warn("failed to seed agents", error)),
-    )
+      ],
+      wrapper: subscriptionWrapper,
+    }
     yield* Effect.promise(() =>
-      seedConfig(
-        configDir,
-        app.getPath("userData"),
-        subscriptionWrapper,
-        join(process.env.XDG_DATA_HOME ?? voidAppEnv(VOID_HOME, {}).XDG_DATA_HOME, "opencode", "auth.json"),
-      ).catch((error) => logger.warn("failed to seed config", error)),
+      ensureDefaultSpaces(
+        appRoot,
+        { personal: JSON.parse(personalSpaceTemplate), company: JSON.parse(companySpaceTemplate) },
+        onboardingTestRoot ? join(onboardingTestRoot, "no-old-runtime") : join(homedir(), ".void", "spaces"),
+      ).catch((error) => logger.warn("failed to create default spaces", error)),
     )
+    const spaces = createCores({
+      root: appRoot,
+      prepare: (id) => seedSpace(appRoot, id, seed).catch((error) => logger.warn("failed to seed space", error)),
+      start: async (id, options) => {
+        let exitSignal!: () => void
+        const exited = new Promise<void>((resolve) => {
+          exitSignal = resolve
+        })
+        const { listener, health } = await spawnLocalServer(options.hostname, options.port, options.password, {
+          userDataPath: join(spaceDir(appRoot, id), "state"),
+          env: options.env,
+          onStdout: (message) => writeLog("server", "stdout", { message, space: id }),
+          onStderr: (message) => writeLog("server", "stderr", { message, space: id }, "warn"),
+          onExit: (code) => {
+            writeLog("utility", "sidecar exited", { code, space: id }, "warn")
+            exitSignal()
+          },
+        })
+        return { stop: listener.stop, ready: health.wait, exited }
+      },
+    })
+    cores = spaces
+    spaces.setViewed(HOME_SPACE_ID)
 
     ensureLoopbackNoProxy()
     useEnvProxy()
 
     if (SIDECAR_VERSION === "v2") {
       logger.log("spawning v2 sidecar")
+      yield* Effect.promise(() => seedSpace(appRoot, HOME_SPACE_ID, seed).catch((error) => logger.warn("failed to seed space", error)))
       const sidecar = yield* Effect.promise(() => startBackgroundCli(logger, shellEnv?.XDG_STATE_HOME))
       yield* Deferred.succeed(serverReady, {
         url: sidecar.url,
@@ -406,54 +428,22 @@ const main = Effect.gen(function* () {
       return
     }
 
-    const port = yield* Effect.gen(function* () {
-      const fromEnv = process.env.OPENCODE_PORT
-      if (fromEnv) {
-        const parsed = Number.parseInt(fromEnv, 10)
-        if (!Number.isNaN(parsed)) return parsed
-      }
-
-      const res = yield* Deferred.make<number, unknown>()
-      const socket = createServer()
-      socket.on("error", (e) => Deferred.failSync(res, () => e))
-      socket.listen(0, "127.0.0.1", () => {
-        const address = socket.address()
-        if (typeof address !== "object" || !address) {
-          socket.close()
-          Deferred.failSync(res, () => new Error("Failed to get port"))
-          return
-        }
-        const port = address.port
-        socket.close(() => Effect.runSync(Deferred.succeed(res, port)))
-      })
-
-      return yield* Deferred.await(res)
-    })
-    const hostname = "127.0.0.1"
-    const url = `http://${hostname}:${port}`
-    const password = randomUUID()
-
-    logger.log("spawning sidecar", { url })
-    const { listener, health } = yield* Effect.promise(() =>
-      spawnLocalServer(hostname, port, password, {
-        userDataPath: app.getPath("userData"),
-        onStdout: (message) => writeLog("server", "stdout", { message }),
-        onStderr: (message) => writeLog("server", "stderr", { message }, "warn"),
-        onExit: (code) => writeLog("utility", "sidecar exited", { code }, "warn"),
-      }),
+    const fromEnv = Number.parseInt(process.env.OPENCODE_PORT ?? "", 10)
+    logger.log("spawning sidecar")
+    const core = yield* Effect.promise(() =>
+      spaces.ensure(HOME_SPACE_ID, Number.isNaN(fromEnv) ? {} : { port: fromEnv }),
     )
-    server = listener
     yield* Deferred.succeed(serverReady, {
-      url,
-      username: "opencode",
-      password,
+      url: core.url,
+      username: core.username,
+      password: core.password,
     })
 
     if (process.platform === "win32") {
       void wslServers.initialize().catch((error) => logger.error("wsl server initialization failed", error))
     }
 
-    yield* Effect.promise(() => health.wait).pipe(
+    yield* Effect.promise(() => spaces.ready(HOME_SPACE_ID)).pipe(
       Effect.timeout("30 seconds"),
       Effect.catch((e) =>
         Effect.sync(() => {
