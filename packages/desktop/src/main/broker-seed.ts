@@ -46,3 +46,17 @@ export async function addDelegatePermissions(configDir: string, stateDir: string
       section: "permission",
     })
 }
+
+export async function addDelegatePrompt(configDir: string, stateDir: string, mainContent: string) {
+  const line = mainContent.split("\n").find((row) => row.startsWith("- ") && row.includes("delegate tool"))
+  if (line === undefined) return
+  await addMissingLines({
+    file: join(configDir, "agents", "main.md"),
+    stateDir,
+    name: "main-delegate-prompt",
+    version: 1,
+    lines: [line],
+    heading: "Delegation",
+    marker: "delegate tool",
+  })
+}

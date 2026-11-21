@@ -68,4 +68,43 @@ describe("addMissingLines", () => {
     await run({ section: undefined, lines: ["b", "c"] })
     expect(await readFile(file, "utf8")).toBe("a\nb\nc\n")
   })
+
+  describe("under a body heading", () => {
+    const doc = "---\nmode: primary\n---\n\n## Role\nr\n\n## Delegation\n- one\n- two\n\n## Hard rules\n- x\n"
+    const bullet = "- Use the delegate tool for CLI workers."
+    const body = { section: undefined, heading: "Delegation", lines: [bullet], name: "prompt" }
+
+    test("adds the bullet at the end of the heading section and keeps the rest", async () => {
+      await writeFile(file, doc)
+      expect(await run(body)).toBe(true)
+      expect(await readFile(file, "utf8")).toBe(doc.replace("- two\n", `- two\n${bullet}\n`))
+    })
+
+    test("adds it once per stamp", async () => {
+      await writeFile(file, doc)
+      await run(body)
+      const first = await readFile(file, "utf8")
+      expect(await run(body)).toBe(false)
+      expect(await readFile(file, "utf8")).toBe(first)
+    })
+
+    test("leaves a file that already has the line unchanged", async () => {
+      const has = doc.replace("- two\n", `- two\n${bullet}\n`)
+      await writeFile(file, has)
+      expect(await run(body)).toBe(false)
+      expect(await readFile(file, "utf8")).toBe(has)
+    })
+
+    test("leaves a file with the marker text in another wording unchanged", async () => {
+      const has = doc.replace("- two", "- route CLI work through the delegate tool")
+      await writeFile(file, has)
+      expect(await run({ ...body, marker: "delegate tool" })).toBe(false)
+      expect(await readFile(file, "utf8")).toBe(has)
+    })
+
+    test("does nothing when the heading is missing", async () => {
+      await writeFile(file, "---\nmode: primary\n---\n\n## Role\nr\n")
+      expect(await run(body)).toBe(false)
+    })
+  })
 })

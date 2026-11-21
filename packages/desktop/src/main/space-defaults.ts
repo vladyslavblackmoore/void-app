@@ -1,7 +1,7 @@
 import { readdir, readFile } from "node:fs/promises"
 import { join } from "node:path"
 import { seedAgents, seedTools } from "./agents"
-import { addDelegatePermissions, seedBrokerWorkers } from "./broker-seed"
+import { addDelegatePermissions, addDelegatePrompt, seedBrokerWorkers } from "./broker-seed"
 import { seedConfig } from "./config-seed"
 import { createSpace, ensureHomeSpace, isSpaceId, listSpaces, readSpace, spaceDir, type Space } from "./spaces"
 
@@ -67,6 +67,8 @@ export async function seedSpace(root: string, id: string, seed: SpaceSeed) {
     config: seed.config,
   })
   await addDelegatePermissions(configDir, stateDir)
+  const main = seed.agents.find((agent) => agent.name === "main")
+  if (main) await addDelegatePrompt(configDir, stateDir, main.content)
   if (seed.tools) await seedTools(configDir, stateDir, seed.tools)
   if (seed.workers === undefined) return
   const space = await readSpace(root, id)

@@ -121,7 +121,8 @@ describe("space seeder", () => {
 })
 
 describe("broker seeding", () => {
-  const mainMd = "---\nmode: primary\npermission:\n  bash: allow\n  delegate: allow\n---\nm\n"
+  const bullet = "- Work for a CLI worker goes through the delegate tool."
+  const mainMd = `---\nmode: primary\npermission:\n  bash: allow\n  delegate: allow\n---\n## Delegation\n- first\n${bullet}\n\n## Hard rules\n- x\n`
   const workerMd = "---\nmode: subagent\npermission:\n  bash: allow\n  delegate: deny\n---\nw\n"
   const oldWorkerMd = "---\nmode: subagent\npermission:\n  bash: allow\n  task: deny\n---\nw\n"
   const full = {
@@ -207,6 +208,26 @@ describe("broker seeding", () => {
     await stampOld(mainMd, workerMd)
     await seedSpace(root, "void", full)
     expect(await readFile(files("void").worker, "utf8")).toBe(workerMd)
+    expect(await readFile(files("void").main, "utf8")).toBe(mainMd)
+  })
+
+  const promptOld = "---\nmode: primary\npermission:\n  bash: allow\n  delegate: allow\n---\n## Delegation\n- first\n- mine\n\n## Hard rules\n- x\n"
+
+  test("an old main agent file gets the delegate prompt line once and keeps user edits", async () => {
+    await ensureDefaultSpaces(root, templates, legacy)
+    await stampOld(promptOld, workerMd)
+    await seedSpace(root, "void", full)
+    const main = await readFile(files("void").main, "utf8")
+    expect(main).toBe(promptOld.replace("- mine\n", `- mine\n${bullet}\n`))
+    await writeFile(files("void").main, main.replace("- first", "- edited"))
+    await seedSpace(root, "void", full)
+    expect(await readFile(files("void").main, "utf8")).toBe(main.replace("- first", "- edited"))
+  })
+
+  test("a main agent file that already has the delegate prompt line is unchanged", async () => {
+    await ensureDefaultSpaces(root, templates, legacy)
+    await stampOld(mainMd, workerMd)
+    await seedSpace(root, "void", full)
     expect(await readFile(files("void").main, "utf8")).toBe(mainMd)
   })
 })
