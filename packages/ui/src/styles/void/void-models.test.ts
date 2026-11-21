@@ -97,4 +97,10 @@ describe("void models screens", () => {
     expect(css).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
     expect(css).not.toMatch(/\brgba?\(/)
   })
+
+  test("the effort note sits under the disabled control in the secondary text colour", () => {
+    const rule = body(".void-default-model-note")
+    expect(rule).toContain("color: var(--void-text-2)")
+    expect(rule).toContain("font-size: var(--void-fs-small")
+  })
 })

@@ -65,6 +65,13 @@ export function effortOptions(groups: DefaultModelGroup[], model: string | undef
   return []
 }
 
+export const effortScale = ["low", "medium", "high", "xhigh", "max"]
+
+export function effortControl(groups: DefaultModelGroup[], model: string | undefined) {
+  const variants = effortOptions(groups, model)
+  return variants.length > 0 ? { live: true, values: variants } : { live: false, values: effortScale }
+}
+
 export function selectDefaultModel(draft: DefaultDraft, ref: string, groups: DefaultModelGroup[]): DefaultDraft {
   const keep = draft.variant && effortOptions(groups, ref).includes(draft.variant)
   return { model: ref, variant: keep ? draft.variant : undefined }

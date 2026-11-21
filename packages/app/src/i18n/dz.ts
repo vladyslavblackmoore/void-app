@@ -1361,7 +1361,7 @@ export const dict: Record<string, string> = {
   "void.models.default.unavailable": "Provider not connected",
   "void.models.default.options": "{{count}} available",
   "void.models.default.effort.hint": "Variants of the chosen model",
-  "void.models.default.effort.none": "The chosen model has no effort variants.",
+  "void.models.default.effort.none": "No effort variants for this model.",
   "void.models.default.inherited": "Inherited by",
   "void.models.default.inherited.hint": "Agents using main",
   "void.models.default.inherited.own": "+{{count}} own model",

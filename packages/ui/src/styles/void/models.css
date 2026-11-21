@@ -134,6 +134,12 @@ html[data-theme="void"] .void-default-model-empty {
   font-size: var(--void-fs-small, 12px);
 }
 
+html[data-theme="void"] .void-default-model-note {
+  margin: 8px 0 0;
+  font-size: var(--void-fs-small, 12px);
+  color: var(--void-text-2);
+}
+
 html[data-theme="void"] .void-default-model-inherited {
   display: flex;
   flex-wrap: wrap;
