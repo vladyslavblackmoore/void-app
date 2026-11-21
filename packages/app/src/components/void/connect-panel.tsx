@@ -33,7 +33,7 @@ const check = (
   </svg>
 )
 
-export function ConnectPanel(props: { tile: ConnectorTile; busy: boolean; tools: number | undefined; onToggle: () => void; onClose: () => void }) {
+export function ConnectPanel(props: { tile: ConnectorTile; busy: boolean; onToggle: () => void; onClose: () => void }) {
   const language = useLanguage()
   const [step, setStep] = createSignal<FlowStep>(initialStep(props.tile.state))
   const authorized = () => props.tile.state === "connected"
@@ -107,12 +107,6 @@ export function ConnectPanel(props: { tile: ConnectorTile; busy: boolean; tools:
                   <div data-slot="void-panel-fact">
                     <dt>{language.t("hub.panel.manage.server")}</dt>
                     <dd>{props.tile.serverName}</dd>
-                  </div>
-                </Show>
-                <Show when={props.tools}>
-                  <div data-slot="void-panel-fact">
-                    <dt>{language.t("hub.panel.manage.tools")}</dt>
-                    <dd>{language.plural("hub.tools", props.tools ?? 0)}</dd>
                   </div>
                 </Show>
                 <Show when={props.tile.services.length > 0}>

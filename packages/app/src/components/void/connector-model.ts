@@ -153,13 +153,6 @@ export function hubServer(mcp: Record<string, McpStatusInput> | undefined): { st
   return { state, tone: tileTone(state) }
 }
 
-const toolPrefix = (serverName: string) => `${serverName.replace(/[^a-zA-Z0-9_-]/g, "_")}_`
-
-export function countTools(ids: string[], serverName: string): number {
-  const prefix = toolPrefix(serverName)
-  return ids.filter((id) => id.startsWith(prefix)).length
-}
-
 export function hubSummary(tiles: ConnectorTile[]): {
   total: number
   configured: number

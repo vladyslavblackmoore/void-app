@@ -4,7 +4,6 @@ import {
   connectorCatalog,
   filterCounts,
   filterTiles,
-  countTools,
   hubSummary,
   hubServer,
   tileAction,
@@ -112,7 +111,7 @@ describe("connector model", () => {
   })
 })
 
-describe("connector kinds, hub status and tool counts", () => {
+describe("connector kinds and hub status", () => {
   test("marks memory, google and generic tiles", () => {
     const tiles = buildTiles({ memory: { status: "connected" }, files: { status: "connected" } })
     expect(tiles.find((tile) => tile.serverName === "memory")?.kind).toBe("memory")
@@ -127,16 +126,6 @@ describe("connector kinds, hub status and tool counts", () => {
     expect(hubServer({ hub: { status: "failed" } })).toEqual({ state: "error", tone: "red" })
     expect(hubServer({ memory: { status: "connected" } })).toBeUndefined()
     expect(hubServer(undefined)).toBeUndefined()
-  })
-
-  test("counts the tools of each server by id prefix", () => {
-    const ids = ["bash", "memory_add", "memory_search", "google_workspace_gmail_list", "memory-extra_x"]
-    expect(countTools(ids, "memory")).toBe(2)
-    expect(countTools(ids, "google_workspace")).toBe(1)
-    expect(countTools(ids, "memory-extra")).toBe(1)
-    expect(countTools(ids, "files")).toBe(0)
-    expect(countTools(ids, "My Server.1")).toBe(0)
-    expect(countTools(["My_Server_1_ping"], "My Server.1")).toBe(1)
   })
 })
 

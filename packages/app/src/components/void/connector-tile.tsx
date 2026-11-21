@@ -18,7 +18,6 @@ export function ConnectorTileView(props: {
   tile: ConnectorTile
   selected: boolean
   busy: boolean
-  tools: number | undefined
   onSelect: () => void
   onAction: () => void
 }) {
@@ -63,11 +62,7 @@ export function ConnectorTileView(props: {
       </Show>
       <div data-slot="void-connector-foot">
         <span data-slot="void-connector-hint">
-          {props.tile.state === "available"
-            ? language.t("hub.available.hint")
-            : props.tools
-              ? language.plural("hub.tools", props.tools)
-              : ""}
+          {props.tile.state === "available" ? language.t("hub.available.hint") : ""}
         </span>
         <button
           type="button"
