@@ -846,6 +846,13 @@ html[data-theme="void"] .void-settings-nav-item:focus-visible {
 html[data-theme="void"] .void-settings-content {
   flex: 1;
   min-width: 0;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 24px,
+    #000 calc(100% - 40px),
+    transparent 100%
+  );
 }
 
 html[data-theme="void"] .void-settings-content .settings-v2-tab-header {

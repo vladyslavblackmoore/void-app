@@ -61,6 +61,13 @@ describe("void settings css", () => {
     expect(path).toContain("color: var(--void-text-1)")
   })
 
+  test("the scroller fades its top and bottom edges instead of clipping hard", () => {
+    const scroller = block(content)
+    expect(scroller).toContain("mask-image: linear-gradient(")
+    expect(scroller).toContain("transparent 0")
+    expect(scroller).toContain("transparent 100%")
+  })
+
   test("the search field is a void input", () => {
     const input = block(`${content} .settings-v2-tab-search [data-component="text-input-v2"]`)
     expect(input).toContain("background: var(--void-inner)")
