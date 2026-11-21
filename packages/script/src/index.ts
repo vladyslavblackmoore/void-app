@@ -1,6 +1,7 @@
 import { $ } from "bun"
 import semver from "semver"
 import path from "path"
+import { selectVersion } from "./version"
 
 const rootPkgPath = path.resolve(import.meta.dir, "../../../package.json")
 const rootPkg = await Bun.file(rootPkgPath).json()
@@ -32,8 +33,12 @@ const CHANNEL = await (async () => {
 const IS_PREVIEW = CHANNEL !== "latest"
 
 const VERSION = await (async () => {
-  if (env.OPENCODE_VERSION) return env.OPENCODE_VERSION
-  if (IS_PREVIEW) return `0.0.0-${CHANNEL}-${new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "")}`
+  if (env.OPENCODE_VERSION || IS_PREVIEW) {
+    const pinned = await Bun.file(path.resolve(import.meta.dir, "../../opencode/package.json"))
+      .json()
+      .then((pkg: { version: string }) => pkg.version)
+    return selectVersion({ explicit: env.OPENCODE_VERSION, channel: CHANNEL, pinned, now: new Date() })
+  }
   const version = await fetch("https://registry.npmjs.org/opencode-ai/latest")
     .then((res) => {
       if (!res.ok) throw new Error(res.statusText)
