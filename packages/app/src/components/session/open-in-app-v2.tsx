@@ -9,7 +9,7 @@ import { TooltipV2 } from "@opencode-ai/ui/v2/tooltip-v2"
 import { useLanguage } from "@/context/language"
 import { type OpenApp, useOpenInApp } from "@/components/session/open-in-app"
 
-export function OpenInAppV2(props: { directory: () => string }) {
+export function OpenInAppV2(props: { directory: () => string; paths?: () => string[] }) {
   const language = useLanguage()
   const state = useOpenInApp(props)
 

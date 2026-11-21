@@ -75,6 +75,8 @@ import { sessionTitle } from "@/utils/session-title"
 import { scheduleConnectedMeasure } from "./measure"
 import { observeElementOffsetReconnectAware } from "./observe-element-offset"
 import { createTimelineProjection } from "./projection"
+import { OpenInAppV2 } from "@/components/session/open-in-app-v2"
+import { changedPaths } from "@/components/session/open-in-targets"
 import { MessageComment, SummaryDiff, TimelineRow, TimelineRowMap } from "./rows"
 import { filterVirtualIndexes } from "./virtual-items"
 
@@ -144,6 +146,13 @@ function TimelineThinkingRow(props: { reasoningHeading?: string; showReasoningSu
 
 function TimelineDiffSummaryRow(props: { diffs: SummaryDiff[] }) {
   const language = useLanguage()
+  const sdk = useSDK()
+  const paths = createMemo(() =>
+    changedPaths(
+      sdk().directory,
+      props.diffs.map((diff) => diff.file),
+    ),
+  )
   const maxFiles = 10
   const [state, setState] = createStore({
     showAll: false,
@@ -165,6 +174,7 @@ function TimelineDiffSummaryRow(props: { diffs: SummaryDiff[] }) {
           {language.plural("ui.sessionTurn.diffs.changed", props.diffs.length)}
         </span>
         <DiffChanges changes={props.diffs} />
+        <OpenInAppV2 directory={() => sdk().directory} paths={paths} />
         <Show when={overflow() > 0}>
           <span data-slot="session-turn-diffs-toggle" onClick={() => setState("showAll", !showAll())}>
             {showAll() ? language.t("ui.sessionTurn.diffs.showLess") : language.t("ui.sessionTurn.diffs.showAll")}

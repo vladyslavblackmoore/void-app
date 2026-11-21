@@ -5,6 +5,7 @@ import { usePlatform } from "@/context/platform"
 import { useServer } from "@/context/server"
 import { Persist, persisted } from "@/utils/persist"
 import { showToast } from "@/utils/toast"
+import { openTargets } from "./open-in-targets"
 
 export const OPEN_APPS = [
   "vscode",
@@ -121,7 +122,7 @@ const showRequestError = (language: ReturnType<typeof useLanguage>, err: unknown
   })
 }
 
-export function useOpenInApp(input: { directory: () => string }) {
+export function useOpenInApp(input: { directory: () => string; paths?: () => string[] }) {
   const platform = usePlatform()
   const server = useServer()
   const language = useLanguage()
@@ -190,9 +191,13 @@ export function useOpenInApp(input: { directory: () => string }) {
 
     const item = options().find((o) => o.id === app)
     const openWith = item && "openWith" in item ? item.openWith : undefined
+    const target = openTargets(app, directory, input.paths?.())
+    const run =
+      target.reveal && platform.revealPath
+        ? platform.revealPath(target.paths[0]).then(() => undefined)
+        : platform.openPath(target.paths.length === 1 ? target.paths[0] : target.paths, openWith)
     setOpenRequest("app", app)
-    platform
-      .openPath(directory, openWith)
+    run
       .catch((err: unknown) => showRequestError(language, err))
       .finally(() => {
         setOpenRequest("app", undefined)
@@ -200,7 +205,7 @@ export function useOpenInApp(input: { directory: () => string }) {
   }
 
   const copyPath = () => {
-    const directory = input.directory()
+    const directory = input.paths?.().join("\n") || input.directory()
     if (!directory) return
     navigator.clipboard
       .writeText(directory)
