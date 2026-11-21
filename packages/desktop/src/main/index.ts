@@ -52,6 +52,7 @@ import { registerWslIpcHandlers } from "./wsl/ipc"
 import { spawnWslSidecar } from "./wsl/sidecar"
 import { cleanupStoreFiles } from "./store-cleanup"
 import { startBackgroundCli } from "./background-cli"
+import { ensureHomeSpace } from "./spaces"
 import { VOID_HOME, voidAppEnv, voidUserData } from "./void-home"
 import { setNativeTranslations } from "./native-translations"
 
@@ -208,7 +209,17 @@ const main = Effect.gen(function* () {
     return
   }
 
-  const shellEnv = preferAppEnv(onboardingTestRoot ?? VOID_HOME)
+  const appRoot = onboardingTestRoot ?? VOID_HOME
+  const migrationFailure = yield* Effect.promise(() =>
+    ensureHomeSpace(appRoot, new Date(), { log: (message, meta) => logger.log(message, meta) }).then(
+      () => undefined,
+      (error: unknown) => {
+        logger.error("home space migration failed", error)
+        return error
+      },
+    ),
+  )
+  const shellEnv = preferAppEnv(appRoot)
 
   app.on("second-instance", (_event: Event, argv: string[]) => {
     const urls = argv.filter((arg: string) => arg.startsWith("opencode://"))
@@ -357,6 +368,7 @@ const main = Effect.gen(function* () {
 
   const loadingTask = yield* Effect.gen(function* () {
     logger.log("sidecar connection started", { version: SIDECAR_VERSION })
+    if (migrationFailure !== undefined) return yield* Effect.fail(migrationFailure)
 
     const configDir = join(process.env.XDG_CONFIG_HOME ?? voidAppEnv(VOID_HOME, {}).XDG_CONFIG_HOME, "opencode")
     yield* Effect.promise(() =>

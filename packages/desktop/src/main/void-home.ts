@@ -1,5 +1,6 @@
 import { homedir } from "node:os"
 import { join, relative, resolve, isAbsolute } from "node:path"
+import { HOME_SPACE_ID, spaceDir } from "./spaces"
 
 export const VOID_HOME = join(homedir(), "void")
 
@@ -31,12 +32,13 @@ export function userXdg(root: string, recorded: string | undefined, ...sources: 
   ) as Record<(typeof USER_XDG)[number], string | undefined>
 }
 
-export function voidAppEnv(root: string, user: UserXdg) {
+export function voidAppEnv(root: string, user: UserXdg, spaceId = HOME_SPACE_ID) {
+  const space = spaceDir(root, spaceId)
   return {
-    XDG_DATA_HOME: join(root, "data"),
-    XDG_CONFIG_HOME: join(root, "config"),
+    XDG_DATA_HOME: join(space, "data"),
+    XDG_CONFIG_HOME: join(space, "config"),
     XDG_CACHE_HOME: join(root, "cache"),
-    XDG_STATE_HOME: join(root, "state"),
+    XDG_STATE_HOME: join(space, "state"),
     VOID_USER_ENV: JSON.stringify(Object.fromEntries(USER_XDG.map((key) => [key, user[key] || null]))),
     OPENCODE_DISABLE_CLAUDE_CODE: "true",
     OPENCODE_DISABLE_EXTERNAL_SKILLS: "true",

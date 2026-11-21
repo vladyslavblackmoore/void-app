@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
-import { homedir } from "node:os"
-import { join } from "node:path"
-import { VOID_HOME, userXdg, voidAppEnv, voidUserData } from "./void-home"
+import { homedir, tmpdir } from "node:os"
+import { join, sep } from "node:path"
+import { USER_XDG, VOID_HOME, userXdg, voidAppEnv, voidUserData } from "./void-home"
 
 const root = join(homedir(), "void")
 
@@ -12,10 +12,21 @@ describe("void home", () => {
 
   test("points every xdg dir under the void root", () => {
     const env = voidAppEnv(VOID_HOME, {})
-    expect(env.XDG_DATA_HOME).toBe(join(root, "data"))
-    expect(env.XDG_CONFIG_HOME).toBe(join(root, "config"))
+    expect(env.XDG_DATA_HOME).toBe(join(root, "spaces", "home", "data"))
+    expect(env.XDG_CONFIG_HOME).toBe(join(root, "spaces", "home", "config"))
     expect(env.XDG_CACHE_HOME).toBe(join(root, "cache"))
-    expect(env.XDG_STATE_HOME).toBe(join(root, "state"))
+    expect(env.XDG_STATE_HOME).toBe(join(root, "spaces", "home", "state"))
+  })
+
+  test("keeps every path variable under the space tree or the shared cache", () => {
+    const base = join(tmpdir(), "void-env-root")
+    const env = voidAppEnv(base, {})
+    const allowed = [join(base, "spaces", "home") + sep, join(base, "cache")]
+    for (const key of USER_XDG) {
+      expect(allowed.some((prefix) => env[key] === prefix || env[key].startsWith(prefix))).toBe(true)
+    }
+    expect(voidAppEnv(base, {}, "work").XDG_DATA_HOME).toBe(join(base, "spaces", "work", "data"))
+    expect(voidAppEnv(base, {}, "work").XDG_CACHE_HOME).toBe(join(base, "cache"))
   })
 
   test("ignores the user's own xdg dirs for void but records them for agent shells", () => {
@@ -25,8 +36,8 @@ describe("void home", () => {
       XDG_CACHE_HOME: "",
       XDG_STATE_HOME: undefined,
     })
-    expect(env.XDG_DATA_HOME).toBe(join(root, "data"))
-    expect(env.XDG_CONFIG_HOME).toBe(join(root, "config"))
+    expect(env.XDG_DATA_HOME).toBe(join(root, "spaces", "home", "data"))
+    expect(env.XDG_CONFIG_HOME).toBe(join(root, "spaces", "home", "config"))
     expect(JSON.parse(env.VOID_USER_ENV)).toEqual({
       XDG_DATA_HOME: "/u/data",
       XDG_CONFIG_HOME: "/u/config",
@@ -88,7 +99,7 @@ describe("void home", () => {
   })
 
   test("uses another root when given one", () => {
-    expect(voidAppEnv("/tmp/x", {}).XDG_STATE_HOME).toBe(join("/tmp/x", "state"))
+    expect(voidAppEnv("/tmp/x", {}).XDG_STATE_HOME).toBe(join("/tmp/x", "spaces", "home", "state"))
   })
 
   test("keeps the packaged app's user data at ~/void/app apart from dev runs", () => {
