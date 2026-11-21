@@ -49,6 +49,12 @@ describe("void settings css", () => {
     expect(block('html[data-theme="void"] .void-data-path')).toContain("font-family: var(--font-family-mono)")
   })
 
+  test("shortcut key hints are readable", () => {
+    const hint = block(`${content} .settings-v2-keybind-button`)
+    expect(hint).toContain("font-size: var(--void-fs-small, 12px)")
+    expect(hint).toContain("color: var(--void-text-2)")
+  })
+
   test("the search field is a void input", () => {
     const input = block(`${content} .settings-v2-tab-search [data-component="text-input-v2"]`)
     expect(input).toContain("background: var(--void-inner)")

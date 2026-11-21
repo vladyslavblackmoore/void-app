@@ -1191,6 +1191,11 @@ html[data-theme="void"] .void-space-tag {
   color: var(--void-text-2);
 }
 
+html[data-theme="void"] .void-settings-content .settings-v2-keybind-button {
+  font-size: var(--void-fs-small, 12px);
+  color: var(--void-text-2);
+}
+
 html[data-theme="void"] .void-data-path {
   font-family: var(--font-family-mono);
 }
