@@ -21,6 +21,7 @@ html[data-theme="void"] {
   --void-card: #1c1c1e;
   --void-inner: #26272b;
   --void-raised: #2d2e34;
+  --void-sheet: var(--void-raised);
   --void-border: rgba(255, 255, 255, 0.06);
   --void-border-strong: rgba(255, 255, 255, 0.28);
   --void-track: rgba(255, 255, 255, 0.10);
@@ -115,6 +116,7 @@ html[data-theme="void"][data-color-scheme="light"] {
   --void-card: #ffffff;
   --void-inner: #f3f4f6;
   --void-raised: #e8eaee;
+  --void-sheet: var(--void-card);
   --void-border: rgba(0, 0, 0, 0.06);
   --void-border-strong: rgba(0, 0, 0, 0.28);
   --void-track: rgba(0, 0, 0, 0.08);
