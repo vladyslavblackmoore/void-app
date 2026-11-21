@@ -6,6 +6,7 @@
 @import "@opencode-ai/ui/styles/void/typography.css";
 @import "@opencode-ai/ui/styles/void/radii.css";
 @import "@opencode-ai/ui/styles/void/buttons.css";
+@import "@opencode-ai/ui/styles/void/segmented.css";
 @import "@opencode-ai/ui/styles/void/canvas.css";
 
 @font-face {
