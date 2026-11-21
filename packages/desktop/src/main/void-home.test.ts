@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { homedir } from "node:os"
 import { join } from "node:path"
-import { VOID_HOME, voidAppEnv, voidUserData } from "./void-home"
+import { VOID_HOME, userXdg, voidAppEnv, voidUserData } from "./void-home"
 
 const root = join(homedir(), "void")
 
@@ -33,6 +33,50 @@ describe("void home", () => {
       XDG_CACHE_HOME: null,
       XDG_STATE_HOME: null,
     })
+  })
+
+  test("keeps the values recorded before a relaunch", () => {
+    const recorded = JSON.stringify({
+      XDG_DATA_HOME: "/u/data",
+      XDG_CONFIG_HOME: null,
+      XDG_CACHE_HOME: "/u/cache",
+      XDG_STATE_HOME: null,
+    })
+    expect(userXdg(VOID_HOME, recorded, { XDG_DATA_HOME: join(root, "data"), XDG_CONFIG_HOME: "/other" })).toEqual({
+      XDG_DATA_HOME: "/u/data",
+      XDG_CONFIG_HOME: undefined,
+      XDG_CACHE_HOME: "/u/cache",
+      XDG_STATE_HOME: undefined,
+    })
+  })
+
+  test("never records a dir inside the void root as the user's own", () => {
+    expect(
+      userXdg(
+        VOID_HOME,
+        undefined,
+        { XDG_DATA_HOME: join(root, "data"), XDG_CONFIG_HOME: root, XDG_CACHE_HOME: "/u/cache" },
+        { XDG_DATA_HOME: "/u/data", XDG_CONFIG_HOME: join(root, "config"), XDG_STATE_HOME: join(root, "state") },
+      ),
+    ).toEqual({
+      XDG_DATA_HOME: "/u/data",
+      XDG_CONFIG_HOME: undefined,
+      XDG_CACHE_HOME: "/u/cache",
+      XDG_STATE_HOME: undefined,
+    })
+  })
+
+  test("drops void dirs from a recorded value too", () => {
+    const recorded = JSON.stringify({ XDG_DATA_HOME: join(root, "data") })
+    expect(userXdg(VOID_HOME, recorded).XDG_DATA_HOME).toBeUndefined()
+  })
+
+  test("reads the sources when the recorded value is not valid json", () => {
+    expect(userXdg(VOID_HOME, "{", { XDG_DATA_HOME: "/u/data" }).XDG_DATA_HOME).toBe("/u/data")
+  })
+
+  test("does not treat a sibling of the void root as inside it", () => {
+    expect(userXdg(VOID_HOME, undefined, { XDG_DATA_HOME: root + "-x" }).XDG_DATA_HOME).toBe(root + "-x")
   })
 
   test("uses another root when given one", () => {

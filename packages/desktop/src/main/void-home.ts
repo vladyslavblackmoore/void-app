@@ -1,11 +1,37 @@
 import { homedir } from "node:os"
-import { join } from "node:path"
+import { join, relative, resolve, isAbsolute } from "node:path"
 
 export const VOID_HOME = join(homedir(), "void")
 
 export const USER_XDG = ["XDG_DATA_HOME", "XDG_CONFIG_HOME", "XDG_CACHE_HOME", "XDG_STATE_HOME"] as const
 
-export function voidAppEnv(root: string, user: Partial<Record<(typeof USER_XDG)[number], string | undefined>>) {
+type UserXdg = Partial<Record<(typeof USER_XDG)[number], string | undefined>>
+
+function insideRoot(root: string, value: string) {
+  const rel = relative(resolve(root), resolve(value))
+  return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel))
+}
+
+function parseRecorded(recorded: string | undefined) {
+  if (!recorded) return undefined
+  try {
+    const value = JSON.parse(recorded)
+    return value && typeof value === "object" ? (value as Record<string, unknown>) : undefined
+  } catch {
+    return undefined
+  }
+}
+
+export function userXdg(root: string, recorded: string | undefined, ...sources: (UserXdg | null | undefined)[]) {
+  const kept = parseRecorded(recorded)
+  const pick = (values: unknown[]) =>
+    values.find((value): value is string => typeof value === "string" && value !== "" && !insideRoot(root, value))
+  return Object.fromEntries(
+    USER_XDG.map((key) => [key, kept ? pick([kept[key]]) : pick(sources.map((source) => source?.[key]))]),
+  ) as Record<(typeof USER_XDG)[number], string | undefined>
+}
+
+export function voidAppEnv(root: string, user: UserXdg) {
   return {
     XDG_DATA_HOME: join(root, "data"),
     XDG_CONFIG_HOME: join(root, "config"),
