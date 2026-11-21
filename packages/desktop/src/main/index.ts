@@ -12,6 +12,9 @@ import contextMenu from "electron-context-menu"
 
 import mainAgent from "../../resources/agents/main.md?raw"
 import workerAgent from "../../resources/agents/worker.md?raw"
+import architectAgent from "../../resources/agents/architect.md?raw"
+import docAgent from "../../resources/agents/doc.md?raw"
+import explorerAgent from "../../resources/agents/explorer.md?raw"
 import subscriptionWrapper from "../../resources/provider/subscription.mjs?raw"
 import subscriptionPlugin from "../../resources/plugin/subscription-auth.js?raw"
 import spaceConfigTemplate from "../../resources/spaces/opencode.jsonc?raw"
@@ -388,6 +391,9 @@ const main = Effect.gen(function* () {
       agents: [
         { name: "main", content: mainAgent },
         { name: "worker", content: workerAgent },
+        { name: "architect", content: architectAgent, version: 2 },
+        { name: "doc", content: docAgent, version: 2 },
+        { name: "explorer", content: explorerAgent, version: 2 },
       ],
       wrapper: subscriptionWrapper,
       plugin: subscriptionPlugin,

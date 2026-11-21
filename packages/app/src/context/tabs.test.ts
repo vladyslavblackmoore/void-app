@@ -4,6 +4,8 @@ import { createTabMemory } from "./tab-memory"
 import { nextTabAfterClose, pushClosedTab, removeClosedTabs, takeClosedTab, type ClosedTab } from "./closed-tabs"
 import type { SessionTab, Tab } from "./tabs"
 import { migrateTabs } from "./tab-migration"
+import { isSettingsTabPage, settingsTabHref, settingsTabPages, settingsTabs } from "./settings-tabs"
+import { isFixedTab, isKnownTabKey, tabHref, tabKey } from "./tabs"
 import type { ServerConnection } from "./server"
 
 const server = "local\nhttp://localhost:4096" as ServerConnection.Key
@@ -121,5 +123,58 @@ describe("closed tab stack", () => {
     expect(nextTabAfterClose(tabs, 1, false)).toBeUndefined()
     expect(nextTabAfterClose(tabs, 1, true)).toEqual(sessionTab("c"))
     expect(nextTabAfterClose([sessionTab("a")], 0, true)).toBeNull()
+  })
+})
+
+describe("settings tabs", () => {
+  test("lists agents, models and settings in order", () => {
+    expect(settingsTabPages).toEqual(["agents", "models", "settings"])
+    expect(settingsTabs.map((tab) => tab.page)).toEqual(["agents", "models", "settings"])
+    expect(settingsTabs.every((tab) => tab.type === "settings")).toBe(true)
+  })
+
+  test("builds unique keys and hrefs", () => {
+    expect(settingsTabs.map(tabKey)).toEqual(["settings:agents", "settings:models", "settings:settings"])
+    expect(settingsTabs.map(tabHref)).toEqual(["/settings/agents", "/settings/models", "/settings/settings"])
+    expect(settingsTabHref("agents")).toBe("/settings/agents")
+  })
+
+  test("marks only settings tabs as fixed", () => {
+    expect(settingsTabs.every(isFixedTab)).toBe(true)
+    expect(isFixedTab(sessionTab("a"))).toBe(false)
+    expect(isFixedTab({ type: "draft", draftID: "d1", server, directory: "/tmp" })).toBe(false)
+  })
+
+  test("validates pages", () => {
+    expect(isSettingsTabPage("models")).toBe(true)
+    expect(isSettingsTabPage("mcp")).toBe(false)
+    expect(isSettingsTabPage(undefined)).toBe(false)
+  })
+
+  test("never restores settings tabs from persisted data", () => {
+    expect(migrateTabs([{ type: "settings", page: "agents" }, sessionTab("a")], server)).toEqual([sessionTab("a")])
+  })
+
+  test("never records settings tabs as closed", () => {
+    expect(pushClosedTab([], settingsTabs[0]!, 0)).toEqual([])
+  })
+
+  test("picks the neighbour when a tab before the fixed ones is closed", () => {
+    const tabs: Tab[] = [sessionTab("a"), sessionTab("b")]
+    expect(nextTabAfterClose(tabs, 1, true)).toEqual(sessionTab("a"))
+    expect(nextTabAfterClose([sessionTab("a")], 0, true)).toBeNull()
+  })
+})
+
+describe("known tab keys", () => {
+  test("keeps the key of a settings tab", () => {
+    expect(isKnownTabKey([], "settings:models")).toBe(true)
+    expect(isKnownTabKey([sessionTab("a")], "settings:agents")).toBe(true)
+  })
+
+  test("keeps the key of a stored tab and drops unknown keys", () => {
+    expect(isKnownTabKey([sessionTab("a")], tabKey(sessionTab("a")))).toBe(true)
+    expect(isKnownTabKey([sessionTab("a")], tabKey(sessionTab("b")))).toBe(false)
+    expect(isKnownTabKey([], "settings:mcp")).toBe(false)
   })
 })

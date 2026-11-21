@@ -342,7 +342,7 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
       slash: "new",
       onSelect: (source) => {
         if (settings.general.newLayoutDesigns()) {
-          command.trigger("tab.new", source)
+          command.trigger("session.draft", source)
           return
         }
         navigate(`/${params.dir}/session`)

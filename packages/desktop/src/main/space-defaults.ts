@@ -6,7 +6,7 @@ import { createSpace, ensureHomeSpace, isSpaceId, listSpaces, spaceDir, type Spa
 
 export type SpaceTemplate = Pick<Space, "class" | "sessionMode" | "color">
 export type SpaceTemplates = { personal: SpaceTemplate; company: SpaceTemplate }
-export type SpaceSeed = { agents: Array<{ name: string; content: string }>; wrapper: string; plugin?: string; config?: string }
+export type SpaceSeed = { agents: Array<{ name: string; content: string; version?: number }>; wrapper: string; plugin?: string; config?: string }
 
 const VOID_SPACE_ID = "void"
 const WORK_SPACE_ID = "work"

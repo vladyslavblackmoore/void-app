@@ -13,6 +13,9 @@ import { createTabMemory } from "./tab-memory"
 import { nextTabAfterClose, pushClosedTab, removeClosedTabs, takeClosedTab, type ClosedTab } from "./closed-tabs"
 import { createDraftPromptSession, type PromptModel } from "./prompt-state"
 import { migrateTabs } from "./tab-migration"
+import { settingsTabHref, settingsTabs, type SettingsTab } from "./settings-tabs"
+
+export { settingsTabs, type SettingsTab, type SettingsTabPage } from "./settings-tabs"
 
 export type SessionTab = {
   type: "session"
@@ -28,7 +31,9 @@ export type DraftTab = {
   worktree?: string
 }
 
-export type Tab = SessionTab | DraftTab
+export type StoredTab = SessionTab | DraftTab
+
+export type Tab = StoredTab | SettingsTab
 
 export type TabInfo = {
   title?: string
@@ -41,10 +46,20 @@ type RecentTab = {
 
 export const draftHref = (draftID: string) => `/new-session?draftId=${encodeURIComponent(draftID)}`
 
-export const tabHref = (tab: Tab) =>
-  tab.type === "draft" ? draftHref(tab.draftID) : sessionHref(tab.server, tab.sessionId)
+export const tabHref = (tab: Tab) => {
+  if (tab.type === "settings") return settingsTabHref(tab.page)
+  return tab.type === "draft" ? draftHref(tab.draftID) : sessionHref(tab.server, tab.sessionId)
+}
 
-export const tabKey = (tab: Tab) => (tab.type === "draft" ? `draft:${tab.draftID}` : `${tab.server}\n${tabHref(tab)}`)
+export const tabKey = (tab: Tab) => {
+  if (tab.type === "settings") return `settings:${tab.page}`
+  return tab.type === "draft" ? `draft:${tab.draftID}` : `${tab.server}\n${tabHref(tab)}`
+}
+
+export const isKnownTabKey = (stored: StoredTab[], key: string) =>
+  [...stored, ...settingsTabs].some((tab) => tabKey(tab) === key)
+
+export const isFixedTab = (tab: Tab): tab is SettingsTab => tab.type === "settings"
 
 export function sessionHasOpenTab(tabs: Tab[], server: ServerConnection.Key, session: Session) {
   return tabs.some((tab) => tab.type === "session" && tab.server === server && tab.sessionId === session.id)
@@ -62,7 +77,7 @@ export const { use: useTabs, provider: TabsProvider } = createSimpleContext({
         ...Persist.window("tabs"),
         migrate: (value: unknown) => migrateTabs(value, fallback),
       },
-      createStore<Tab[]>([]),
+      createStore<StoredTab[]>([]),
     )
     const [recent, setRecent, , recentReady] = persisted(Persist.window("tabs.recent"), createStore<RecentTab>({}))
     const [info, setInfo] = persisted(Persist.window("tabs.info"), createStore<Record<string, TabInfo>>({}))
@@ -132,7 +147,7 @@ export const { use: useTabs, provider: TabsProvider } = createSimpleContext({
         }
         setStore(() => next)
       }
-      if (recent.key && !next.some((tab) => tabKey(tab) === recent.key)) setRecentKey(undefined)
+      if (recent.key && !isKnownTabKey(next, recent.key)) setRecentKey(undefined)
       const keys = new Set(next.map(tabKey))
       for (const key of Object.keys(info)) {
         if (!keys.has(key)) removeInfo(key)
@@ -195,7 +210,7 @@ export const { use: useTabs, provider: TabsProvider } = createSimpleContext({
         setStore(
           produce((tabs) => {
             const byKey = new Map(tabs.map((tab) => [tabKey(tab), tab]))
-            const next = keys.map((key) => byKey.get(key)).filter((tab): tab is Tab => !!tab)
+            const next = keys.map((key) => byKey.get(key)).filter((tab): tab is StoredTab => !!tab)
             if (next.length !== tabs.length) return
             tabs.splice(0, tabs.length, ...next)
           }),
@@ -361,7 +376,7 @@ export const { use: useTabs, provider: TabsProvider } = createSimpleContext({
       },
       toggleHome(input: { home: boolean; current?: Tab }) {
         if (input.home) {
-          const tab = store.find((tab) => tabKey(tab) === recentKey())
+          const tab = [...store, ...settingsTabs].find((tab) => tabKey(tab) === recentKey())
           if (tab) navigateTab(tab)
           return
         }
@@ -380,6 +395,6 @@ export const { use: useTabs, provider: TabsProvider } = createSimpleContext({
       },
     }
 
-    return { ...actions, store, info, ready, recentReady }
+    return { ...actions, store, fixed: settingsTabs, info, ready, recentReady }
   },
 })

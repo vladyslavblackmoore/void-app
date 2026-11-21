@@ -5,6 +5,7 @@ import type { Config, OpencodeClient, Project } from "@opencode-ai/sdk/v2/client
 import type { AgentApi, CatalogApi, CommandApi, ReferenceApi } from "@opencode-ai/client/promise"
 import type { NormalizedProviderListResponse } from "@opencode-ai/session-ui/context"
 import {
+  agentsQueryFilter,
   bootstrapDirectory,
   loadAgentsQuery,
   loadCommands,
@@ -181,6 +182,66 @@ describe("bootstrapDirectory", () => {
 
     expect(store.status).toBe("complete")
   })
+
+  test("keeps the global config unchanged when the directory config is merged into the child store", async () => {
+    const [query] = createStore({
+      data: { agent: { doc: { model: "mock/m-b", variant: "low", options: {}, permission: {} } } } as Config,
+    })
+    const [global] = createStore({
+      get config() {
+        return query.data
+      },
+    })
+    const [store, setStore] = directoryState()
+    const merged = {
+      agent: {
+        doc: {
+          model: "mock/m-a",
+          variant: "low",
+          options: {},
+          permission: { edit: "allow" },
+          prompt: "from the markdown file",
+        },
+      },
+    } as Config
+
+    await bootstrapDirectory({
+      directory: "/project",
+      scope: ServerScope.local,
+      mcp: true,
+      global: {
+        config: global.config,
+        path: { state: "", config: "", worktree: "/project", directory: "/project", home: "/home" },
+        project: [{ id: "project", worktree: "/project" } as Project],
+        provider,
+      },
+      sdk: {
+        app: { agents: async () => ({ data: [] }) },
+        config: { get: async () => ({ data: merged }) },
+        session: { status: async () => ({ data: {} }) },
+        vcs: { get: async () => ({ data: undefined }) },
+        command: { list: async () => ({ data: [] }) },
+        permission: { list: async () => ({ data: [] }) },
+        question: { list: async () => ({ data: [] }) },
+        v2: { reference: { list: async () => ({ data: { data: [] } }) } },
+        mcp: { status: async () => ({ data: {} }) },
+        experimental: { resource: { list: async () => ({ data: {} }) } },
+        provider: { list: async () => ({ data: { all: [], connected: [], default: {} } }) },
+      } as unknown as OpencodeClient,
+      api,
+      store,
+      setStore,
+      vcsCache: { setStore() {} } as unknown as VcsCache,
+      loadSessions() {},
+      translate: (key) => key,
+      queryClient: new QueryClient(),
+      protocol: Promise.resolve("v1"),
+    })
+    await new Promise((resolve) => setTimeout(resolve, 80))
+
+    expect(store.config.agent?.doc?.model).toBe("mock/m-a")
+    expect(global.config.agent?.doc).toEqual({ model: "mock/m-b", variant: "low", options: {}, permission: {} })
+  })
 })
 
 describe("config queries", () => {
@@ -326,5 +387,30 @@ describe("query keys", () => {
 
     expect(calls).toEqual([{ location: { directory: "/repo" } }])
     expect(result).toHaveLength(1)
+  })
+})
+
+describe("agentsQueryFilter", () => {
+  test("drops cached agent lists of the scope so the next bootstrap refetches them", async () => {
+    const scope = "scope-a" as ServerScope
+    const other = "scope-b" as ServerScope
+    const client = new QueryClient()
+    client.setQueryData([scope, "/repo", "agents"], [{ name: "old" }])
+    client.setQueryData([scope, "/other", "agents"], [{ name: "old" }])
+    client.setQueryData([other, "/repo", "agents"], [{ name: "keep" }])
+    client.setQueryData([scope, "/repo", "mcp"], { keep: true })
+
+    client.removeQueries(agentsQueryFilter(scope))
+
+    expect(client.getQueryData([scope, "/repo", "agents"])).toBeUndefined()
+    expect(client.getQueryData([scope, "/other", "agents"])).toBeUndefined()
+    expect(client.getQueryData([other, "/repo", "agents"])).toEqual([{ name: "keep" }])
+    expect(client.getQueryData([scope, "/repo", "mcp"])).toEqual({ keep: true })
+
+    const fresh = await client.ensureQueryData({
+      queryKey: [scope, "/repo", "agents"],
+      queryFn: async () => [{ name: "new" }],
+    })
+    expect(fresh).toEqual([{ name: "new" }])
   })
 })

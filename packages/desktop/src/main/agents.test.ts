@@ -9,6 +9,11 @@ const agents = [
   { name: "worker", content: "worker prompt" },
 ]
 
+const roles = [
+  { name: "architect", content: "architect prompt", version: 2 },
+  { name: "doc", content: "doc prompt", version: 2 },
+]
+
 let dir = ""
 let data = ""
 
@@ -88,6 +93,58 @@ describe("seedAgents", () => {
   })
 })
 
+describe("seedAgents versions", () => {
+  const all = [...agents, ...roles]
+  const names = async () => (await readdir(join(dir, "agents"))).sort()
+
+  test("a fresh profile gets every file and both stamps", async () => {
+    await seedAgents(dir, data, all)
+
+    expect(await names()).toEqual(["architect.md", "doc.md", "main.md", "worker.md"])
+    expect((await readdir(data)).sort()).toEqual(["agents-seeded", "agents-seeded-2"])
+  })
+
+  const oldProfile = async () => {
+    await seedAgents(dir, data, agents)
+    await rm(join(data, "agents-seeded-2"))
+  }
+
+  test("a profile stamped by version 1 gets the new roles and nothing else", async () => {
+    await oldProfile()
+    await rm(join(dir, "agents", "worker.md"))
+    await writeFile(join(dir, "agents", "main.md"), "edited")
+    const config = await readFile(join(dir, "config.json"), "utf8")
+
+    await seedAgents(dir, data, all)
+
+    expect(await names()).toEqual(["architect.md", "doc.md", "main.md"])
+    expect(await readFile(join(dir, "agents", "main.md"), "utf8")).toBe("edited")
+    expect(await readFile(join(dir, "config.json"), "utf8")).toBe(config)
+    expect(await readFile(join(dir, "agents", "architect.md"), "utf8")).toBe("architect prompt")
+  })
+
+  test("an existing role file is not overwritten when the roles are seeded", async () => {
+    await oldProfile()
+    await writeFile(join(dir, "agents", "doc.md"), "own doc")
+
+    await seedAgents(dir, data, all)
+
+    expect(await readFile(join(dir, "agents", "doc.md"), "utf8")).toBe("own doc")
+    expect(await readFile(join(dir, "agents", "architect.md"), "utf8")).toBe("architect prompt")
+  })
+
+  test("a second start changes nothing", async () => {
+    await seedAgents(dir, data, all)
+    await rm(join(dir, "agents", "doc.md"))
+    await writeFile(join(dir, "agents", "architect.md"), "edited")
+
+    await seedAgents(dir, data, all)
+
+    expect(await names()).toEqual(["architect.md", "main.md", "worker.md"])
+    expect(await readFile(join(dir, "agents", "architect.md"), "utf8")).toBe("edited")
+  })
+})
+
 describe("bundled agents", () => {
   const permission = async (name: string) => {
     const text = await readFile(join(import.meta.dir, "../../resources/agents", `${name}.md`), "utf8")
@@ -101,6 +158,17 @@ describe("bundled agents", () => {
       question: "allow",
       task: { "*": "allow" },
     })
+  })
+
+  test("the role files carry no model or variant", async () => {
+    for (const name of ["architect", "doc", "explorer"]) {
+      const text = await readFile(join(import.meta.dir, "../../resources/agents", `${name}.md`), "utf8")
+      const front = Bun.YAML.parse(text.split("---")[1]) as Record<string, unknown>
+      expect(front.mode).toBe("subagent")
+      expect(typeof front.description).toBe("string")
+      expect(front.model).toBeUndefined()
+      expect(front.variant).toBeUndefined()
+    }
   })
 
   test("worker runs commands and edits without asking and starts no tasks", async () => {
