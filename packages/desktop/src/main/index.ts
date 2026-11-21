@@ -13,6 +13,8 @@ import contextMenu from "electron-context-menu"
 import mainAgent from "../../resources/agents/main.md?raw"
 import workerAgent from "../../resources/agents/worker.md?raw"
 import subscriptionWrapper from "../../resources/provider/subscription.mjs?raw"
+import subscriptionPlugin from "../../resources/plugin/subscription-auth.js?raw"
+import spaceConfigTemplate from "../../resources/spaces/opencode.jsonc?raw"
 import type { ServerReadyData } from "../preload/types"
 import { seedAgents } from "./agents"
 import { seedConfig } from "./config-seed"
@@ -383,6 +385,8 @@ const main = Effect.gen(function* () {
         { name: "worker", content: workerAgent },
       ],
       wrapper: subscriptionWrapper,
+      plugin: subscriptionPlugin,
+      config: spaceConfigTemplate,
     }
     yield* Effect.promise(() =>
       ensureDefaultSpaces(

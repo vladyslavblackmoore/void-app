@@ -6,7 +6,7 @@ import { getLogger } from "./logging"
 import { getUserShell, loadShellEnv } from "./shell-env"
 import { getStore } from "./store"
 import { DEFAULT_SERVER_URL_KEY } from "./store-keys"
-import { userXdg, voidAppEnv } from "./void-home"
+import { coreEnv, userXdg, voidAppEnv } from "./void-home"
 
 export type HealthCheck = { wait: Promise<void> }
 
@@ -214,12 +214,7 @@ export async function checkHealth(url: string, password?: string | null): Promis
 }
 
 function createSidecarEnv(overrides: Record<string, string> = {}): Record<string, string> {
-  const env = {
-    ...Object.fromEntries(
-      Object.entries(process.env).flatMap(([key, value]) => (value === undefined ? [] : [[key, String(value)]])),
-    ),
-    ...overrides,
-  }
+  const env = coreEnv(process.env, overrides)
   delete env.DEBUG
   if (process.platform === "linux") delete env.LD_PRELOAD
   return env

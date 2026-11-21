@@ -168,6 +168,45 @@ describe("home migration", () => {
     expect(old).toContain(join(root, LEGACY_CLI_DIR))
   })
 
+  test("rewrites the home placeholders of the installed config to the space variables", async () => {
+    const savedHome = process.env.HOME
+    const fakeHome = await mkdtemp(join(tmpdir(), "void-fake-home-"))
+    try {
+      process.env.HOME = fakeHome
+      const base = join(fakeHome, "void")
+      await put(
+        join(base, "config", "opencode", "opencode.jsonc"),
+        [
+          "{",
+          '  "provider": { "subscription": {',
+          '    "npm": "file://{env:HOME}/void/config/opencode/provider/subscription.mjs",',
+          '    "options": { "defaultSettings": { "env": { "CLAUDE_CONFIG_DIR": "{env:HOME}/void/claude" } } }',
+          "  } },",
+          '  "other": ["{env:HOME}/void/data/x", "{env:HOME}/void/state/y", "{env:HOME}/void/state/signing/k", "{env:HOME}/void/cache/z", "{env:HOME}/void/dataset"]',
+          "}",
+        ].join("\n"),
+      )
+      await put(join(base, LEGACY_CLI_DIR, "session"), "s")
+      await ensureHomeSpace(base, date)
+      const text = await readFile(join(spaceDir(base, "home"), "config", "opencode", "opencode.jsonc"), "utf8")
+      const config = JSON.parse(text)
+      expect(config.provider.subscription.npm).toBe(
+        "file://{env:XDG_CONFIG_HOME}/opencode/provider/subscription.mjs",
+      )
+      expect(config.provider.subscription.options.defaultSettings.env.CLAUDE_CONFIG_DIR).toBe("{env:VOID_SPACE_CLI_DIR}")
+      expect(config.other).toEqual([
+        "{env:XDG_DATA_HOME}/x",
+        "{env:XDG_STATE_HOME}/y",
+        "{env:HOME}/void/state/signing/k",
+        "{env:HOME}/void/cache/z",
+        "{env:HOME}/void/dataset",
+      ])
+    } finally {
+      process.env.HOME = savedHome
+      await rm(fakeHome, { recursive: true, force: true })
+    }
+  })
+
   test("writes the home space.json", async () => {
     await legacy()
     await ensureHomeSpace(root, date)

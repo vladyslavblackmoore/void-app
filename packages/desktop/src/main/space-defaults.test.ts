@@ -3,6 +3,7 @@ import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises"
 import { existsSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
+import { parse } from "jsonc-parser"
 import { ensureDefaultSpaces, seedSpace, type SpaceTemplates } from "./space-defaults"
 import { listSpaces, spaceDir } from "./spaces"
 
@@ -97,5 +98,24 @@ describe("space seeder", () => {
     await seedSpace(root, "void", { ...seed, agents: [{ name: "main", content: "changed" }] })
     expect((await stat(stamp)).mtimeMs).toBe(first)
     expect(await readFile(join(spaceDir(root, "void"), "config", "opencode", "agents", "main.md"), "utf8")).toBe("m")
+  })
+
+  test("puts the sign-in plugin and the provider entry into a space without a config", async () => {
+    await ensureDefaultSpaces(root, templates, legacy)
+    const config = '{"provider":{"subscription":{"models":{}}}}'
+    await seedSpace(root, "work", { ...seed, plugin: "export default {}", config })
+    const dir = join(spaceDir(root, "work"), "config", "opencode")
+    expect(await readFile(join(dir, "plugins", "subscription-auth.js"), "utf8")).toBe("export default {}")
+    const written = parse(await readFile(join(dir, "opencode.jsonc"), "utf8"))
+    expect(written.provider.subscription.models).toEqual({})
+  })
+
+  test("keeps an existing config", async () => {
+    await ensureDefaultSpaces(root, templates, legacy)
+    const dir = join(spaceDir(root, "work"), "config", "opencode")
+    await mkdir(dir, { recursive: true })
+    await writeFile(join(dir, "opencode.jsonc"), "{}")
+    await seedSpace(root, "work", { ...seed, plugin: "p", config: '{"provider":{}}' })
+    expect(await readFile(join(dir, "opencode.jsonc"), "utf8")).toBe("{}")
   })
 })

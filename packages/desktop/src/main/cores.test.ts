@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, test } from "bun:test"
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises"
+import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { IDLE_STOP_MS, createCores, isCoreBusy, type CoreStart } from "./cores"
 
@@ -93,6 +95,26 @@ describe("core manager", () => {
     expect(calls[1].env.XDG_CACHE_HOME).toBe(join(root, "cache"))
     expect(calls[0].env).not.toBe(calls[1].env)
     expect(process.env.XDG_DATA_HOME).toBe(before.XDG_DATA_HOME)
+  })
+
+  test("gives an isolated space its login directory and a user space none", async () => {
+    const base = await mkdtemp(join(tmpdir(), "void-cores-modes-"))
+    try {
+      for (const [id, sessionMode] of [["void", "isolated"], ["work", "user"]]) {
+        await mkdir(join(base, "spaces", id), { recursive: true })
+        await writeFile(
+          join(base, "spaces", id, "space.json"),
+          JSON.stringify({ id, name: id, class: "personal", sessionMode, color: "#fff" }),
+        )
+      }
+      const cores = createCores({ root: base, start })
+      await cores.ensure("void")
+      await cores.ensure("work")
+      expect(calls[0].env.VOID_SPACE_CLI_DIR).toBe(join(base, "spaces", "void", "cli"))
+      expect("VOID_SPACE_CLI_DIR" in calls[1].env).toBe(false)
+    } finally {
+      await rm(base, { recursive: true, force: true })
+    }
   })
 
   test("starts a space once for concurrent and repeated calls", async () => {

@@ -6,7 +6,7 @@ import { createSpace, ensureHomeSpace, isSpaceId, listSpaces, spaceDir, type Spa
 
 export type SpaceTemplate = Pick<Space, "class" | "sessionMode" | "color">
 export type SpaceTemplates = { personal: SpaceTemplate; company: SpaceTemplate }
-export type SpaceSeed = { agents: Array<{ name: string; content: string }>; wrapper: string }
+export type SpaceSeed = { agents: Array<{ name: string; content: string }>; wrapper: string; plugin?: string; config?: string }
 
 const VOID_SPACE_ID = "void"
 const WORK_SPACE_ID = "work"
@@ -54,5 +54,8 @@ export async function seedSpace(root: string, id: string, seed: SpaceSeed) {
   const configDir = join(dir, "config", "opencode")
   const stateDir = join(dir, "state")
   await seedAgents(configDir, stateDir, seed.agents)
-  await seedConfig(configDir, stateDir, seed.wrapper, join(dir, "data", "opencode", "auth.json"))
+  await seedConfig(configDir, stateDir, seed.wrapper, join(dir, "data", "opencode", "auth.json"), {
+    plugin: seed.plugin,
+    config: seed.config,
+  })
 }

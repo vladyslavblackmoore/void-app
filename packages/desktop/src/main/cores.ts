@@ -1,5 +1,6 @@
 import { createServer } from "node:net"
 import { randomUUID } from "node:crypto"
+import { readSpace } from "./spaces"
 import { userXdg, voidAppEnv } from "./void-home"
 
 export const IDLE_STOP_MS = 30 * 60 * 1000
@@ -114,11 +115,12 @@ export function createCores(deps: CoresDeps) {
 
   const launch = async (id: string, port?: number) => {
     await deps.prepare?.(id)
+    const space = await readSpace(deps.root, id)
     const options = {
       hostname: HOSTNAME,
       port: port ?? (await freePort()),
       password: password(),
-      env: voidAppEnv(deps.root, user(), id),
+      env: voidAppEnv(deps.root, user(), id, space?.sessionMode),
     }
     const handle = await deps.start(id, options)
     const endpoint = { url: `http://${HOSTNAME}:${options.port}`, username: USERNAME, password: options.password }

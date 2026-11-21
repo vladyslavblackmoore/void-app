@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { homedir, tmpdir } from "node:os"
 import { join, sep } from "node:path"
-import { USER_XDG, VOID_HOME, userXdg, voidAppEnv, voidUserData } from "./void-home"
+import { USER_XDG, VOID_HOME, coreEnv, userXdg, voidAppEnv, voidUserData } from "./void-home"
 
 const root = join(homedir(), "void")
 
@@ -16,6 +16,23 @@ describe("void home", () => {
     expect(env.XDG_CONFIG_HOME).toBe(join(root, "spaces", "home", "config"))
     expect(env.XDG_CACHE_HOME).toBe(join(root, "cache"))
     expect(env.XDG_STATE_HOME).toBe(join(root, "spaces", "home", "state"))
+  })
+
+  test("gives an isolated space its own login directory and a user space none", () => {
+    const base = join(tmpdir(), "void-env-root")
+    expect(voidAppEnv(base, {}, "void", "isolated").VOID_SPACE_CLI_DIR).toBe(join(base, "spaces", "void", "cli"))
+    expect(voidAppEnv(base, {}, "void").VOID_SPACE_CLI_DIR).toBe(join(base, "spaces", "void", "cli"))
+    expect("VOID_SPACE_CLI_DIR" in voidAppEnv(base, {}, "work", "user")).toBe(false)
+  })
+
+  test("drops an inherited login directory so the space variable is the only source", () => {
+    const env = coreEnv(
+      { CLAUDE_CONFIG_DIR: "/inherited", VOID_SPACE_CLI_DIR: "/other-space/cli", PATH: "/bin", GONE: undefined },
+      { VOID_SPACE_CLI_DIR: "/space/cli" },
+    )
+    expect(env).toEqual({ PATH: "/bin", VOID_SPACE_CLI_DIR: "/space/cli" })
+    expect("CLAUDE_CONFIG_DIR" in coreEnv({ CLAUDE_CONFIG_DIR: "/inherited" })).toBe(false)
+    expect("VOID_SPACE_CLI_DIR" in coreEnv({ VOID_SPACE_CLI_DIR: "/other" })).toBe(false)
   })
 
   test("keeps every path variable under the space tree or the shared cache", () => {

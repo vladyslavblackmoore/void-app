@@ -1,6 +1,7 @@
 import { constants } from "node:fs"
 import { chmod, cp, lstat, mkdir, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises"
-import { join } from "node:path"
+import { homedir } from "node:os"
+import { isAbsolute, join, relative } from "node:path"
 
 export const LEGACY_CLI_DIR = "claude"
 export const HOME_SPACE_ID = "home"
@@ -77,6 +78,16 @@ export async function listSpaces(root: string): Promise<Space[]> {
   return spaces.filter((space): space is Space => space !== undefined).sort((a, b) => a.id.localeCompare(b.id))
 }
 
+export async function readSpace(root: string, id: string): Promise<Space | undefined> {
+  const text = await readFile(join(spaceDir(root, id), SPACE_FILE), "utf8").catch(() => undefined)
+  if (text === undefined) return
+  try {
+    return parseSpace(JSON.parse(text), id)
+  } catch {
+    return
+  }
+}
+
 async function privateDir(path: string) {
   await mkdir(path, { recursive: true, mode: 0o700 })
   await chmod(path, 0o700)
@@ -114,11 +125,22 @@ function escapeRegExp(value: string) {
 
 function rewriteMovedPaths(text: string, root: string, home: string) {
   const boundary = "(?![A-Za-z0-9._-])"
+  const fromHome = relative(process.env.HOME || homedir(), root)
+  const placeholder = fromHome === "" || fromHome.startsWith("..") || isAbsolute(fromHome) ? undefined : `{env:HOME}/${fromHome}`
+  const notSigning = `(?!/${SIGNING_DIR}${boundary})`
   const moves: [string, string, string][] = [
     [join(root, LEGACY_CLI_DIR), join(home, "cli"), ""],
     [join(root, "config"), join(home, "config"), ""],
     [join(root, "data"), join(home, "data"), ""],
-    [join(root, "state"), join(home, "state"), `(?!/${SIGNING_DIR}${boundary})`],
+    [join(root, "state"), join(home, "state"), notSigning],
+    ...(placeholder === undefined
+      ? []
+      : ([
+          [`${placeholder}/${LEGACY_CLI_DIR}`, "{env:VOID_SPACE_CLI_DIR}", ""],
+          [`${placeholder}/config`, "{env:XDG_CONFIG_HOME}", ""],
+          [`${placeholder}/data`, "{env:XDG_DATA_HOME}", ""],
+          [`${placeholder}/state`, "{env:XDG_STATE_HOME}", notSigning],
+        ] as [string, string, string][])),
   ]
   return moves.reduce(
     (result, [from, to, extra]) =>

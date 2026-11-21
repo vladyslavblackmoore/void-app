@@ -18,13 +18,13 @@ let exitHooked = false
 function cliSettings(options) {
   return {
     binary: options?.binary ?? join(homedir(), ".local", "bin", "claude"),
-    configDir: options?.configDir ?? join(homedir(), "void", "claude"),
+    configDir: options?.configDir || process.env.VOID_SPACE_CLI_DIR || undefined,
   }
 }
 
 function cliEnv(cli) {
   const env = Object.fromEntries(passEnv.filter((key) => process.env[key]).map((key) => [key, process.env[key]]))
-  return { ...env, CLAUDE_CONFIG_DIR: cli.configDir }
+  return cli.configDir ? { ...env, CLAUDE_CONFIG_DIR: cli.configDir } : env
 }
 
 function run(cli, args, limit) {
@@ -73,7 +73,7 @@ async function connected(cli, auth) {
   if (login || Date.now() < markerDueUntil) return true
   if (!markerSeen) return false
   markerSeen = false
-  await run(cli, ["auth", "logout"], statusLimit)
+  if (cli.configDir) await run(cli, ["auth", "logout"], statusLimit)
   statusCache = undefined
   return false
 }
@@ -114,7 +114,7 @@ async function finish(cli, current) {
   const code = await current.done
   if (code !== 0) return { type: "failed" }
   if (!(await signedIn(cli))) return { type: "failed" }
-  return { type: "success", key: provider, metadata: { configDir: cli.configDir } }
+  return { type: "success", key: provider, metadata: cli.configDir ? { configDir: cli.configDir } : { userDefault: true } }
 }
 
 export default {
