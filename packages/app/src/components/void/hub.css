@@ -242,3 +242,7 @@
   opacity: var(--void-disabled-opacity, 0.5);
   cursor: not-allowed;
 }
+
+html[data-theme="void"] [data-component="void-hub"] {
+  padding-left: var(--void-page-inset);
+}

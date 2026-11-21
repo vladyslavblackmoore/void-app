@@ -762,7 +762,8 @@ html[data-theme="void"] .void-settings-page {
   flex-direction: column;
   height: 100%;
   min-height: 0;
-  padding: 0 var(--void-gutter, 28px) 0 12px;
+  padding: 0 var(--void-gutter, 28px) 0 0;
+  padding-left: var(--void-page-inset);
 }
 
 html[data-theme="void"] .void-settings-head {

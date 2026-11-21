@@ -80,6 +80,7 @@ html[data-theme="void"] {
   --void-radius-full: 999px;
 
   --void-gutter: 28px;
+  --void-page-inset: var(--void-gutter);
   --void-gap: 14px;
   --void-gap-sm: 8px;
   --void-pad-card: 16px;
