@@ -146,3 +146,14 @@ html[data-theme="void"] [data-slot="void-agent-empty"] {
   font-size: var(--void-fs-small);
   color: var(--void-text-2);
 }
+
+html[data-theme="void"] [data-slot="void-agent-tag"][data-kind="haiku"] {
+  background: var(--void-model-tier-2);
+  color: var(--void-on-tag);
+}
+
+html[data-theme="void"][data-color-scheme="light"] [data-slot="void-agent-tag"][data-kind="other"] {
+  background: var(--void-inner);
+  color: var(--void-text-1);
+  border: 1px solid var(--void-border-strong);
+}

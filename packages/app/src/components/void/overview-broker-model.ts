@@ -8,7 +8,11 @@ const tones: Record<BrokerState, TileTone> = {
   failed: "red",
 }
 
-export function brokerCard(status: BrokerStatus | undefined): { state: BrokerState; tone: TileTone } | undefined {
+export type BrokerCard = { state: BrokerState; tone: TileTone; exitCode?: number }
+
+export function brokerCard(status: BrokerStatus | undefined): BrokerCard | undefined {
   if (!status) return undefined
-  return { state: status.state, tone: tones[status.state] }
+  const card: BrokerCard = { state: status.state, tone: tones[status.state] }
+  if (typeof status.exitCode === "number") card.exitCode = status.exitCode
+  return card
 }
