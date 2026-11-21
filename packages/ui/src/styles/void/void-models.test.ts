@@ -103,4 +103,18 @@ describe("void models screens", () => {
     expect(rule).toContain("color: var(--void-text-2)")
     expect(rule).toContain("font-size: var(--void-fs-small")
   })
+
+  test("the default model Reset and Save are 44px pills like the agents editor", () => {
+    const rule = body(".void-default-model-actions > [data-component=\"button-v2\"]")
+    expect(rule).toContain("min-height: var(--void-control-h, 44px)")
+    expect(rule).toContain("border-radius: var(--void-radius-control")
+    expect(rule).toContain("font-size: var(--void-fs-body")
+  })
+
+  test("a disabled Save is faded well below the active pill", () => {
+    const rule = body(".void-default-model-actions [data-variant=\"contrast\"]:disabled")
+    const opacity = Number(/opacity: ([\d.]+)/.exec(rule)?.[1])
+    expect(opacity).toBeGreaterThan(0)
+    expect(opacity).toBeLessThanOrEqual(0.45)
+  })
 })

@@ -169,6 +169,16 @@ html[data-theme="void"] .void-default-model-actions > * {
   flex: 1;
 }
 
+html[data-theme="void"] .void-default-model-actions > [data-component="button-v2"] {
+  min-height: var(--void-control-h, 44px);
+  border-radius: var(--void-radius-control, 14px);
+  font-size: var(--void-fs-body, 14px);
+}
+
+html[data-theme="void"] .void-default-model-actions [data-variant="contrast"]:disabled {
+  opacity: 0.4;
+}
+
 html[data-theme="void"] .void-default-model-warn {
   margin: 12px 0 0;
   padding: 10px 12px;
