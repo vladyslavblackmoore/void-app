@@ -15,6 +15,7 @@ import {
   type PromptProjectController,
 } from "@/components/prompt-project-selector"
 import { StatusPopoverV2 } from "@/components/status-popover"
+import { useVoidTheme } from "@/components/void/use-void-theme"
 import { useLanguage } from "@/context/language"
 import { useSDK } from "@/context/sdk"
 import { useServerSync } from "@/context/server-sync"
@@ -31,6 +32,7 @@ export function NewSessionView(props: {
   project: PromptProjectController
   workspace: NewSessionWorkspaceController
 }) {
+  const voidTheme = useVoidTheme()
   return (
     <div class="@container relative flex flex-col min-h-0 h-full flex-1">
       <div
@@ -39,13 +41,15 @@ export function NewSessionView(props: {
       >
         <div class="absolute inset-x-0 top-[25.375%] flex justify-center px-6">
           <div class={NEW_SESSION_CONTENT_WIDTH}>
-            <WordmarkV2 class="h-auto w-full text-v2-background-bg-inverse" />
-            <div class="mt-8 flex flex-col gap-8">
+            <Show when={!voidTheme()}>
+              <WordmarkV2 class="h-auto w-full text-v2-background-bg-inverse" />
+            </Show>
+            <div class="flex flex-col gap-8" classList={{ "mt-8": !voidTheme() }}>
               <PromptInputV2Composer controller={props.input} />
               <Show when={props.project.empty()}>
                 <PromptProjectAddButton controller={props.project} />
               </Show>
-              <Show when={props.project.selected()}>
+              <Show when={props.project.selected() && !voidTheme()}>
                 <div class="flex min-h-7 min-w-0 flex-col items-center justify-center gap-0 text-v2-text-text-faint sm:flex-row">
                   <PromptProjectSelector controller={props.project} placement="bottom" />
                   <Show
@@ -68,7 +72,9 @@ export function NewSessionView(props: {
             </div>
           </div>
         </div>
-        <ProviderTip />
+        <Show when={!voidTheme()}>
+          <ProviderTip />
+        </Show>
       </div>
     </div>
   )

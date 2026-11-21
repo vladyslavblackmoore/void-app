@@ -1,0 +1,127 @@
+html[data-theme="void"] [data-slot="dialog-container"]:has([data-void-model-picker]) {
+  background: var(--void-glass);
+  -webkit-backdrop-filter: blur(var(--void-blur));
+  backdrop-filter: blur(var(--void-blur));
+  border: 1px solid var(--void-border);
+  border-radius: var(--void-radius-card);
+  box-shadow: var(--void-shadow);
+  color: var(--void-text-1);
+}
+
+html[data-theme="void"] [data-slot="dialog-container"]:has([data-void-model-picker]) [data-slot="dialog-header-title"] {
+  color: var(--void-text-1);
+  font-family: var(--void-font);
+}
+
+html[data-theme="void"] [data-slot="dialog-container"]:has([data-void-model-picker]) [data-slot="dialog-close-button"] {
+  color: var(--void-text-2);
+  border-radius: var(--void-radius-sm);
+}
+
+html[data-theme="void"] [data-void-model-picker] [data-slot="free-models-title"] {
+  display: none;
+}
+
+html[data-theme="void"] [data-void-model-picker] [data-slot="view-more-providers"] {
+  display: none;
+}
+
+html[data-theme="void"] [data-void-model-picker] [data-provider-id="opencode"],
+html[data-theme="void"] [data-void-model-picker] [data-provider-id="opencode-go"] {
+  display: none;
+}
+
+html[data-theme="void"] [data-void-model-picker] [data-slot="model-option"] {
+  border-radius: var(--void-radius-control);
+  color: var(--void-text-1);
+  font-family: var(--void-font);
+  padding: 10px 14px;
+}
+
+html[data-theme="void"] [data-void-model-picker] [data-slot="model-option"]:hover,
+html[data-theme="void"] [data-void-model-picker] [data-slot="model-option"]:focus {
+  background: var(--void-hover);
+}
+
+html[data-theme="void"] [data-void-model-picker] [data-slot="model-option"][data-selected],
+html[data-theme="void"] [data-void-model-picker] [data-slot="model-option"][data-selected]:hover,
+html[data-theme="void"] [data-void-model-picker] [data-slot="model-option"][data-selected]:focus {
+  background: var(--void-pill);
+  color: var(--void-pill-text);
+  font-weight: var(--void-weight-medium);
+}
+
+html[data-theme="void"] [data-void-model-picker] [data-slot="model-option"][data-selected] svg {
+  color: var(--void-pill-text);
+}
+
+html[data-theme="void"] [data-void-model-picker] [data-component="tag"] {
+  background: var(--void-ok-bg);
+  border: 1px solid var(--void-ok-border);
+  border-radius: var(--void-radius-chip);
+  color: var(--void-green);
+  font-family: var(--void-font);
+  padding: 1px 8px;
+}
+
+html[data-theme="void"] [data-void-model-picker] [data-slot="model-option"][data-selected] [data-component="tag"] {
+  background: transparent;
+  border-color: var(--void-on-pill-muted);
+  color: var(--void-pill-text);
+}
+
+html[data-theme="void"] [data-void-model-picker] [data-slot="add-more-models"] {
+  background: var(--void-inner);
+  border: 1px solid var(--void-border);
+  border-radius: var(--void-radius-control);
+  color: var(--void-text-2);
+}
+
+html[data-theme="void"] [data-void-model-picker] [data-slot="add-more-models"] button {
+  background: var(--void-raised);
+  border: 1px solid var(--void-border);
+  border-radius: var(--void-radius-control);
+  box-shadow: none;
+  color: var(--void-text-1);
+  font-family: var(--void-font);
+}
+
+html[data-theme="void"] [data-void-model-picker] [data-slot="add-more-models"] button:hover,
+html[data-theme="void"] [data-void-model-picker] [data-slot="add-more-models"] button:focus {
+  background: var(--void-card-hover);
+}
+
+html[data-theme="void"] [data-component="tooltip-v2"]:has([data-void-model-tooltip]) {
+  background: var(--void-raised);
+  -webkit-backdrop-filter: blur(var(--void-blur));
+  backdrop-filter: blur(var(--void-blur));
+  border: 1px solid var(--void-border);
+  border-radius: var(--void-radius-inner);
+  box-shadow: var(--void-shadow);
+  color: var(--void-text-1);
+  font-family: var(--void-font);
+  padding: 12px 14px;
+}
+
+html[data-theme="void"] [data-void-model-tooltip] {
+  width: 260px;
+  gap: 8px;
+  font-size: var(--void-fs-small);
+  line-height: 16px;
+}
+
+html[data-theme="void"] [data-void-model-tooltip] > div {
+  align-items: flex-start;
+}
+
+html[data-theme="void"] [data-void-model-tooltip] span {
+  color: var(--void-text-2);
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+html[data-theme="void"] [data-void-model-tooltip] span:last-child {
+  color: var(--void-text-1);
+  overflow-wrap: anywhere;
+}

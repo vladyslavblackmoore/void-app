@@ -340,6 +340,7 @@ function SessionRouteFrame(props: ParentProps<{ padded?: boolean }>) {
 function SessionPanelFrame(props: ParentProps<{ newLayout: boolean; raised?: boolean }>) {
   return (
     <div
+      data-component="session-panel-frame"
       classList={{
         "flex-1 min-h-0 flex flex-col": true,
         "bg-v2-background-bg-base": props.newLayout,
@@ -2293,7 +2294,7 @@ export default function Page() {
             </SessionPanelFrame>
           )}
 
-          <Show when={desktopSessionResizeOpen()}>
+          <Show when={desktopSessionResizeOpen() && !voidSheets()}>
             <div onPointerDown={() => size.start()}>
               <ResizeHandle
                 classList={{

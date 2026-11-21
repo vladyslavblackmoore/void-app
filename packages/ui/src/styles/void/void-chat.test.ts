@@ -10,6 +10,10 @@ const sources = [
   "../../../../session-ui/src/components/dock-prompt.tsx",
   "../../components/dock-surface.tsx",
   "../../components/button.tsx",
+  "../../components/card.tsx",
+  "../../../../app/src/pages/session.tsx",
+  "../../../../app/src/pages/session/timeline/message-timeline.tsx",
+  "../../../../app/src/pages/new-session/new-session-view.tsx",
 ]
 
 function rules() {
@@ -41,7 +45,9 @@ describe("void chat messages", () => {
     expect(attributes.size).toBeGreaterThan(3)
     for (const attribute of attributes) {
       const text = attribute.slice(1, -1)
-      expect(upstream).toContain(text.startsWith("data-variant") ? "data-variant" : text)
+      const value = text.match(/="([a-z0-9-]+)"/)?.[1]
+      const expected = text.startsWith("data-variant") ? "data-variant" : text
+      expect(upstream.includes(expected) || (value !== undefined && upstream.includes(`"${value}"`))).toBe(true)
     }
   })
 
@@ -57,5 +63,43 @@ describe("void chat messages", () => {
   test("orders the permission actions as allow once, allow always, deny", () => {
     const css = readFileSync(new URL("chat.css", dir), "utf8")
     expect(css).toContain("flex-direction: row-reverse")
+  })
+
+  test("renders thread errors as the error banner without the upstream rule", () => {
+    const css = readFileSync(new URL("chat.css", dir), "utf8")
+    const rule = rules().find((item) => item.selectors.some((selector) => selector.endsWith('[data-variant="error"]')))
+    expect(rule?.body).toContain("var(--void-error-bg)")
+    expect(rule?.body).toContain("var(--void-error-border)")
+    expect(rule?.body).toContain("var(--void-radius-inner)")
+    expect(css).toContain('[data-variant="error"]::before')
+  })
+
+  test("turns the thread column into a glass sheet with a transparent frame", () => {
+    const rule = rules().find((item) => item.selectors.some((selector) => selector.endsWith('[data-slot="void-session-main"]')))
+    expect(rule?.body).toContain("var(--void-glass)")
+    expect(rule?.body).toContain("var(--void-border)")
+    expect(rule?.body).toContain("var(--void-radius-sheet)")
+    expect(rule?.body).toContain("backdrop-filter")
+    const frame = rules().find((item) => item.selectors.some((selector) => selector.endsWith('[data-component="session-panel-frame"]')))
+    expect(frame?.body).toContain("background: transparent")
+  })
+
+  test("lets the canvas show through the empty chat", () => {
+    const rule = rules().find((item) => item.selectors.some((selector) => selector.endsWith('[data-component="session-new-design"]')))
+    expect(rule?.body).toContain("background: transparent")
+  })
+
+  test("keeps chat meta text at text-2 or darker", () => {
+    const css = readFileSync(new URL("chat.css", dir), "utf8")
+    expect(css).not.toContain("var(--void-text-3)")
+    expect(css).toContain('[data-slot="user-message-label"]')
+  })
+
+  test("labels the user bubble and the sessions search with the markup it targets", () => {
+    const part = readFileSync(new URL("../../../../session-ui/src/components/message-part.tsx", dir), "utf8")
+    expect(part).toContain('data-slot="user-message-label"')
+    const list = readFileSync(new URL("../../../../app/src/pages/session/void-session-list.tsx", dir), "utf8")
+    expect(list).toContain('data-slot="void-sheet-search-wrap"')
+    expect(list).toContain("<circle")
   })
 })

@@ -1,6 +1,7 @@
 import { Show, type Component, type JSX } from "solid-js"
 import { modelNote } from "@/components/provider-notes"
 import { useLanguage } from "@/context/language"
+import { tooltipProviderName } from "./model-tooltip-provider"
 
 type InputKey = "text" | "image" | "audio" | "video" | "pdf"
 type InputMap = Record<InputKey, boolean>
@@ -47,7 +48,7 @@ export const ModelTooltip: Component<{ model: ModelInfo; latest?: boolean; free?
     if (/grok|xai/.test(value)) return language.t("model.provider.xai")
     if (/llama|meta/.test(value)) return language.t("model.provider.meta")
 
-    return model.provider.name
+    return tooltipProviderName(model.provider.name, document.documentElement.dataset.theme)
   }
   const inputLabel = (value: string) => {
     if (value === "text") return language.t("model.input.text")
@@ -98,9 +99,10 @@ export const ModelTooltip: Component<{ model: ModelInfo; latest?: boolean; free?
 
   if (props.v2) {
     return (
-      <div class="flex w-[180px] flex-col gap-2">
+      <div data-void-model-tooltip class="flex w-[180px] flex-col gap-2">
         <ModelTooltipRow name={language.t("model.tooltip.model")} value={name()} />
-        <ModelTooltipRow name={language.t("model.tooltip.provider")} value={props.model.provider.name} />
+        <ModelTooltipRow name={language.t("model.tooltip.provider")} value={tooltipProviderName(props.model.provider.name, document.documentElement.dataset.theme)}
+        />
         <Show when={inputs()}>
           {(value) => <ModelTooltipRow name={language.t("model.tooltip.inputs")} value={value()} />}
         </Show>

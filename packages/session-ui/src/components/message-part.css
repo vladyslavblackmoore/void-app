@@ -124,6 +124,10 @@
     line-height: var(--line-height-large);
   }
 
+  [data-slot="user-message-label"] {
+    display: none;
+  }
+
   [data-slot="user-message-body"] {
     width: fit-content;
     max-width: min(82%, 64ch);
