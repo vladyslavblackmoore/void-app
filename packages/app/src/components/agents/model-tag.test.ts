@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { modelTagKind, modelTagLabel } from "./model-tag"
+import { modelChipLabel, modelTagKind, modelTagLabel } from "./model-tag"
 
 describe("modelTagKind", () => {
   test("maps model ids to tag kinds", () => {
@@ -24,5 +24,12 @@ describe("modelTagLabel", () => {
   test("returns the model id", () => {
     expect(modelTagLabel({ providerID: "sub", modelID: "opus" })).toBe("opus")
     expect(modelTagLabel(undefined)).toBeUndefined()
+  })
+})
+
+describe("modelChipLabel", () => {
+  test("shows the model name without the provider", () => {
+    expect(modelChipLabel({ providerID: "subscription", modelID: "opus" })).toBe("opus")
+    expect(modelChipLabel(undefined)).toBeUndefined()
   })
 })

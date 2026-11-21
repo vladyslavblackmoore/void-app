@@ -177,3 +177,26 @@ describe("agent links", () => {
     expect(linkPaths(0)).toEqual([])
   })
 })
+
+describe("buildAgentsDiagram config model", () => {
+  const base = { agents: [{ name: "main", mode: "primary" as const }], providers: [{ id: "sub", models: {} }] }
+
+  test("main falls back to the model key of the config", () => {
+    const diagram = buildAgentsDiagram({ ...base, defaultModel: null, configModel: "sub/opus" })
+    expect(diagram.main.model).toEqual({ providerID: "sub", modelID: "opus" })
+    expect(diagram.main.status).toBe("ready")
+  })
+
+  test("the server default wins over the config model", () => {
+    const diagram = buildAgentsDiagram({
+      ...base,
+      defaultModel: { providerID: "sub", modelID: "sonnet" },
+      configModel: "sub/opus",
+    })
+    expect(diagram.main.model?.modelID).toBe("sonnet")
+  })
+
+  test("a config model on an unknown provider stays unavailable", () => {
+    expect(buildAgentsDiagram({ ...base, configModel: "gone/x" }).main.status).toBe("unavailable")
+  })
+})
