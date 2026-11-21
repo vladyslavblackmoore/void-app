@@ -3,12 +3,6 @@ html[data-theme="void"] [data-void-sheets] {
   padding: 0 var(--void-gutter) 28px;
 }
 
-html[data-theme="void"] [data-void-sheets] > [data-slot="void-session-main"] {
-  flex: 1 1 0;
-  width: auto !important;
-  min-width: 0;
-}
-
 html[data-theme="void"] [data-component="void-session-list"],
 html[data-theme="void"] [data-component="void-run-details"] {
   display: flex;

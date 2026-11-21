@@ -187,3 +187,20 @@ html[data-theme="void"] [data-component="prompt-input-v2"] [data-slot="segmented
   overflow: visible;
   text-overflow: clip;
 }
+
+html[data-theme="void"] [data-slot="void-session-column"] [data-component="session-prompt-dock"] {
+  flex: none;
+  padding-bottom: 0;
+}
+
+html[data-theme="void"] [data-slot="void-session-column"] [data-slot="new-session-dock"] {
+  display: flex;
+  flex: none;
+  justify-content: center;
+  padding: 0;
+}
+
+html[data-theme="void"] [data-slot="void-session-column"] [data-slot="new-session-dock"] > div {
+  width: 100%;
+  max-width: 680px;
+}

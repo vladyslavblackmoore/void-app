@@ -31,6 +31,7 @@ export function NewSessionView(props: {
   input: NewSessionDraftController["input"]
   project: PromptProjectController
   workspace: NewSessionWorkspaceController
+  dockOutside?: boolean
 }) {
   const voidTheme = useVoidTheme()
   const language = useLanguage()
@@ -40,45 +41,63 @@ export function NewSessionView(props: {
         data-component="session-new-design"
         class="relative flex-1 min-h-0 overflow-hidden rounded-[10px] bg-v2-background-bg-deep"
       >
-        <div data-slot="new-session-dock" class="absolute inset-x-0 top-[25.375%] flex justify-center px-6">
-          <div class={NEW_SESSION_CONTENT_WIDTH}>
-            <Show when={!voidTheme()}>
-              <WordmarkV2 class="h-auto w-full text-v2-background-bg-inverse" />
-            </Show>
-            <div class="flex flex-col gap-8" classList={{ "mt-8": !voidTheme() }}>
-              <PromptInputV2Composer controller={props.input} />
-              <Show when={props.project.empty()}>
-                <PromptProjectAddButton controller={props.project} />
-              </Show>
-              <Show when={props.project.selected() && !voidTheme()}>
-                <div class="flex min-h-7 min-w-0 flex-col items-center justify-center gap-0 text-v2-text-text-faint sm:flex-row">
-                  <PromptProjectSelector controller={props.project} placement="bottom" />
-                  <Show
-                    when={props.workspace.bar.visible()}
-                    fallback={
-                      <PromptGitStatus branch={props.workspace.bar.branch()} noGit={!props.workspace.project.git()} />
-                    }
-                  >
-                    <PromptWorkspaceSelector
-                      value={props.workspace.selection.value()}
-                      projectRoot={props.workspace.project.root()}
-                      workspaces={props.workspace.project.workspaces()}
-                      branch={props.workspace.bar.branch()}
-                      onChange={props.workspace.selection.set}
-                      onDone={props.input.restoreFocus}
-                    />
-                  </Show>
-                </div>
-              </Show>
-            </div>
-          </div>
-        </div>
+        <Show when={!props.dockOutside}>
+          <NewSessionDock input={props.input} project={props.project} workspace={props.workspace} />
+        </Show>
         <Show when={voidTheme()}>
           <div data-slot="new-session-hint">{language.t("void.chat.hint")}</div>
         </Show>
         <Show when={!voidTheme()}>
           <ProviderTip />
         </Show>
+      </div>
+    </div>
+  )
+}
+
+export function NewSessionDock(props: {
+  input: NewSessionDraftController["input"]
+  project: PromptProjectController
+  workspace: NewSessionWorkspaceController
+  flow?: boolean
+}) {
+  const voidTheme = useVoidTheme()
+  return (
+    <div
+      data-slot="new-session-dock"
+      class="flex justify-center px-6"
+      classList={{ "absolute inset-x-0 top-[25.375%]": !props.flow }}
+    >
+      <div class={NEW_SESSION_CONTENT_WIDTH}>
+        <Show when={!voidTheme()}>
+          <WordmarkV2 class="h-auto w-full text-v2-background-bg-inverse" />
+        </Show>
+        <div class="flex flex-col gap-8" classList={{ "mt-8": !voidTheme() }}>
+          <PromptInputV2Composer controller={props.input} />
+          <Show when={props.project.empty()}>
+            <PromptProjectAddButton controller={props.project} />
+          </Show>
+          <Show when={props.project.selected() && !voidTheme()}>
+            <div class="flex min-h-7 min-w-0 flex-col items-center justify-center gap-0 text-v2-text-text-faint sm:flex-row">
+              <PromptProjectSelector controller={props.project} placement="bottom" />
+              <Show
+                when={props.workspace.bar.visible()}
+                fallback={
+                  <PromptGitStatus branch={props.workspace.bar.branch()} noGit={!props.workspace.project.git()} />
+                }
+              >
+                <PromptWorkspaceSelector
+                  value={props.workspace.selection.value()}
+                  projectRoot={props.workspace.project.root()}
+                  workspaces={props.workspace.project.workspaces()}
+                  branch={props.workspace.bar.branch()}
+                  onChange={props.workspace.selection.set}
+                  onDone={props.input.restoreFocus}
+                />
+              </Show>
+            </div>
+          </Show>
+        </div>
       </div>
     </div>
   )
