@@ -216,7 +216,7 @@ const createPlatform = (windowState: DesktopWindowState): Platform => {
     openLocalFile(url: string) {
       window.api.openLocalFile(url)
     },
-    async openPath(path: string, app?: string) {
+    async openPath(path: string | string[], app?: string) {
       if (os === "windows") {
         const resolvedApp = app ? await window.api.resolveAppPath(app).catch(() => null) : null
         return window.api.openPath(path, resolvedApp ?? undefined)

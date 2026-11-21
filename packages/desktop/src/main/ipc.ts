@@ -221,11 +221,12 @@ export function registerIpcHandlers(deps: Deps) {
     openLocalFileURL(url)
   })
 
-  ipcMain.handle("open-path", async (_event: IpcMainInvokeEvent, path: string, app?: string) => {
-    if (!app) return shell.openPath(path)
+  ipcMain.handle("open-path", async (_event: IpcMainInvokeEvent, path: string | string[], app?: string) => {
+    const paths = Array.isArray(path) ? path : [path]
+    if (!app) return shell.openPath(paths[0])
     await new Promise<void>((resolve, reject) => {
       const [cmd, args] =
-        process.platform === "darwin" ? (["open", ["-a", app, path]] as const) : ([app, [path]] as const)
+        process.platform === "darwin" ? (["open", ["-a", app, ...paths]] as const) : ([app, paths] as const)
       execFile(cmd, args, (err) => (err ? reject(err) : resolve()))
     })
   })
