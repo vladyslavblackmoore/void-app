@@ -4,7 +4,7 @@ import { Icon } from "@opencode-ai/ui/icon"
 import { TabsV2 } from "@opencode-ai/ui/v2/tabs-v2"
 import { SegmentedControlItemV2, SegmentedControlV2 } from "@opencode-ai/ui/v2/segmented-control-v2"
 import { useLanguage } from "@/context/language"
-import { SettingsGeneralV2 } from "./general"
+import { SettingsGeneralRoute } from "./general-void"
 import { SettingsKeybinds } from "../settings-keybinds"
 import { SettingsServersV2 } from "./servers"
 import { SettingsProvidersV2 } from "./providers"
@@ -122,7 +122,7 @@ export function SettingsTabSettings() {
           value: "general",
           icon: "sliders",
           title: () => language.t("settings.tab.general"),
-          content: () => <SettingsGeneralV2 />,
+          content: () => <SettingsGeneralRoute />,
         },
         {
           value: "shortcuts",

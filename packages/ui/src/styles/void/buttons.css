@@ -70,3 +70,12 @@ html[data-theme="void"] [data-component="button-v2"][data-variant="ghost-muted"]
 html[data-theme="void"] [data-component="button-v2"][data-variant="outline"] {
   box-shadow: inset 0 0 0 1px var(--void-border-strong);
 }
+
+html[data-theme="void"] [data-component="button-v2"]:is(:disabled, [data-state="disabled"]) {
+  opacity: var(--void-disabled-opacity);
+  cursor: not-allowed;
+}
+
+html[data-theme="void"] [data-component="button-v2"][data-variant="neutral"] {
+  box-shadow: var(--void-button-edge);
+}

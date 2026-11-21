@@ -772,7 +772,7 @@ html[data-theme="void"] .void-settings-head {
   align-items: flex-end;
   justify-content: space-between;
   gap: 20px;
-  padding: 24px 0 22px;
+  padding: 24px 0 0;
 }
 
 html[data-theme="void"] .void-settings-title {
@@ -846,7 +846,6 @@ html[data-theme="void"] .void-settings-nav-item:focus-visible {
 html[data-theme="void"] .void-settings-content {
   flex: 1;
   min-width: 0;
-  padding-bottom: 28px;
 }
 
 html[data-theme="void"] .void-settings-content .settings-v2-tab-header {
@@ -1088,4 +1087,173 @@ html[data-theme="void"] .void-provider-card-id {
 html[data-theme="void"] .void-provider-card-hint {
   font-size: var(--void-fs-small, 12px);
   color: var(--void-text-3);
+}
+
+html[data-theme="void"] .void-settings-content .settings-v2-tab-body.void-general {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-width: auto;
+  gap: var(--void-gap, 14px);
+  align-items: start;
+}
+
+html[data-theme="void"] .void-general-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--void-gap, 14px);
+  min-width: 0;
+}
+
+html[data-theme="void"] .void-general-col .settings-v2-section {
+  margin-bottom: 0;
+}
+
+@media (max-width: 900px) {
+  html[data-theme="void"] .void-settings-content .settings-v2-tab-body.void-general {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+html[data-theme="void"] .void-settings-content .settings-v2-shortcuts {
+  display: block;
+  gap: 0;
+}
+
+html[data-theme="void"] .void-appearance-label {
+  margin: 12px 0 8px;
+  font-size: var(--void-fs-small, 12px);
+  color: var(--void-text-2);
+}
+
+html[data-theme="void"] .void-appearance-scheme {
+  width: 100%;
+}
+
+html[data-theme="void"] .void-appearance-scheme [data-slot="segmented-control-v2-item"] {
+  height: 32px;
+}
+
+html[data-theme="void"] .void-appearance-note {
+  margin: 12px 0 10px;
+  font-size: var(--void-fs-small, 12px);
+  line-height: 1.5;
+  color: var(--void-text-2);
+}
+
+html[data-theme="void"] .void-space-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--void-gap-sm, 8px);
+  margin-top: 12px;
+}
+
+html[data-theme="void"] .void-space-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--void-inner);
+  border-radius: var(--void-radius-inner, 14px);
+}
+
+html[data-theme="void"] .void-space-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--space);
+  box-shadow: 0 0 10px var(--space);
+}
+
+html[data-theme="void"] .void-space-main {
+  flex: 1;
+  min-width: 0;
+}
+
+html[data-theme="void"] .void-space-name {
+  font-size: var(--void-fs-body, 14px);
+  line-height: 1.3;
+  color: var(--void-text-1);
+}
+
+html[data-theme="void"] .void-space-meta {
+  font-size: var(--void-fs-small, 12px);
+  color: var(--void-text-2);
+}
+
+html[data-theme="void"] .void-space-core {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--void-text-3);
+}
+
+html[data-theme="void"] .void-space-row[data-core="running"] .void-space-core {
+  background: var(--void-green);
+}
+
+html[data-theme="void"] .void-space-row[data-core="starting"] .void-space-core {
+  background: var(--void-yellow);
+}
+
+html[data-theme="void"] .void-space-state {
+  min-width: 54px;
+  font-size: var(--void-fs-small, 12px);
+  color: var(--void-text-2);
+}
+
+html[data-theme="void"] .void-space-hint {
+  margin: 12px 0 10px;
+  font-size: var(--void-fs-small, 12px);
+  line-height: 1.5;
+  color: var(--void-text-2);
+}
+
+html[data-theme="void"] .void-settings-content .settings-v2-servers-lead > .bg-icon-success-base,
+html[data-theme="void"] .void-settings-content .settings-v2-servers-lead > .bg-icon-critical-base,
+html[data-theme="void"] .void-settings-content .settings-v2-servers-lead > .bg-border-weak-base {
+  width: 8px;
+  height: 8px;
+}
+
+html[data-theme="void"] .void-settings-content .settings-v2-servers-lead > .bg-icon-success-base {
+  background-color: var(--void-green);
+}
+
+html[data-theme="void"] .void-settings-content .settings-v2-servers-lead > .bg-icon-critical-base {
+  background-color: var(--void-red);
+}
+
+html[data-theme="void"] .void-settings-content .settings-v2-servers-lead > .bg-border-weak-base {
+  background-color: var(--void-text-3);
+}
+
+html[data-theme="void"] .void-settings-content .settings-v2-tab-search [data-component="text-input-v2"] {
+  height: var(--void-control-h, 44px);
+  padding-inline: 0 10px;
+  border: 1px solid var(--void-border);
+  border-radius: var(--void-radius-control, 14px);
+  outline: none;
+  background: var(--void-inner);
+  box-shadow: none;
+}
+
+html[data-theme="void"] .void-settings-content .settings-v2-tab-search [data-component="text-input-v2"]:hover {
+  border-color: var(--void-border-strong);
+}
+
+html[data-theme="void"] .void-settings-content .settings-v2-tab-search [data-component="text-input-v2"]:focus-within {
+  border-color: var(--void-border-strong);
+  box-shadow: var(--void-focus-ring);
+}
+
+html[data-theme="void"] .void-settings-content .settings-v2-tab-search [data-slot="text-input-v2-input"] {
+  padding-inline-start: 14px;
+  font-size: var(--void-fs-body, 14px);
+  color: var(--void-text-1);
+}
+
+html[data-theme="void"] .void-settings-content .settings-v2-tab-search [data-slot="text-input-v2-input"]::placeholder {
+  color: var(--void-text-2);
 }

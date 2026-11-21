@@ -47,6 +47,24 @@ describe("void buttons", () => {
     expect(css).toContain("var(--void-raised)")
   })
 
+  test("disabled buttons of every variant use the void disabled opacity", () => {
+    const body =
+      rules("buttons.css").find((rule) =>
+        rule.selectors.includes(`${prefix}[data-component="button-v2"]:is(:disabled, [data-state="disabled"])`),
+      )?.body ?? ""
+    expect(body).toContain("opacity: var(--void-disabled-opacity)")
+    expect(body).toContain("cursor: not-allowed")
+  })
+
+  test("the light secondary button has a visible edge", () => {
+    const neutral = `${prefix}[data-component="button-v2"][data-variant="neutral"]`
+    const bodies = rules("buttons.css").filter((rule) => rule.selectors.includes(neutral))
+    expect(bodies.some((rule) => rule.body.includes("box-shadow: var(--void-button-edge)"))).toBe(true)
+    const tokens = readFileSync(new URL("tokens.css", dir), "utf8")
+    expect(tokens).toContain("--void-button-edge: none")
+    expect(tokens).toContain("--void-button-edge: inset 0 0 0 1px var(--void-border-strong)")
+  })
+
   test("is imported by the app stylesheet", () => {
     const index = readFileSync(new URL("../../../../app/src/index.css", import.meta.url), "utf8")
     expect(index).toContain("styles/void/buttons.css")
