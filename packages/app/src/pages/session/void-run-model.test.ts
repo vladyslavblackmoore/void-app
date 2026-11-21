@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { readFileSync } from "node:fs"
 import type { Message } from "@opencode-ai/sdk/v2/client"
 import { runModelLabel, runSummary } from "./void-run-model"
 
@@ -46,5 +47,11 @@ describe("run summary", () => {
 
   test("the new session screen with nothing is empty", () => {
     expect(runSummary({ id: undefined, messages: [], providers, todos: 0, files: 0 }).empty).toBe(true)
+  })
+
+  test("a selected session with a model and nothing else is not empty and the view hides the empty text for it", () => {
+    expect(runSummary({ id: "s", messages: [user], providers, todos: 0, files: 0 }).empty).toBe(false)
+    const view = readFileSync(new URL("./void-run-view.tsx", import.meta.url), "utf8")
+    expect(view).toContain("props.empty && !props.id")
   })
 })

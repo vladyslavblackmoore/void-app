@@ -81,7 +81,7 @@ export function VoidRunView(props: RunViewProps) {
           </div>
         </section>
       </Show>
-      <Show when={props.empty}>
+      <Show when={props.empty && !props.id}>
         <div data-slot="void-sheet-empty">{props.t("void.run.empty")}</div>
       </Show>
     </>
