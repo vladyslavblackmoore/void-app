@@ -7,6 +7,7 @@ import {
   nextServerAfterRemoval,
   resolveServerList,
   ServerConnection,
+  serversForActive,
 } from "./server"
 import { ServerScope } from "@/utils/server-scope"
 
@@ -284,5 +285,33 @@ describe("space connections", () => {
     expect(ServerConnection.space(sidecar())).toBe("home")
     expect(ServerConnection.space(sidecar("void"))).toBe("void")
     expect(ServerConnection.space({ type: "http", http: { url: "http://x" } })).toBeUndefined()
+  })
+})
+
+describe("serversForActive", () => {
+  const sidecar = (space?: string, name = space ?? "Core server"): ServerConnection.Any => ({
+    type: "sidecar",
+    variant: "base",
+    space,
+    displayName: name,
+    http: { url: `http://127.0.0.1:${space ? 5000 + space.length : 4000}` },
+  })
+  const remote: ServerConnection.Any = { type: "http", http: { url: "https://remote.example.test" } }
+  const list = [sidecar(), sidecar("void", "VOID"), sidecar("sharkscode", "Work"), remote]
+  const keys = (items: ServerConnection.Any[]) => items.map((item) => ServerConnection.key(item) as string)
+
+  test("shows only the active space among the space cores", () => {
+    expect(keys(serversForActive(list, ServerConnection.Key.make("sidecar:void")))).toEqual([
+      "sidecar:void",
+      "https://remote.example.test",
+    ])
+    expect(keys(serversForActive(list, ServerConnection.Key.make("sidecar")))).toEqual([
+      "sidecar",
+      "https://remote.example.test",
+    ])
+  })
+
+  test("keeps every server when the active one is not a space core", () => {
+    expect(serversForActive(list, ServerConnection.Key.make("https://remote.example.test"))).toEqual(list)
   })
 })
