@@ -22,13 +22,13 @@ const cancelParams = z.object({ runId: z.string().min(1) })
 
 const codes = { parse: -32700, invalidRequest: -32600, methodNotFound: -32601, invalidParams: -32602, internal: -32603 }
 
-export type ServerOptions = BrokerOptions
+export type ServerOptions = BrokerOptions & { socketPath?: string }
 
 export type BrokerServer = { socketPath: string; broker: Broker; close: () => Promise<void> }
 
 export async function startServer(options: ServerOptions): Promise<BrokerServer> {
   const broker = await createBroker(options)
-  const socketPath = path.join(options.stateDir, "broker.sock")
+  const socketPath = options.socketPath ?? path.join(options.stateDir, "broker.sock")
   await mkdir(options.stateDir, { recursive: true, mode: 0o700 })
   await chmod(options.stateDir, 0o700)
   await rm(socketPath, { force: true })

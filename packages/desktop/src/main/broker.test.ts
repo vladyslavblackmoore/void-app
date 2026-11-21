@@ -5,7 +5,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
-import { brokerPaths, brokerRuntime, startBroker, withBroker } from "./broker"
+import { brokerPaths, brokerRuntime, brokerSocketPath, startBroker, withBroker } from "./broker"
 import type { CoreStart } from "./cores"
 
 const here = dirname(fileURLToPath(import.meta.url))
@@ -44,6 +44,40 @@ const settle = async (pid: number) => {
 }
 
 const options = (extra: Record<string, string> = {}) => ({ hostname: "127.0.0.1", port: 1, password: "p", env: { ...extra } })
+
+describe("socket path", () => {
+  const long = "/very/long/home/".repeat(8)
+  const limit = process.platform === "darwin" ? 104 : 108
+
+  test("keeps the default path for a short root", () => {
+    expect(brokerSocketPath("/r", "home", "darwin", "/tmp")).toBe("/r/spaces/home/state/broker/broker.sock")
+  })
+
+  test("falls back to a short path for a long root", () => {
+    const socket = brokerPaths(long, "home").socket
+    expect(Buffer.byteLength(socket)).toBeLessThan(limit)
+    expect(socket).toMatch(/void-broker-[0-9a-f]{8}\.sock$/)
+    expect(socket).not.toContain(long)
+  })
+
+  test("is deterministic per root and id", () => {
+    expect(brokerPaths(long, "home").socket).toBe(brokerPaths(long, "home").socket)
+    expect(brokerPaths(long, "home").socket).not.toBe(brokerPaths(long, "work").socket)
+    expect(brokerPaths(long, "home").socket).not.toBe(brokerPaths(long + "x", "home").socket)
+  })
+
+  test("uses the shorter fixed directory when the temp directory is too long", () => {
+    const socket = brokerSocketPath(long, "home", "darwin", long)
+    expect(socket).toMatch(/^\/tmp\/void-broker-[0-9a-f]{8}\.sock$/)
+  })
+
+  test("limits are 104 bytes on darwin and 108 elsewhere", () => {
+    const root = "/" + "a".repeat(50)
+    expect(Buffer.byteLength(brokerSocketPath(root, "home", "darwin", "/tmp"))).toBeLessThan(104)
+    expect(brokerSocketPath(root, "home", "linux", "/tmp")).toBe(join(root, "spaces", "home", "state", "broker", "broker.sock"))
+    expect(brokerSocketPath(long, "home", "win32", "/tmp")).toBe(join(long, "spaces", "home", "state", "broker", "broker.sock"))
+  })
+})
 
 describe("paths", () => {
   test("lie inside the space directory", () => {
