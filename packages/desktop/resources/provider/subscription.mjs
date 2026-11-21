@@ -109,9 +109,110 @@ async function ensureConnected(check) {
   if (!(await check())) throw createAuthenticationError({ message: notConnected })
 }
 
+const secretPrefix = "secret:"
+
+const sanitize = (value) => String(value).replace(/[^a-zA-Z0-9_-]/g, "_")
+
+const hasSecret = (values) => Object.values(values ?? {}).some((value) => String(value).startsWith(secretPrefix))
+
+function mapServer(entry) {
+  if (!entry || typeof entry !== "object" || entry.enabled === false) return
+  if (entry.type === "local") {
+    if (!Array.isArray(entry.command) || entry.command.length === 0) return
+    if (entry.command.some((part) => String(part).startsWith(secretPrefix)) || hasSecret(entry.environment)) return
+    const [command, ...args] = entry.command
+    return { type: "stdio", command, args, ...(entry.environment ? { env: entry.environment } : {}) }
+  }
+  if (entry.type === "remote") {
+    if (typeof entry.url !== "string" || hasSecret(entry.headers)) return
+    return { type: "http", url: entry.url, ...(entry.headers ? { headers: entry.headers } : {}) }
+  }
+}
+
+const collides = (a, b) => a === b || a.startsWith(`${b}_`) || b.startsWith(`${a}_`)
+
+export function mcpServers(mcp) {
+  if (!mcp || typeof mcp !== "object") return {}
+  const found = Object.entries(mcp)
+    .map(([name, entry]) => [name, mapServer(entry)])
+    .filter(([, server]) => server !== undefined)
+  const clashing = found
+    .filter(([name]) => found.some(([other]) => other !== name && collides(sanitize(name), sanitize(other))))
+    .map(([name]) => name)
+  if (clashing.length > 0)
+    console.warn(`subscription: mcp servers dropped because their tool names would be ambiguous: ${clashing.join(", ")}`)
+  return Object.fromEntries(found.filter(([name]) => !clashing.includes(name)))
+}
+
+function wildcard(input, pattern) {
+  const escaped = pattern
+    .replaceAll("\\", "/")
+    .replace(/[.+^${}()|[\]\\]/g, "\\$&")
+    .replace(/\*/g, ".*")
+    .replace(/\?/g, ".")
+  const source = escaped.endsWith(" .*") ? `${escaped.slice(0, -3)}( .*)?` : escaped
+  return new RegExp(`^${source}$`, "s").test(input.replaceAll("\\", "/"))
+}
+
+export function ruleAction(name, rules) {
+  const rule = rules.findLast((item) => wildcard(name, String(item.permission)) && wildcard("*", String(item.pattern)))
+  return rule?.action ?? "ask"
+}
+
+function toolNames(tools) {
+  if (!Array.isArray(tools)) return new Set()
+  return new Set(tools.map((tool) => tool?.name).filter((name) => typeof name === "string"))
+}
+
+export function mcpGuard(servers, tools, rules) {
+  const prefixes = Object.keys(servers)
+    .map((name) => ({ prefix: `mcp__${sanitize(name)}__`, server: sanitize(name) }))
+    .sort((a, b) => b.prefix.length - a.prefix.length)
+  return async (input) => {
+    const name = input?.tool_name
+    if (typeof name !== "string" || !name.startsWith("mcp__")) return {}
+    const match = prefixes.find((item) => name.startsWith(item.prefix))
+    const key = match === undefined ? undefined : `${match.server}_${sanitize(name.slice(match.prefix.length))}`
+    if (key !== undefined && tools.has(key) && ruleAction(key, rules) !== "deny") return {}
+    return {
+      hookSpecificOutput: {
+        hookEventName: "PreToolUse",
+        permissionDecision: "deny",
+        permissionDecisionReason: `${name} is not permitted for this agent`,
+      },
+    }
+  }
+}
+
+export function mcpPlan(mcp, tools, rules) {
+  if (!Array.isArray(rules)) return
+  const names = toolNames(tools)
+  const servers = mcpServers(mcp)
+  if (names.size === 0 || Object.keys(servers).length === 0) return
+  return { servers, guard: mcpGuard(servers, names, rules) }
+}
+
+function callSettings(settings, effort, plan) {
+  const withEffort = effort ? { ...settings, effort } : settings
+  if (!plan) return withEffort
+  return {
+    ...withEffort,
+    mcpServers: { ...withEffort?.mcpServers, ...plan.servers },
+    strictMcpConfig: true,
+    streamingInput: "always",
+    hooks: {
+      ...withEffort?.hooks,
+      PreToolUse: [...(withEffort?.hooks?.PreToolUse ?? []), { matcher: "mcp__.*", hooks: [plan.guard] }],
+    },
+  }
+}
+
 export function wrapModel(build, check, key = "subscription") {
   const model = build()
-  const call = (options) => build(options?.providerOptions?.[key]?.effort)
+  const call = (options) => {
+    const own = options?.providerOptions?.[key]
+    return build(own?.effort, mcpPlan(own?.mcp, options?.tools, own?.mcpRules))
+  }
   return new Proxy(model, {
     get(target, key) {
       if (key === "doStream")
@@ -156,7 +257,7 @@ export function createSubscription(options = {}, factory = createClaudeCode) {
   const base = factory({ defaultSettings })
   const check = statusCheck(defaultSettings.pathToClaudeCodeExecutable, defaultSettings.env ?? {})
   const model = (modelId, settings) =>
-    wrapModel((effort) => base.languageModel(modelId, effort ? { ...settings, effort } : settings), check, key)
+    wrapModel((effort, plan) => base.languageModel(modelId, callSettings(settings, effort, plan)), check, key)
   const provider = (modelId, settings) => model(modelId, settings)
   return Object.assign(provider, base, { languageModel: model, chat: model, specificationVersion: "v3" })
 }

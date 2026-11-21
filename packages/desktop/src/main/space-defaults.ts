@@ -13,6 +13,7 @@ export type SpaceSeed = {
   agents: Array<{ name: string; content: string; version?: number }>
   wrapper: string
   plugin?: string
+  mcpPlugin?: string
   config?: string
   memory?: MemoryRuntime
   memoryPlugin?: string
@@ -69,6 +70,7 @@ export async function seedSpace(root: string, id: string, seed: SpaceSeed) {
   await seedAgents(configDir, stateDir, seed.agents)
   await seedConfig(configDir, stateDir, seed.wrapper, join(dir, "data", "opencode", "auth.json"), {
     plugin: seed.plugin,
+    mcpPlugin: seed.mcpPlugin,
     config: seed.config,
   })
   await seedMemory(dir, configDir, seed.memory)
