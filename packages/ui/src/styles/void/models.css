@@ -12,12 +12,15 @@ html[data-theme="void"] .void-providers-layout {
 
 html[data-theme="void"] .void-providers-layout .void-provider-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-self: start;
   padding-bottom: 8px;
 }
 
 html[data-theme="void"] .void-default-model {
   position: sticky;
   top: 0;
+  align-self: start;
+  height: calc(100vh - 176px - var(--void-gutter));
   display: flex;
   box-sizing: border-box;
   flex-direction: column;
@@ -57,7 +60,8 @@ html[data-theme="void"] .void-default-model-label small {
 
 html[data-theme="void"] .void-default-model-options {
   display: flex;
-  max-height: 232px;
+  flex: 0 1 auto;
+  min-height: 96px;
   flex-direction: column;
   gap: 6px;
   overflow-y: auto;
@@ -134,6 +138,12 @@ html[data-theme="void"] .void-default-model-empty {
   font-size: var(--void-fs-small, 12px);
 }
 
+html[data-theme="void"] .void-default-model-note {
+  margin: 8px 0 0;
+  font-size: var(--void-fs-small, 12px);
+  color: var(--void-text-2);
+}
+
 html[data-theme="void"] .void-default-model-inherited {
   display: flex;
   flex-wrap: wrap;
@@ -156,11 +166,22 @@ html[data-theme="void"] .void-default-model-chip[data-muted] {
 html[data-theme="void"] .void-default-model-actions {
   display: flex;
   gap: 8px;
-  margin-top: 16px;
+  margin-top: auto;
+  padding-top: 16px;
 }
 
 html[data-theme="void"] .void-default-model-actions > * {
   flex: 1;
+}
+
+html[data-theme="void"] .void-default-model-actions > [data-component="button-v2"] {
+  min-height: var(--void-control-h, 44px);
+  border-radius: var(--void-radius-control, 14px);
+  font-size: var(--void-fs-body, 14px);
+}
+
+html[data-theme="void"] .void-default-model-actions [data-variant="contrast"]:disabled {
+  opacity: 0.4;
 }
 
 html[data-theme="void"] .void-default-model-warn {
@@ -187,7 +208,7 @@ html[data-theme="void"] .void-providers-layout .void-provider-tag {
 
 html[data-theme="void"] .void-settings-page[data-section="models"] .settings-v2-tab-body.settings-v2-models {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(380px, 640px));
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--void-gap, 14px);
   align-items: start;
   column-width: auto;

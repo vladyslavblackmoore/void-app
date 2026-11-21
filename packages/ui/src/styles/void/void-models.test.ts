@@ -68,7 +68,8 @@ describe("void models screens", () => {
   })
 
   test("the models list fills the canvas and uses a void search field", () => {
-    expect(body(".settings-v2-tab-body.settings-v2-models")).toContain("repeat(auto-fit, minmax(380px, 640px))")
+    expect(body(".settings-v2-tab-body.settings-v2-models")).toContain("grid-template-columns: minmax(0, 1fr)")
+    expect(body(".settings-v2-tab-body.settings-v2-models")).not.toContain("640px")
     expect(body('[data-component="text-input-v2"]')).toContain("var(--void-control-h")
   })
 
@@ -80,7 +81,6 @@ describe("void models screens", () => {
   })
 
   test("the default model panel starts level with the grid and lists options as radios", () => {
-    expect(body(".void-default-model")).toContain("top: 0")
     expect(body(".void-default-model-option")).toContain("border-radius: var(--void-radius-control")
     expect(body('.void-default-model-option[aria-checked="true"]')).toContain("background: var(--void-pill)")
     expect(body(".void-default-model-options")).toContain("overflow-y: auto")
@@ -96,5 +96,38 @@ describe("void models screens", () => {
     const css = readFileSync(new URL("models.css", dir), "utf8")
     expect(css).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
     expect(css).not.toMatch(/\brgba?\(/)
+  })
+
+  test("the effort note sits under the disabled control in the secondary text colour", () => {
+    const rule = body(".void-default-model-note")
+    expect(rule).toContain("color: var(--void-text-2)")
+    expect(rule).toContain("font-size: var(--void-fs-small")
+  })
+
+  test("the default model Reset and Save are 44px pills like the agents editor", () => {
+    const rule = body(".void-default-model-actions > [data-component=\"button-v2\"]")
+    expect(rule).toContain("min-height: var(--void-control-h, 44px)")
+    expect(rule).toContain("border-radius: var(--void-radius-control")
+    expect(rule).toContain("font-size: var(--void-fs-body")
+  })
+
+  test("a disabled Save is faded well below the active pill", () => {
+    const rule = body(".void-default-model-actions [data-variant=\"contrast\"]:disabled")
+    const opacity = Number(/opacity: ([\d.]+)/.exec(rule)?.[1])
+    expect(opacity).toBeGreaterThan(0)
+    expect(opacity).toBeLessThanOrEqual(0.45)
+  })
+
+  test("the default model panel is sticky, sized to the visible area, with its actions pinned at the bottom", () => {
+    const panel = body(".void-default-model")
+    expect(panel).toContain("position: sticky")
+    expect(panel).toContain("top: 0")
+    expect(panel).toContain("height: calc(100vh - 176px - var(--void-gutter))")
+    expect(panel).toContain("align-self: start")
+    expect(body(".void-providers-layout")).not.toContain("align-items: stretch")
+    expect(body(".void-default-model-options")).toContain("flex: 0 1 auto")
+    expect(body(".void-default-model-options")).toContain("min-height: 96px")
+    expect(body(".void-default-model-options")).not.toContain("max-height")
+    expect(body(".void-default-model-actions")).toContain("margin-top: auto")
   })
 })

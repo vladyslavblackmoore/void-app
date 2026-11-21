@@ -51,8 +51,27 @@ describe("void settings css", () => {
 
   test("shortcut key hints are readable", () => {
     const hint = block(`${content} .settings-v2-keybind-button`)
-    expect(hint).toContain("font-size: var(--void-fs-small, 12px)")
+    expect(hint).toContain("font-size: 13px")
     expect(hint).toContain("color: var(--void-text-2)")
+  })
+
+  test("the data path is legible", () => {
+    const path = block('html[data-theme="void"] .void-data-path')
+    expect(path).toContain("font-size: 13px")
+    expect(path).toContain("color: var(--void-text-1)")
+  })
+
+  test("the scroller fades an edge only where content scrolls under it", () => {
+    const scroller = block(content)
+    expect(scroller).toContain("mask-image: linear-gradient(")
+    expect(scroller).toContain("var(--void-fade-top)")
+    expect(scroller).toContain("var(--void-fade-bottom)")
+    expect(scroller).toContain("--void-fade-top: 0px")
+    expect(scroller).toContain("--void-fade-bottom: 0px")
+    expect(scroller).toContain("animation-timeline: scroll(self block)")
+    expect(css).toContain("@property --void-fade-top")
+    expect(css).toContain("@keyframes void-fade-top")
+    expect(css).toContain("@keyframes void-fade-bottom")
   })
 
   test("the search field is a void input", () => {

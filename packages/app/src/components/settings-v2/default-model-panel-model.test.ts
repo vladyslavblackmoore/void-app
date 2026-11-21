@@ -3,6 +3,8 @@ import {
   defaultModelGroups,
   defaultModelPanel,
   defaultModelPatch,
+  effortControl,
+  effortScale,
   inheritedBy,
   isDraftDirty,
   selectDefaultModel,
@@ -130,5 +132,23 @@ describe("inherited by", () => {
       { name: "doc", inherits: false, isMain: false },
     ]
     expect(inheritedBy(nodes)).toEqual({ names: ["main", "architect"], own: 2 })
+  })
+})
+
+describe("effort control", () => {
+  const groups = defaultModelGroups(choices, true)
+
+  test("is live with the variants of a model that has them", () => {
+    expect(effortControl(groups, "anthropic/opus")).toEqual({ live: true, values: ["low", "high"] })
+  })
+
+  test("is the disabled five-value scale for a model without variants", () => {
+    expect(effortScale).toEqual(["low", "medium", "high", "xhigh", "max"])
+    expect(effortControl(groups, "anthropic/haiku")).toEqual({ live: false, values: effortScale })
+  })
+
+  test("is the disabled scale when no model is chosen or the model is unknown", () => {
+    expect(effortControl(groups, undefined)).toEqual({ live: false, values: effortScale })
+    expect(effortControl(groups, "x/y")).toEqual({ live: false, values: effortScale })
   })
 })

@@ -843,9 +843,55 @@ html[data-theme="void"] .void-settings-nav-item:focus-visible {
   box-shadow: var(--void-focus-ring);
 }
 
+@property --void-fade-top {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --void-fade-bottom {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@keyframes void-fade-top {
+  from {
+    --void-fade-top: 0px;
+  }
+  to {
+    --void-fade-top: 24px;
+  }
+}
+
+@keyframes void-fade-bottom {
+  from {
+    --void-fade-bottom: 40px;
+  }
+  to {
+    --void-fade-bottom: 0px;
+  }
+}
+
 html[data-theme="void"] .void-settings-content {
   flex: 1;
   min-width: 0;
+  --void-fade-top: 0px;
+  --void-fade-bottom: 0px;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 var(--void-fade-top),
+    #000 calc(100% - var(--void-fade-bottom)),
+    transparent 100%
+  );
+  animation:
+    void-fade-top linear both,
+    void-fade-bottom linear both;
+  animation-timeline: scroll(self block);
+  animation-range:
+    0 24px,
+    calc(100% - 40px) 100%;
 }
 
 html[data-theme="void"] .void-settings-content .settings-v2-tab-header {
@@ -1192,12 +1238,14 @@ html[data-theme="void"] .void-space-tag {
 }
 
 html[data-theme="void"] .void-settings-content .settings-v2-keybind-button {
-  font-size: var(--void-fs-small, 12px);
+  font-size: 13px;
   color: var(--void-text-2);
 }
 
 html[data-theme="void"] .void-data-path {
   font-family: var(--font-family-mono);
+  font-size: 13px;
+  color: var(--void-text-1);
 }
 
 html[data-theme="void"] .void-appearance-scheme + [data-component="settings-v2-list"] {

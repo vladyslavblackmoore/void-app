@@ -24,7 +24,7 @@ import {
   defaultModelGroups,
   defaultModelPanel,
   defaultModelPatch,
-  effortOptions,
+  effortControl,
   inheritedBy,
   isDraftDirty,
   selectDefaultModel,
@@ -198,7 +198,7 @@ export const SettingsProvidersV2: Component<{
   })
   const [draft, setDraft] = createSignal<DefaultDraft>(saved())
   createEffect(on(saved, (value) => setDraft(value), { defer: true }))
-  const efforts = createMemo(() => effortOptions(groups(), draft().model))
+  const effort = createMemo(() => effortControl(groups(), draft().model))
   const dirty = createMemo(() => isDraftDirty(draft(), saved()))
   const modelCount = createMemo(() => groups().reduce((total, group) => total + group.models.length, 0))
   const [saving, setSaving] = createSignal(false)
@@ -280,21 +280,22 @@ export const SettingsProvidersV2: Component<{
         <span>{language.t("void.models.default.effort")}</span>
         <small>{language.t("void.models.default.effort.hint")}</small>
       </div>
-      <Show
-        when={efforts().length > 0}
-        fallback={<span class="void-default-model-empty">{language.t("void.models.default.effort.none")}</span>}
+      <SegmentedControlV2
+        class="segmented-control-v2--full-width"
+        aria-label={language.t("void.models.default.effort")}
+        value={effort().live ? (draft().variant ?? null) : null}
+        disabled={!effort().live}
+        allowDeselect
+        onChange={(next) => setDraft((current) => ({ ...current, variant: next ?? undefined }))}
       >
-        <SegmentedControlV2
-          class="segmented-control-v2--full-width"
-          aria-label={language.t("void.models.default.effort")}
-          value={draft().variant ?? null}
-          allowDeselect
-          onChange={(next) => setDraft((current) => ({ ...current, variant: next ?? undefined }))}
-        >
-          <For each={efforts()}>
-            {(variant) => <SegmentedControlItemV2 value={variant}>{variant}</SegmentedControlItemV2>}
-          </For>
-        </SegmentedControlV2>
+        <For each={effort().values}>
+          {(variant) => <SegmentedControlItemV2 value={variant}>{variant}</SegmentedControlItemV2>}
+        </For>
+      </SegmentedControlV2>
+      <Show when={!effort().live}>
+        <p class="void-default-model-note" data-component="void-default-model-effort-note">
+          {language.t("void.models.default.effort.none")}
+        </p>
       </Show>
       <Show when={inherited()}>
         {(value) => (
