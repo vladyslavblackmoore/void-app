@@ -19,6 +19,7 @@ import explorerAgent from "../../resources/agents/explorer.md?raw"
 import delegateTool from "../../resources/tools/delegate.ts?raw"
 import brokerWorkers from "../../resources/broker/workers.json?raw"
 import subscriptionWrapper from "../../resources/provider/subscription.mjs?raw"
+import mcpMapSource from "../../resources/provider/mcp-map.mjs?raw"
 import subscriptionPlugin from "../../resources/plugin/subscription-auth.js?raw"
 import subscriptionMcpPlugin from "../../resources/plugin/subscription-mcp.js?raw"
 import spaceConfigTemplate from "../../resources/spaces/opencode.jsonc?raw"
@@ -405,6 +406,7 @@ const main = Effect.gen(function* () {
       wrapper: subscriptionWrapper,
       plugin: subscriptionPlugin,
       mcpPlugin: subscriptionMcpPlugin,
+      mcpMap: mcpMapSource,
       config: spaceConfigTemplate,
       memory: memoryCommand({
         packaged: app.isPackaged,

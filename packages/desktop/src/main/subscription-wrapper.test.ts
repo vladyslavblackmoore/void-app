@@ -178,22 +178,6 @@ describe("subscription wrapper mcp servers", () => {
     expect(settings?.streamingInput).toBe("always")
   })
 
-  test("skips disabled servers and servers with secret references", async () => {
-    const settings = await callWith(
-      {
-        memory,
-        off: { type: "local", command: ["x"], enabled: false },
-        keyed: { type: "remote", url: "https://x.example", headers: { Authorization: "secret:mail-token" } },
-        env: { type: "local", command: ["x"], environment: { TOKEN: "secret:t" } },
-        arg: { type: "local", command: ["x", "secret:t"] },
-        broken: { type: "local", command: [] },
-        nothing: null,
-      },
-      ["memory_remember"],
-    )
-    expect(Object.keys(settings?.mcpServers ?? {})).toEqual(["memory"])
-  })
-
   test("keeps the model settings and merges its own servers and hooks", async () => {
     const own = { type: "stdio", command: "own" }
     const hook = async () => ({})

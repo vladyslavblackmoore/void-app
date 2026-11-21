@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { mapMcpServers, mcpSanitize } from "../src/mcp-map"
+import { mapMcpServers, mcpSanitize } from "../../resources/provider/mcp-map.mjs"
 
 describe("mapMcpServers", () => {
   test("maps a local entry to stdio with command, args and env", () => {

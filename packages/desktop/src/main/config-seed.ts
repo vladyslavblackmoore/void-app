@@ -40,7 +40,7 @@ async function writeIfChanged(target: string, content: string) {
   await writeFile(target, content)
 }
 
-export type ConfigTemplates = { plugin?: string; mcpPlugin?: string; config?: string }
+export type ConfigTemplates = { plugin?: string; mcpPlugin?: string; mcpMap?: string; config?: string }
 
 export async function seedConfig(
   configDir: string,
@@ -49,6 +49,7 @@ export async function seedConfig(
   authFile = "",
   templates: ConfigTemplates = {},
 ) {
+  if (templates.mcpMap !== undefined) await writeIfChanged(join(configDir, "provider", "mcp-map.mjs"), templates.mcpMap)
   await writeIfChanged(join(configDir, "provider", "subscription.mjs"), wrapper)
   if (templates.plugin !== undefined) await writeIfChanged(join(configDir, "plugins", "subscription-auth.js"), templates.plugin)
   if (templates.mcpPlugin !== undefined)

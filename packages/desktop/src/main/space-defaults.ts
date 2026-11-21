@@ -14,6 +14,7 @@ export type SpaceSeed = {
   wrapper: string
   plugin?: string
   mcpPlugin?: string
+  mcpMap?: string
   config?: string
   memory?: MemoryRuntime
   memoryPlugin?: string
@@ -71,6 +72,7 @@ export async function seedSpace(root: string, id: string, seed: SpaceSeed) {
   await seedConfig(configDir, stateDir, seed.wrapper, join(dir, "data", "opencode", "auth.json"), {
     plugin: seed.plugin,
     mcpPlugin: seed.mcpPlugin,
+    mcpMap: seed.mcpMap,
     config: seed.config,
   })
   await seedMemory(dir, configDir, seed.memory)

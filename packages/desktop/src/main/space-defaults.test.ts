@@ -117,6 +117,13 @@ describe("space seeder", () => {
     expect(await readFile(join(dir, "plugins", "subscription-mcp.js"), "utf8")).toBe("export default {}")
   })
 
+  test("seeds the shared mcp mapping next to the subscription provider", async () => {
+    await ensureDefaultSpaces(root, templates, legacy)
+    await seedSpace(root, "work", { ...seed, mcpMap: "export const mapMcpServers = 1" })
+    const dir = join(spaceDir(root, "work"), "config", "opencode")
+    expect(await readFile(join(dir, "provider", "mcp-map.mjs"), "utf8")).toBe("export const mapMcpServers = 1")
+  })
+
   test("keeps an existing config", async () => {
     await ensureDefaultSpaces(root, templates, legacy)
     const dir = join(spaceDir(root, "work"), "config", "opencode")
@@ -154,7 +161,7 @@ describe("memory permission seeding", () => {
     await mkdir(agents, { recursive: true })
     await writeFile(join(agents, "worker.md"), "---\npermission:\n  bash: allow\n---\nbody\n")
     await seedSpace(root, "void", { agents: [], wrapper: "w" })
-    expect(await readFile(join(agents, "worker.md"), "utf8")).toContain("  memory_board_changes: allow\n---\nbody\n")
+    expect(await readFile(join(agents, "worker.md"), "utf8")).toContain("  memory_board_changes: allow\n  delegate: deny\n---\nbody\n")
   })
 })
 
@@ -228,6 +235,7 @@ describe("broker seeding", () => {
     await writeFile(f.main, main)
     await writeFile(f.worker, worker)
     await writeFile(join(spaceDir(root, "void"), "state", "agents-seeded"), "x")
+    await writeFile(join(spaceDir(root, "void"), "state", "memory-seeded-1"), "x")
   }
 
   test("a profile stamped by the earlier version gets the missing delegate lines once", async () => {

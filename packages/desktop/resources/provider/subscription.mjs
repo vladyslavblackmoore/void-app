@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process"
+import { mapMcpServers, mcpSanitize } from "./mcp-map.mjs"
 import { createAuthenticationError, createClaudeCode, isAuthenticationError } from "ai-sdk-provider-claude-code"
 
 export const notConnected = "Claude subscription is not connected. Open Settings → Providers and press Connect."
@@ -109,40 +110,7 @@ async function ensureConnected(check) {
   if (!(await check())) throw createAuthenticationError({ message: notConnected })
 }
 
-const secretPrefix = "secret:"
-
-const sanitize = (value) => String(value).replace(/[^a-zA-Z0-9_-]/g, "_")
-
-const hasSecret = (values) => Object.values(values ?? {}).some((value) => String(value).startsWith(secretPrefix))
-
-function mapServer(entry) {
-  if (!entry || typeof entry !== "object" || entry.enabled === false) return
-  if (entry.type === "local") {
-    if (!Array.isArray(entry.command) || entry.command.length === 0) return
-    if (entry.command.some((part) => String(part).startsWith(secretPrefix)) || hasSecret(entry.environment)) return
-    const [command, ...args] = entry.command
-    return { type: "stdio", command, args, ...(entry.environment ? { env: entry.environment } : {}) }
-  }
-  if (entry.type === "remote") {
-    if (typeof entry.url !== "string" || hasSecret(entry.headers)) return
-    return { type: "http", url: entry.url, ...(entry.headers ? { headers: entry.headers } : {}) }
-  }
-}
-
-const collides = (a, b) => a === b || a.startsWith(`${b}_`) || b.startsWith(`${a}_`)
-
-export function mcpServers(mcp) {
-  if (!mcp || typeof mcp !== "object") return {}
-  const found = Object.entries(mcp)
-    .map(([name, entry]) => [name, mapServer(entry)])
-    .filter(([, server]) => server !== undefined)
-  const clashing = found
-    .filter(([name]) => found.some(([other]) => other !== name && collides(sanitize(name), sanitize(other))))
-    .map(([name]) => name)
-  if (clashing.length > 0)
-    console.warn(`subscription: mcp servers dropped because their tool names would be ambiguous: ${clashing.join(", ")}`)
-  return Object.fromEntries(found.filter(([name]) => !clashing.includes(name)))
-}
+export const mcpServers = (mcp) => mapMcpServers(mcp, "subscription")
 
 function wildcard(input, pattern) {
   const escaped = pattern
@@ -166,13 +134,13 @@ function toolNames(tools) {
 
 export function mcpGuard(servers, tools, rules) {
   const prefixes = Object.keys(servers)
-    .map((name) => ({ prefix: `mcp__${sanitize(name)}__`, server: sanitize(name) }))
+    .map((name) => ({ prefix: `mcp__${mcpSanitize(name)}__`, server: mcpSanitize(name) }))
     .sort((a, b) => b.prefix.length - a.prefix.length)
   return async (input) => {
     const name = input?.tool_name
     if (typeof name !== "string" || !name.startsWith("mcp__")) return {}
     const match = prefixes.find((item) => name.startsWith(item.prefix))
-    const key = match === undefined ? undefined : `${match.server}_${sanitize(name.slice(match.prefix.length))}`
+    const key = match === undefined ? undefined : `${match.server}_${mcpSanitize(name.slice(match.prefix.length))}`
     if (key !== undefined && tools.has(key) && ruleAction(key, rules) !== "deny") return {}
     return {
       hookSpecificOutput: {
