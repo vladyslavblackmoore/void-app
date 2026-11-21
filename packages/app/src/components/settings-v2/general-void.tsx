@@ -280,6 +280,7 @@ export const SettingsGeneralVoid: Component = () => {
               )}
             </For>
           </SegmentedControlV2>
+          <p class="void-appearance-note">{copy("settings.general.row.colorScheme.description")}</p>
           <SettingsListV2>
             <ToggleRow
               action="settings-glows"
@@ -318,7 +319,6 @@ export const SettingsGeneralVoid: Component = () => {
               />
             </SettingsRowV2>
           </SettingsListV2>
-          <p class="void-appearance-note">{copy("settings.general.row.colorScheme.description")}</p>
         </Card>
       </div>
 
