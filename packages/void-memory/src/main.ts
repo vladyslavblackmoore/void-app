@@ -10,5 +10,6 @@ if (!path) {
 }
 
 const { db } = openDatabase(path)
-const server = createServer(createStore(db), { agent: process.env.VOID_MEMORY_AGENT })
+const fanout = process.env.VOID_MEMORY_FANOUT ? Number(process.env.VOID_MEMORY_FANOUT) : undefined
+const server = createServer(createStore(db, { fanout }), { agent: process.env.VOID_MEMORY_AGENT })
 await server.connect(new StdioServerTransport())

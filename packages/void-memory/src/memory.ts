@@ -19,6 +19,7 @@ import type {
 
 const scopePattern = /^(shared|agent:.+)$/
 const defaultExpansionCap = 300
+export const defaultFanout = 100
 const maxLimit = 50
 const maxHops = 2
 const dayMs = 86_400_000
@@ -28,23 +29,31 @@ export const newId = (kind: string): string => `${kind}-${crypto.randomUUID().re
 const ownScope = (agent: string | undefined): string | null => (agent ? `agent:${agent}` : null)
 
 export const expansionSql = (history: boolean, cap: number): string => {
-  const edgeLive = history ? "" : " and e.invalidated_at is null"
+  const live = history ? "" : " and x.invalidated_at is null"
   const visible = history
     ? "(m.scope = 'shared' or m.scope = ?3)"
     : "(m.scope = 'shared' or m.scope = ?3) and m.invalidated_at is null"
   return `with recursive walk(id, d, seed) as (
       select value, 0, value from json_each(?1)
       union
-      select e.dst, w.d + 1, w.seed from walk w join edge e on e.src = w.id join node m on m.id = e.dst
-        where w.d < ?2${edgeLive} and ${visible}
+      select e.dst, w.d + 1, w.seed from walk w
+        join edge e on e.rowid in (select x.rowid from edge x where x.src = w.id${live} order by x.created_at desc, x.rowid desc limit ?4)
+        join node m on m.id = e.dst
+        where w.d < ?2 and ${visible}
       union
-      select e.src, w.d + 1, w.seed from walk w join edge e on e.dst = w.id join node m on m.id = e.src
-        where w.d < ?2${edgeLive} and ${visible}
+      select e.src, w.d + 1, w.seed from walk w
+        join edge e on e.rowid in (select x.rowid from edge x where x.dst = w.id${live} order by x.created_at desc, x.rowid desc limit ?4)
+        join node m on m.id = e.src
+        where w.d < ?2 and ${visible}
     )
     select id, d, seed from walk limit ${cap}`
 }
 
-export const createMemory = (db: Database, expansionCap: number = defaultExpansionCap) => {
+export const createMemory = (
+  db: Database,
+  expansionCap: number = defaultExpansionCap,
+  fanout: number = defaultFanout,
+) => {
   const findNode = db.query<NodeRow, [string]>("select * from node where id = ?1")
   const findByKey = db.query<{ id: string }, [string, string, string]>(
     "select id from node where kind = ?1 and title = ?2 and scope = ?3 and invalidated_at is null order by created_at limit 1",
@@ -251,7 +260,7 @@ export const createMemory = (db: Database, expansionCap: number = defaultExpansi
     if (hops === 0) {
       for (const seed of seeds) note(seed.id, 0, seed.id)
     } else {
-      const params: SQLQueryBindings[] = [JSON.stringify(seeds.map((seed) => seed.id)), hops, ownScope(input.agent)]
+      const params: SQLQueryBindings[] = [JSON.stringify(seeds.map((seed) => seed.id)), hops, ownScope(input.agent), fanout]
       const sql = expansionSql(history, expansionCap)
       const rows = db.query<{ id: string; d: number; seed: string }, SQLQueryBindings[]>(sql).all(...params)
       for (const row of rows) note(row.id, row.d, row.seed)
