@@ -14,6 +14,7 @@ import {
   loadProjectsQuery,
   loadProvidersQuery,
   loadReferencesQuery,
+  loadSpaceAgentsQuery,
 } from "./bootstrap"
 import type { State, VcsCache } from "./types"
 import { ServerScope } from "@/utils/server-scope"
@@ -341,6 +342,27 @@ describe("query keys", () => {
 
     expect(calls).toEqual([{ location: { directory: "/repo" } }])
     expect(result).toEqual([])
+  })
+
+  test("loads the agents of a space without a project directory", async () => {
+    let calls = 0
+    const legacy = {
+      app: {
+        agents: async () => {
+          calls++
+          return { data: [{ name: "worker", mode: "subagent" }] }
+        },
+      },
+    } as unknown as OpencodeClient
+
+    const client = new QueryClient()
+    const options = loadSpaceAgentsQuery(ServerScope.local, legacy, Promise.resolve("v1"))
+    const result = await client.fetchQuery(options)
+
+    expect(calls).toBe(1)
+    expect(result.map((agent) => agent.name)).toEqual(["worker"])
+    expect(options.queryKey[0]).toBe(ServerScope.local)
+    expect(agentsQueryFilter(ServerScope.local).predicate({ queryKey: options.queryKey })).toBe(true)
   })
 
   test("loads commands from the current location-scoped endpoint", async () => {

@@ -2,9 +2,9 @@ import { createEffect, createMemo, For, on, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useQuery } from "@tanstack/solid-query"
 import { useLanguage } from "@/context/language"
-import { useLayout } from "@/context/layout"
 import { useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
+import { loadSpaceAgentsQuery } from "@/context/global-sync/bootstrap"
 import { useProviders } from "@/hooks/use-providers"
 import { buildAgentsDiagram, formatModelRef, LINK_HEIGHT, linkPaths, type AgentNode } from "./agents-diagram-model"
 import { showToast } from "@/utils/toast"
@@ -52,7 +52,6 @@ function AgentNodeCard(props: { node: AgentNode; main?: boolean; selected: boole
 
 export function AgentsDiagram() {
   const language = useLanguage()
-  const layout = useLayout()
   const serverSync = useServerSync()
   const serverSDK = useServerSDK()
   const globalAgents = useQuery(() => ({
@@ -64,12 +63,11 @@ export function AgentsDiagram() {
     },
     staleTime: 0,
   }))
-  const directory = createMemo(() => layout.projects.list()[0]?.worktree)
-  const providers = useProviders(directory)
-  const agents = createMemo(() => {
-    const value = directory()
-    return value ? serverSync().child(value)[0].agent : []
-  })
+  const spaceAgents = useQuery(() =>
+    loadSpaceAgentsQuery(serverSDK().scope, serverSDK().client, serverSDK().protocol),
+  )
+  const providers = useProviders(() => undefined)
+  const agents = createMemo(() => spaceAgents.data ?? [])
 
   const diagram = createMemo(() =>
     buildAgentsDiagram({
