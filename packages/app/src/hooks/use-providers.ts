@@ -9,6 +9,7 @@ export const popularProviders = [
   "opencode",
   "opencode-go",
   "anthropic",
+  "subscription",
   "github-copilot",
   "openai",
   "google",

@@ -2143,3 +2143,130 @@ it.effect("opencode loader keeps paid models when auth exists", () =>
     expect(keyedCount).toBeGreaterThan(0)
   }).pipe(provideMultiInstance),
 )
+
+const gatedPlugin = (connected?: string) => [
+  "export default {",
+  '  id: "demo.gated-provider",',
+  "  server: async () => ({",
+  "    auth: {",
+  '      provider: "gated",',
+  ...(connected ? [`      connected: ${connected},`] : []),
+  '      methods: [{ type: "oauth", label: "Sign in", authorize: async () => ({ url: "https://example.com", instructions: "", method: "auto", callback: async () => ({ type: "failed" }) }) }],',
+  "    },",
+  "  }),",
+  "}",
+  "",
+].join("\n")
+
+const gatedConfig = {
+  provider: {
+    gated: {
+      name: "Gated Provider",
+      npm: "file:///nonexistent/gated.mjs",
+      models: { chat: { name: "Gated Chat", tool_call: true, limit: { context: 128000, output: 4096 } } },
+    },
+  },
+}
+
+const writeGatedPlugin = (directory: string, connected?: string) =>
+  Effect.promise(async () => {
+    const configDir = path.join(directory, ".opencode")
+    await mkdir(path.join(configDir, "plugin"), { recursive: true })
+    await markPluginDependenciesReady(configDir)
+    await Bun.write(path.join(configDir, "plugin", "gated.ts"), gatedPlugin(connected))
+  })
+
+const storeGatedAuth = Effect.gen(function* () {
+  const authPath = path.join(Global.Path.data, "auth.json")
+  const original = yield* Effect.promise(() => Filesystem.readText(authPath).catch(() => undefined))
+  yield* Effect.acquireRelease(
+    Effect.promise(() => Filesystem.write(authPath, JSON.stringify({ gated: { type: "api", key: "gated" } }))),
+    () =>
+      Effect.promise(async () => {
+        if (original !== undefined) await Filesystem.write(authPath, original)
+        else await unlink(authPath).catch(() => undefined)
+      }),
+  )
+})
+
+const listGated = (dir: string) =>
+  Effect.gen(function* () {
+    const provider = yield* Provider.Service
+    return { connected: yield* provider.list(), awaiting: yield* provider.awaitingAuth() }
+  }).pipe(provideInstanceEffect(dir))
+
+it.effect("a custom config provider with a plugin sign-in waits for auth before it connects", () =>
+  Effect.gen(function* () {
+    const dir = yield* tmpdirScoped({ config: gatedConfig })
+    yield* writeGatedPlugin(dir)
+    const result = yield* Effect.gen(function* () {
+      const provider = yield* Provider.Service
+      return { connected: yield* provider.list(), awaiting: yield* provider.awaitingAuth() }
+    }).pipe(provideInstanceEffect(dir))
+    expect(result.connected[ProviderV2.ID.make("gated")]).toBeUndefined()
+    expect(result.awaiting[ProviderV2.ID.make("gated")]?.name).toBe("Gated Provider")
+    expect(result.awaiting[ProviderV2.ID.make("gated")]?.models[ModelV2.ID.make("chat")]).toBeDefined()
+  }).pipe(provideMultiInstance),
+)
+
+it.effect("a custom config provider with a plugin sign-in connects once auth is stored", () =>
+  Effect.gen(function* () {
+    const dir = yield* tmpdirScoped({ config: gatedConfig })
+    yield* writeGatedPlugin(dir)
+    const authPath = path.join(Global.Path.data, "auth.json")
+    const original = yield* Effect.promise(() => Filesystem.readText(authPath).catch(() => undefined))
+    yield* Effect.acquireRelease(
+      Effect.promise(() => Filesystem.write(authPath, JSON.stringify({ gated: { type: "api", key: "gated" } }))),
+      () =>
+        Effect.promise(async () => {
+          if (original !== undefined) await Filesystem.write(authPath, original)
+          else await unlink(authPath).catch(() => undefined)
+        }),
+    )
+    const result = yield* Effect.gen(function* () {
+      const provider = yield* Provider.Service
+      return { connected: yield* provider.list(), awaiting: yield* provider.awaitingAuth() }
+    }).pipe(provideInstanceEffect(dir))
+    expect(result.connected[ProviderV2.ID.make("gated")]?.source).toBe("config")
+    expect(result.awaiting[ProviderV2.ID.make("gated")]).toBeUndefined()
+  }).pipe(provideMultiInstance),
+)
+
+it.effect("a custom config provider without a plugin sign-in stays connected", () =>
+  Effect.gen(function* () {
+    const dir = yield* tmpdirScoped({ config: gatedConfig })
+    const connected = yield* Provider.use.list().pipe(provideInstanceEffect(dir))
+    expect(connected[ProviderV2.ID.make("gated")]).toBeDefined()
+  }).pipe(provideMultiInstance),
+)
+
+it.effect("a plugin sign-in check keeps a provider with stored auth disconnected when it reports signed out", () =>
+  Effect.gen(function* () {
+    const dir = yield* tmpdirScoped({ config: gatedConfig })
+    yield* writeGatedPlugin(dir, "async () => false")
+    yield* storeGatedAuth
+    const result = yield* listGated(dir)
+    expect(result.connected[ProviderV2.ID.make("gated")]).toBeUndefined()
+    expect(result.awaiting[ProviderV2.ID.make("gated")]).toBeDefined()
+  }).pipe(provideMultiInstance),
+)
+
+it.effect("a plugin sign-in check connects a provider without stored auth when it reports signed in", () =>
+  Effect.gen(function* () {
+    const dir = yield* tmpdirScoped({ config: gatedConfig })
+    yield* writeGatedPlugin(dir, "async (auth) => auth === undefined")
+    const result = yield* listGated(dir)
+    expect(result.connected[ProviderV2.ID.make("gated")]?.source).toBe("config")
+    expect(result.awaiting[ProviderV2.ID.make("gated")]).toBeUndefined()
+  }).pipe(provideMultiInstance),
+)
+
+it.effect("a failing plugin sign-in check keeps the provider disconnected", () =>
+  Effect.gen(function* () {
+    const dir = yield* tmpdirScoped({ config: gatedConfig })
+    yield* writeGatedPlugin(dir, "async () => { throw new Error('status failed') }")
+    const result = yield* listGated(dir)
+    expect(result.connected[ProviderV2.ID.make("gated")]).toBeUndefined()
+    expect(result.awaiting[ProviderV2.ID.make("gated")]).toBeDefined()
+  }).pipe(provideMultiInstance),
+)
