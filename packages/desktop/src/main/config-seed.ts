@@ -9,11 +9,13 @@ const defaults: Array<[string[], unknown]> = [
   [[...settings, "allowDangerouslySkipPermissions"], true],
 ]
 
+const efforts = ["low", "medium", "high", "xhigh", "max"]
+
 const agents = (connected: string[]) => ({
   main: connected.includes("openai")
     ? { model: "openai/gpt-6.2-sol", variant: "medium" }
-    : { model: "subscription/opus" },
-  worker: { model: "subscription/sonnet" },
+    : { model: "subscription/opus", variant: "medium" },
+  worker: { model: "subscription/sonnet", variant: "high" },
 })
 
 export async function seedConfig(configDir: string, wrapper: string, authFile = "") {
@@ -31,6 +33,12 @@ export async function seedConfig(configDir: string, wrapper: string, authFile = 
   const connected = Object.keys(JSON.parse((await readFile(authFile, "utf8").catch(() => undefined)) ?? "{}"))
   const next = [
     ...defaults,
+    ...(findNodeAtLocation(tree, ["provider", "subscription", "models"])?.children ?? []).flatMap((model) =>
+      efforts.map((effort): [string[], unknown] => [
+        ["provider", "subscription", "models", model.children?.[0]?.value, "variants", effort],
+        { effort },
+      ]),
+    ),
     ...Object.entries(agents(connected))
       .filter(([name]) => !findNodeAtLocation(tree, ["agent", name, "model"]))
       .flatMap(([name, values]) =>

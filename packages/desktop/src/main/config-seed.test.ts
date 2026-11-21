@@ -135,7 +135,7 @@ describe("seedConfig agents", () => {
 
     expect(await agents()).toEqual({
       main: { model: "openai/gpt-6.2-sol", variant: "medium" },
-      worker: { model: "subscription/sonnet" },
+      worker: { model: "subscription/sonnet", variant: "high" },
     })
   })
 
@@ -145,8 +145,8 @@ describe("seedConfig agents", () => {
     await seedConfig(dir, wrapper, join(dir, "missing.json"))
 
     expect(await agents()).toEqual({
-      main: { model: "subscription/opus" },
-      worker: { model: "subscription/sonnet" },
+      main: { model: "subscription/opus", variant: "medium" },
+      worker: { model: "subscription/sonnet", variant: "high" },
     })
   })
 
@@ -165,5 +165,35 @@ describe("seedConfig agents", () => {
       main: { model: "anthropic/x", steps: 3 },
       worker: { model: "subscription/sonnet", variant: "low" },
     })
+  })
+})
+
+describe("seedConfig effort variants", () => {
+  const efforts = Object.fromEntries(["low", "medium", "high", "xhigh", "max"].map((name) => [name, { effort: name }]))
+  const models = async () => parse(await read()).provider.subscription.models
+
+  test("gives every subscription model the effort variants", async () => {
+    await writeFile(join(dir, "opencode.jsonc"), config)
+
+    await seedConfig(dir, wrapper)
+
+    expect(await models()).toEqual({
+      opus: { name: "Opus", variants: efforts },
+      sonnet: { name: "Sonnet", variants: efforts },
+    })
+  })
+
+  test("keeps variants a model already has", async () => {
+    await writeFile(
+      join(dir, "opencode.jsonc"),
+      config.replace(
+        '"sonnet": { "name": "Sonnet" }',
+        '"sonnet": { "name": "Sonnet", "variants": { "high": { "effort": "max" }, "fast": {} } }',
+      ),
+    )
+
+    await seedConfig(dir, wrapper)
+
+    expect((await models()).sonnet.variants).toEqual({ ...efforts, high: { effort: "max" }, fast: {} })
   })
 })
