@@ -1208,4 +1208,11 @@ export const dict = {
   "agents.editor.running": "Running sessions will be stopped. Apply now?",
   "agents.editor.apply": "Apply now",
   "agents.editor.fromFile": "Set in the agent file; edit the file to change it",
+  "void.nav.label": "Sections",
+  "void.nav.overview": "Overview",
+  "void.nav.chat": "Chat",
+  "void.nav.agents": "Agents",
+  "void.nav.models": "Models",
+  "void.nav.hub": "Hub",
+  "void.nav.settings": "Settings",
 }
