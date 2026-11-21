@@ -2,6 +2,7 @@ import { readdir, readFile } from "node:fs/promises"
 import { join } from "node:path"
 import { seedAgents } from "./agents"
 import { seedConfig } from "./config-seed"
+import { cleanSubscriptionInSpaces } from "./subscription-cleanup"
 import { createSpace, ensureHomeSpace, isSpaceId, listSpaces, spaceDir, type Space } from "./spaces"
 
 export type SpaceTemplate = Pick<Space, "class" | "sessionMode" | "color">
@@ -40,6 +41,7 @@ async function createIfAbsent(root: string, existing: Set<string>, space: Space)
 
 export async function ensureDefaultSpaces(root: string, templates: SpaceTemplates, legacyRoot: string) {
   await ensureHomeSpace(root)
+  await cleanSubscriptionInSpaces(root)
   const spaces = await listSpaces(root)
   const ids = new Set(spaces.map((space) => space.id))
   await createIfAbsent(root, ids, { id: VOID_SPACE_ID, name: "VOID", ...templates.personal })
