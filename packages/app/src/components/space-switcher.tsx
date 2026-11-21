@@ -1,10 +1,10 @@
-import { createResource, createSignal, For, Show } from "solid-js"
+import { createEffect, createResource, createSignal, For, onCleanup, Show } from "solid-js"
 import { DropdownMenu } from "@opencode-ai/ui/dropdown-menu"
 
 import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
 import { ServerConnection, useServer } from "@/context/server"
-import { menuSpaces, switchToSpace } from "@/spaces/model"
+import { applyCoreStatus, menuSpaces, switchToSpace, visibleCoreState } from "@/spaces/model"
 
 const itemClass =
   "h-7 gap-2 rounded-sm px-3 text-[13px] font-[440] leading-5 tracking-[-0.04px] text-v2-text-text-base [font-family:var(--v2-font-family-sans)] data-[highlighted]:!bg-v2-overlay-simple-overlay-hover"
@@ -37,6 +37,50 @@ export function SpaceSwitcher() {
   )
   const items = () => menuSpaces(spaces.latest ?? known.latest ?? [], viewed())
   const label = () => items().find((item) => item.viewed)
+  const [coreStatus, setCoreStatus] = createSignal<{ space: string; state: "restarting" | "up" | "failed" }>()
+  const coreState = () => visibleCoreState(coreStatus(), viewed())
+  let clear: ReturnType<typeof setTimeout> | undefined
+
+  createEffect(() => {
+    viewed()
+    clearTimeout(clear)
+    setCoreStatus(undefined)
+  })
+
+  createEffect(() => {
+    const subscribe = platform.spaces?.onCoreStatus
+    if (!subscribe) return
+    const off = subscribe((status) => {
+      const shown = applyCoreStatus({
+        status,
+        viewed: viewed(),
+        name: label()?.name ?? status.space,
+        register: server.register,
+        activate: server.setActive,
+      })
+      if (!shown) return
+      clearTimeout(clear)
+      setCoreStatus({ space: status.space, state: shown })
+      if (shown === "up") clear = setTimeout(() => setCoreStatus(undefined), 4000)
+    })
+    onCleanup(() => {
+      off()
+      clearTimeout(clear)
+    })
+  })
+
+  const retry = () => {
+    const id = viewed()
+    const space = platform.spaces
+    if (!space || !id) return
+    setCoreStatus({ space: id, state: "restarting" })
+    switchToSpace({
+      spaces: space,
+      summary: { id, name: label()?.name ?? id },
+      register: server.register,
+      activate: server.setActive,
+    }).catch(() => setCoreStatus({ space: id, state: "failed" }))
+  }
 
   const choose = (id: string) => {
     const space = platform.spaces
@@ -66,6 +110,18 @@ export function SpaceSwitcher() {
             <Dot color={current().color} />
             <span class="max-w-[140px] truncate">{current().name}</span>
           </DropdownMenu.Trigger>
+          <Show when={coreState()}>
+            {(state) => (
+              <span data-component="space-core-status" data-state={state()} class="text-[11px] text-v2-text-text-weak" role="status">
+                {language.t(`space.core.${state()}`)}
+                <Show when={state() === "failed"}>
+                  <button type="button" class="ml-1 underline" onClick={retry}>
+                    {language.t("space.core.retry")}
+                  </button>
+                </Show>
+              </span>
+            )}
+          </Show>
           <DropdownMenu.Portal>
             <DropdownMenu.Content class="min-w-[200px] overflow-hidden rounded-md border-0 bg-v2-background-bg-layer-01 p-0.5 shadow-[var(--v2-elevation-floating)] focus:outline-none">
               <DropdownMenu.Group>

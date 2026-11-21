@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer, webUtils } from "electron"
 import type { ElectronAPI, WslServersEvent } from "./types"
+import type { CoreStatus } from "@opencode-ai/app/spaces/types"
 import type { MajorUpdateState, UpdaterState } from "@opencode-ai/app/updater"
 
 const updaterCallbacks = new Set<(state: UpdaterState) => void>()
@@ -40,6 +41,11 @@ const api: ElectronAPI = {
     start: (id) => ipcRenderer.invoke("spaces-start", id),
     getViewed: () => ipcRenderer.invoke("spaces-get-viewed"),
     setViewed: (id) => ipcRenderer.invoke("spaces-set-viewed", id),
+    onCoreStatus: (cb) => {
+      const handler = (_: unknown, status: CoreStatus) => cb(status)
+      ipcRenderer.on("spaces-core-status", handler)
+      return () => ipcRenderer.removeListener("spaces-core-status", handler)
+    },
   },
   wslServers: {
     getState: () => ipcRenderer.invoke("wsl-servers-get-state"),

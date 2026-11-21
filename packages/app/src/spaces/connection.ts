@@ -19,3 +19,7 @@ export function spaceConnection(
     http: { url: endpoint.url, username: endpoint.username, password: endpoint.password },
   }
 }
+
+export function endpointSignature(conn: { http: { url: string; username?: string; password?: string } }) {
+  return [conn.http.url, conn.http.username ?? "", conn.http.password ?? ""].join("\u0000")
+}
