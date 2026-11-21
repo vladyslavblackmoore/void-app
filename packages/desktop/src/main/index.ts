@@ -366,7 +366,11 @@ const main = Effect.gen(function* () {
       ]).catch((error) => logger.warn("failed to seed agents", error)),
     )
     yield* Effect.promise(() =>
-      seedConfig(configDir, subscriptionWrapper).catch((error) => logger.warn("failed to seed config", error)),
+      seedConfig(
+        configDir,
+        subscriptionWrapper,
+        join(process.env.XDG_DATA_HOME ?? voidAppEnv(VOID_HOME, {}).XDG_DATA_HOME, "opencode", "auth.json"),
+      ).catch((error) => logger.warn("failed to seed config", error)),
     )
 
     ensureLoopbackNoProxy()

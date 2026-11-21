@@ -9,7 +9,14 @@ const defaults: Array<[string[], unknown]> = [
   [[...settings, "allowDangerouslySkipPermissions"], true],
 ]
 
-export async function seedConfig(configDir: string, wrapper: string) {
+const agents = (connected: string[]) => ({
+  main: connected.includes("openai")
+    ? { model: "openai/gpt-6.2-sol", variant: "medium" }
+    : { model: "subscription/opus" },
+  worker: { model: "subscription/sonnet" },
+})
+
+export async function seedConfig(configDir: string, wrapper: string, authFile = "") {
   const target = join(configDir, "provider", "subscription.mjs")
   if ((await readFile(target, "utf8").catch(() => undefined)) !== wrapper) {
     await mkdir(dirname(target), { recursive: true })
@@ -21,7 +28,15 @@ export async function seedConfig(configDir: string, wrapper: string) {
   if (text === undefined) return
   const tree = parseTree(text)
   if (!tree || !findNodeAtLocation(tree, ["provider", "subscription"])) return
-  const next = defaults
+  const connected = Object.keys(JSON.parse((await readFile(authFile, "utf8").catch(() => undefined)) ?? "{}"))
+  const next = [
+    ...defaults,
+    ...Object.entries(agents(connected))
+      .filter(([name]) => !findNodeAtLocation(tree, ["agent", name, "model"]))
+      .flatMap(([name, values]) =>
+        Object.entries(values).map(([key, value]): [string[], unknown] => [["agent", name, key], value]),
+      ),
+  ]
     .filter(([path]) => !findNodeAtLocation(tree, path))
     .reduce(
       (result, [path, value]) =>
