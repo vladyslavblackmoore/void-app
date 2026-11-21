@@ -436,36 +436,3 @@ export function DraftTabItem(props: {
     </div>
   )
 }
-
-export function SettingsTabItem(props: { href: string; title: string; active?: boolean; onNavigate: () => void }) {
-  return (
-    <div
-      data-titlebar-tab
-      data-titlebar-fixed-tab
-      data-slot="titlebar-tab-item"
-      data-active={props.active}
-      data-state={props.active ? "pressed" : undefined}
-      class="group relative flex h-7 shrink-0 flex-row items-center overflow-hidden rounded-[6px] px-2.5 whitespace-nowrap"
-    >
-      <a
-        data-slot="tab-link"
-        data-titlebar-tab-link
-        href={props.href}
-        draggable={false}
-        aria-current={props.active ? "page" : undefined}
-        onMouseDown={(event) => {
-          if (event.button !== 0) return
-          props.onNavigate()
-        }}
-        onClick={(event) => {
-          event.preventDefault()
-          if (event.detail > 0) return
-          props.onNavigate()
-        }}
-        class="flex h-full min-w-0 flex-row items-center text-[13px] font-medium text-v2-text-text-faint group-data-[active='true']:text-v2-text-text-base [-webkit-user-drag:none]"
-      >
-        {props.title}
-      </a>
-    </div>
-  )
-}
