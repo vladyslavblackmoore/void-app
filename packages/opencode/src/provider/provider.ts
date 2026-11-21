@@ -1245,6 +1245,7 @@ export type Error = ModelNotFoundError | InitError | NoProvidersError | NoModels
 
 export interface Interface {
   readonly list: () => Effect.Effect<Record<ProviderV2.ID, Info>>
+  readonly awaitingAuth: () => Effect.Effect<Record<ProviderV2.ID, Info>>
   readonly getProvider: (providerID: ProviderV2.ID) => Effect.Effect<Info>
   readonly getModel: (providerID: ProviderV2.ID, modelID: ModelV2.ID) => Effect.Effect<Model, ModelNotFoundError>
   readonly getLanguage: (model: Model) => Effect.Effect<LanguageModelV3, ModelNotFoundError>
@@ -1259,6 +1260,7 @@ export interface Interface {
 interface State {
   models: Map<string, LanguageModelV3>
   providers: Record<ProviderV2.ID, Info>
+  awaitingAuth: Record<ProviderV2.ID, Info>
   catalog: Record<ProviderV2.ID, Info>
   sdk: Map<string, BundledSDK>
   modelLoaders: Record<string, CustomModelLoader>
@@ -1699,8 +1701,22 @@ const layer = Layer.effect(
         }
 
         // load config - re-apply with updated data
+        const signIn = new Map(plugins.flatMap((item) => (item.auth?.provider ? [[item.auth.provider, item.auth]] : [])))
+        const awaitingAuth = {} as Record<ProviderV2.ID, Info>
         for (const [id, provider] of configProviders) {
           const providerID = ProviderV2.ID.make(id)
+          const hook = signIn.get(id)
+          if (hook && !modelsDev[id]) {
+            const check = hook.connected
+            const ready = check
+              ? yield* Effect.promise(() => check(auths[id]).then((value) => value === true, () => false))
+              : Boolean(auths[id] || providers[providerID])
+            if (!ready) {
+              delete providers[providerID]
+              if (database[providerID] && isProviderAllowed(providerID)) awaitingAuth[providerID] = database[providerID]
+              continue
+            }
+          }
           const partial: Partial<Info> = { source: "config" }
           if (provider.env) partial.env = provider.env
           if (provider.name) partial.name = provider.name
@@ -1775,6 +1791,7 @@ const layer = Layer.effect(
         return {
           models: languages,
           providers,
+          awaitingAuth,
           catalog,
           sdk,
           modelLoaders,
@@ -1784,6 +1801,7 @@ const layer = Layer.effect(
     )
 
     const list = Effect.fn("Provider.list")(() => InstanceState.use(state, (s) => s.providers))
+    const awaitingAuth = Effect.fn("Provider.awaitingAuth")(() => InstanceState.use(state, (s) => s.awaitingAuth))
 
     async function resolveSDK(model: Model, s: State, envs: Record<string, string | undefined>) {
       try {
@@ -2065,7 +2083,7 @@ const layer = Layer.effect(
       }
     })
 
-    return Service.of({ list, getProvider, getModel, getLanguage, closest, getSmallModel, defaultModel })
+    return Service.of({ list, awaitingAuth, getProvider, getModel, getLanguage, closest, getSmallModel, defaultModel })
   }),
 )
 

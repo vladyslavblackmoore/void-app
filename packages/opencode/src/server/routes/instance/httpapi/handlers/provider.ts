@@ -49,15 +49,17 @@ export const providerHandlers = HttpApiBuilder.group(InstanceHttpApi, "provider"
         if ((enabled ? enabled.has(key) : true) && !disabled.has(key)) filtered[key] = value
       }
       const connected = yield* provider.list()
+      const awaiting = yield* provider.awaitingAuth()
       const credentials = yield* authStore.all().pipe(Effect.orDie)
       const providers = Object.assign(
         mapValues(filtered, (item) => Provider.fromModelsDevProvider(item)),
+        awaiting,
         connected,
       )
       return {
         all: Object.values(providers).map(Provider.toPublicInfo),
         default: Provider.defaultModelIDs(providers),
-        connected: Object.keys(providers).filter((id) => id in connected || credentials[id]),
+        connected: Object.keys(providers).filter((id) => id in connected || (credentials[id] && !(id in awaiting))),
       }
     })
 

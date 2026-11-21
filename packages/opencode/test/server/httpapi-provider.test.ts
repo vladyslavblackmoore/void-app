@@ -138,6 +138,25 @@ function writeProviderAuthPlugin(dir: string) {
   })
 }
 
+function writeSignedOutPlugin(dir: string) {
+  return Effect.gen(function* () {
+    const fs = yield* FSUtil.Service
+    yield* Effect.promise(() => markPluginDependenciesReady(path.join(dir, ".opencode")))
+    yield* fs.writeWithDirs(
+      path.join(dir, ".opencode", "plugin", "signed-out.ts"),
+      [
+        "export default {",
+        '  id: "test.signed-out",',
+        "  server: async () => ({",
+        `    auth: { provider: "${providerID}", connected: async () => false, methods: [] },`,
+        "  }),",
+        "}",
+        "",
+      ].join("\n"),
+    )
+  })
+}
+
 function writeProviderAuthValidationPlugin(dir: string) {
   return Effect.gen(function* () {
     const fs = yield* FSUtil.Service
@@ -261,6 +280,66 @@ function setEnvScoped(key: string, value: string) {
 }
 
 describe("provider HttpApi", () => {
+  it.instance(
+    "does not mark a provider connected by its stored auth while its plugin reports signed out",
+    Effect.gen(function* () {
+      const directory = (yield* TestInstance).directory
+      const stored = yield* Effect.acquireRelease(
+        request(`/auth/${providerID}`, {
+          method: "PUT",
+          headers: { "x-opencode-directory": directory, "content-type": "application/json" },
+          body: JSON.stringify({ type: "api", key: "marker" }),
+        }),
+        () => request(`/auth/${providerID}`, { method: "DELETE" }).pipe(Effect.ignore),
+      )
+      expect(stored.status).toBe(200)
+      const response = yield* request("/provider", { headers: { "x-opencode-directory": directory } })
+      const body = yield* response.json
+      expect(providerByID(body, "all", providerID)).toMatchObject({ id: providerID })
+      expect(isRecord(body) && Array.isArray(body.connected) && body.connected.includes(providerID)).toBe(false)
+    }),
+    {
+      config: {
+        ...projectOptions.config,
+        provider: {
+          [providerID]: {
+            name: "Signed Out",
+            npm: "file:///nonexistent/signed-out.mjs",
+            models: { chat: { name: "Chat", tool_call: true, limit: { context: 1000, output: 100 } } },
+          },
+        },
+      },
+      init: writeSignedOutPlugin,
+    },
+    30000,
+  )
+
+  it.instance(
+    "lists a custom provider that waits for its plugin sign-in without marking it connected",
+    Effect.gen(function* () {
+      const directory = (yield* TestInstance).directory
+      const response = yield* request("/provider", { headers: { "x-opencode-directory": directory } })
+      expect(response.status).toBe(200)
+      const body = yield* response.json
+      expect(providerByID(body, "all", providerID)).toMatchObject({ id: providerID, name: "Signed In" })
+      expect(isRecord(body) && Array.isArray(body.connected) && body.connected.includes(providerID)).toBe(false)
+    }),
+    {
+      config: {
+        ...projectOptions.config,
+        provider: {
+          [providerID]: {
+            name: "Signed In",
+            npm: "file:///nonexistent/signed-in.mjs",
+            models: { chat: { name: "Chat", tool_call: true, limit: { context: 1000, output: 100 } } },
+          },
+        },
+      },
+      init: writeProviderAuthPlugin,
+    },
+    30000,
+  )
+
   it.instance.skip(
     "returns public v2 provider not found errors",
     Effect.gen(function* () {
