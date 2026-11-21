@@ -1012,6 +1012,21 @@
         "solid-js": "^1.9.0",
       },
     },
+    "packages/void-memory": {
+      "name": "@opencode-ai/void-memory",
+      "version": "1.19.6",
+      "dependencies": {
+        "@modelcontextprotocol/sdk": "1.29.0",
+        "zod": "catalog:",
+      },
+      "devDependencies": {
+        "@tsconfig/node22": "catalog:",
+        "@types/bun": "catalog:",
+        "@types/node": "catalog:",
+        "@typescript/native-preview": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
     "packages/web": {
       "name": "@opencode-ai/web",
       "version": "1.19.6",
@@ -2004,6 +2019,8 @@
     "@opencode-ai/tui": ["@opencode-ai/tui@workspace:packages/tui"],
 
     "@opencode-ai/ui": ["@opencode-ai/ui@workspace:packages/ui"],
+
+    "@opencode-ai/void-memory": ["@opencode-ai/void-memory@workspace:packages/void-memory"],
 
     "@opencode-ai/web": ["@opencode-ai/web@workspace:packages/web"],
 
