@@ -227,6 +227,7 @@ export const dict = {
   "dialog.model.manage.provider.toggle": "Alihkan semua model {{provider}}",
 
   "dialog.model.unpaid.freeModels.title": "Model gratis disediakan oleh OpenCode",
+  "dialog.model.unpaid.freeModels.voidTitle": "Free models",
   "dialog.model.unpaid.addMore.title": "Tambahkan lebih banyak model dari penyedia populer",
   "dialog.model.unpaid.viewMoreProviders": "Lihat 70+ penyedia lainnya",
 

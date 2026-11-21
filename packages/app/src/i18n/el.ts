@@ -209,6 +209,7 @@ export const dict = {
   "dialog.model.manage.description": "Προσαρμογή των μοντέλων που εμφανίζονται στον επιλογέα μοντέλων.",
   "dialog.model.manage.provider.toggle": "Εναλλαγή όλων των {{provider}} μοντέλων",
   "dialog.model.unpaid.freeModels.title": "Δωρεάν μοντέλα παρέχονται από OpenCode",
+  "dialog.model.unpaid.freeModels.voidTitle": "Free models",
   "dialog.model.unpaid.addMore.title": "Προσθήκη περισσότερων μοντέλων από δημοφιλείς παρόχους",
   "dialog.model.unpaid.viewMoreProviders": "Δείτε 70+ ακόμη παρόχους",
   "dialog.provider.viewAll": "Εμφάνιση περισσότερων παρόχων",

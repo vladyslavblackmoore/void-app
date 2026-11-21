@@ -211,6 +211,7 @@ export const dict = {
   "dialog.model.manage.description": "Загвар сонгогч дээр ямар загвар гарч ирэхийг тохируулна уу.",
   "dialog.model.manage.provider.toggle": "Бүх {{provider}} загварыг сэлгэх",
   "dialog.model.unpaid.freeModels.title": "OpenCode өгсөн үнэгүй загварууд",
+  "dialog.model.unpaid.freeModels.voidTitle": "Free models",
   "dialog.model.unpaid.addMore.title": "Алдартай үйлчилгээ үзүүлэгчээс илүү олон загварыг нэмнэ үү",
   "dialog.model.unpaid.viewMoreProviders": "Өөр 70 гаруй үйлчилгээ үзүүлэгчийг харна уу",
   "dialog.provider.viewAll": "Илүү олон үйлчилгээ үзүүлэгчийг харуулах",

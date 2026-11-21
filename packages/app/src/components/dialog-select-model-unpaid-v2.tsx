@@ -11,6 +11,7 @@ import { useProviders } from "@/hooks/use-providers"
 import { decode64 } from "@/utils/base64"
 import { useLanguage } from "@/context/language"
 import { ModelTooltip } from "./model-tooltip"
+import { freeModelsTitleKey } from "./model-picker-copy"
 
 type ModelState = ReturnType<typeof useLocal>["model"]
 const featuredProviders = ["opencode", "opencode-go", "openai", "anthropic", "google", "github-copilot"]
@@ -83,7 +84,7 @@ export const DialogSelectModelUnpaidV2: Component<{ model?: ModelState }> = (pro
               class="flex h-8 w-full flex-none select-none flex-row items-center px-3 pb-2"
             >
               <div class="flex h-5 items-center text-[13px] font-[440] leading-5 tracking-[-0.04px] text-v2-text-text-muted [font-family:var(--v2-font-family-sans)] [font-variant-numeric:tabular-nums] [font-variation-settings:'slnt'_0]">
-                {language.t("dialog.model.unpaid.freeModels.title")}
+                {language.t(freeModelsTitleKey(theme.themeId()))}
               </div>
             </div>
             <For each={freeModels()}>

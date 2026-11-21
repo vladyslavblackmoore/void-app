@@ -227,6 +227,7 @@ export const dict = {
   "dialog.model.manage.provider.toggle": "Перемкнути всі моделі {{provider}}",
 
   "dialog.model.unpaid.freeModels.title": "Безкоштовні моделі від OpenCode",
+  "dialog.model.unpaid.freeModels.voidTitle": "Free models",
   "dialog.model.unpaid.addMore.title": "Додати більше моделей від популярних провайдерів",
   "dialog.model.unpaid.viewMoreProviders": "Переглянути ще понад 70 провайдерів",
 

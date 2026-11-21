@@ -210,6 +210,7 @@ export const dict = {
   "dialog.model.manage.description": "Model selektorida qaysi modellar ko'rinishini sozlang.",
   "dialog.model.manage.provider.toggle": "Barcha {{provider}} modellarini almashtiring",
   "dialog.model.unpaid.freeModels.title": "OpenCode tomonidan taqdim etilgan bepul modellar",
+  "dialog.model.unpaid.freeModels.voidTitle": "Free models",
   "dialog.model.unpaid.addMore.title": "Mashhur provayderlarning ko'proq modellarini qo'shing",
   "dialog.model.unpaid.viewMoreProviders": "Yana 70 dan ortiq provayderlarni koʻring",
   "dialog.provider.viewAll": "Ko'proq provayderlarni ko'rsatish",

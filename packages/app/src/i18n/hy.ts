@@ -210,6 +210,7 @@ export const dict = {
   "dialog.model.manage.description": "Անհատականացրեք, թե որ մոդելները կհայտնվեն մոդելի ընտրիչում:",
   "dialog.model.manage.provider.toggle": "Փոխարկել բոլոր {{provider}} մոդելները",
   "dialog.model.unpaid.freeModels.title": "Անվճար մոդելները տրամադրվում են OpenCode",
+  "dialog.model.unpaid.freeModels.voidTitle": "Free models",
   "dialog.model.unpaid.addMore.title": "Ավելացնել ավելի շատ մոդելներ հանրաճանաչ մատակարարներից",
   "dialog.model.unpaid.viewMoreProviders": "Տես 70+ այլ մատակարարներ",
   "dialog.provider.viewAll": "Ցույց տալ ավելի շատ մատակարարներ",

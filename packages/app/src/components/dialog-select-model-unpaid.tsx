@@ -11,6 +11,8 @@ import { popularProviders, useProviders } from "@/hooks/use-providers"
 import { ModelTooltip } from "./model-tooltip"
 import { useLanguage } from "@/context/language"
 import { decode64 } from "@/utils/base64"
+import { useTheme } from "@opencode-ai/ui/theme"
+import { freeModelsTitleKey } from "./model-picker-copy"
 
 type ModelState = ReturnType<typeof useLocal>["model"]
 
@@ -21,6 +23,7 @@ export const DialogSelectModelUnpaid: Component<{ model?: ModelState }> = (props
   const directory = () => decode64(local.slug())
   const providers = useProviders(directory)
   const language = useLanguage()
+  const theme = useTheme()
 
   const openProviders = (provider?: string) => {
     void import("./dialog-connect-provider").then((x) => {
@@ -44,8 +47,8 @@ export const DialogSelectModelUnpaid: Component<{ model?: ModelState }> = (props
       title={language.t("dialog.model.select.title")}
       class="overflow-y-auto [&_[data-slot=dialog-body]]:overflow-visible [&_[data-slot=dialog-body]]:flex-none"
     >
-      <div class="flex flex-col gap-3 px-2.5" onKeyDown={handleKeyDown}>
-        <div class="text-14-medium text-text-base px-2.5">{language.t("dialog.model.unpaid.freeModels.title")}</div>
+      <div data-void-model-picker class="flex flex-col gap-3 px-2.5" onKeyDown={handleKeyDown}>
+        <div class="text-14-medium text-text-base px-2.5">{language.t(freeModelsTitleKey(theme.themeId()))}</div>
         <List
           class="px-3 [&_[data-slot=list-scroll]]:overflow-visible"
           ref={(ref) => (listRef = ref)}
@@ -87,7 +90,10 @@ export const DialogSelectModelUnpaid: Component<{ model?: ModelState }> = (props
         </List>
       </div>
       <div class="px-1.5 pb-1.5">
-        <div class="w-full rounded-sm border border-border-weak-base bg-surface-raised-base">
+        <div
+          data-slot="add-more-models"
+          class="w-full rounded-sm border border-border-weak-base bg-surface-raised-base"
+        >
           <div class="w-full flex flex-col items-start gap-4 px-1.5 pt-4 pb-4">
             <div class="px-2 text-14-medium text-text-base">{language.t("dialog.model.unpaid.addMore.title")}</div>
             <div class="w-full">
@@ -107,7 +113,7 @@ export const DialogSelectModelUnpaid: Component<{ model?: ModelState }> = (props
                 }}
               >
                 {(i) => (
-                  <div class="w-full flex items-center gap-x-3">
+                  <div data-provider-id={i.id} class="w-full flex items-center gap-x-3">
                     <ProviderIcon data-slot="list-item-extra-icon" id={i.id} />
                     <span>{i.name}</span>
                     <Show when={i.id === "opencode"}>

@@ -116,6 +116,7 @@ export const dict = {
   "dialog.model.manage.description": "Mukauta, mitkä mallit näkyvät mallivalitsimessa.",
   "dialog.model.manage.provider.toggle": "Ota kaikki palveluntarjoajan {{provider}} mallit käyttöön tai pois käytöstä",
   "dialog.model.unpaid.freeModels.title": "OpenCoden tarjoamat ilmaiset mallit",
+  "dialog.model.unpaid.freeModels.voidTitle": "Free models",
   "dialog.model.unpaid.addMore.title": "Lisää malleja suosituilta palveluntarjoajilta",
   "dialog.model.unpaid.viewMoreProviders": "Katso yli 70 muuta palveluntarjoajaa",
   "dialog.provider.viewAll": "Näytä lisää palveluntarjoajia",

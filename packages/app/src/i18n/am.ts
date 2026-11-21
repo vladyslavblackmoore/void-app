@@ -208,6 +208,7 @@ export const dict = {
   "dialog.model.manage.description": "በሞዴል መራጭ ውስጥ የትኞቹ ሞዴሎች እንደሚታዩ አብጅ።",
   "dialog.model.manage.provider.toggle": "ሁሉንም {{provider}} ሞዴሎች ቀያይር",
   "dialog.model.unpaid.freeModels.title": "ነጻ ሞዴሎች በOpenCode",
+  "dialog.model.unpaid.freeModels.voidTitle": "Free models",
   "dialog.model.unpaid.addMore.title": "ተጨማሪ ሞዴሎችን ከታዋቂ አቅራቢዎች ያክሉ",
   "dialog.model.unpaid.viewMoreProviders": "ከ70+ በላይ አቅራቢዎችን ይመልከቱ",
   "dialog.provider.viewAll": "ተጨማሪ አቅራቢዎችን አሳይ",

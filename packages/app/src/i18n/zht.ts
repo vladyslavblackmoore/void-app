@@ -229,6 +229,7 @@ export const dict = {
   "dialog.model.manage.provider.toggle": "切換所有 {{provider}} 模型",
 
   "dialog.model.unpaid.freeModels.title": "OpenCode 提供的免費模型",
+  "dialog.model.unpaid.freeModels.voidTitle": "Free models",
   "dialog.model.unpaid.addMore.title": "從熱門提供者新增更多模型",
   "dialog.model.unpaid.viewMoreProviders": "查看另外 70 多個提供者",
 

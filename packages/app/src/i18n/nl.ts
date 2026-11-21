@@ -209,6 +209,7 @@ export const dict = {
   "dialog.model.manage.description": "Pas aan welke modellen in de modelkiezer verschijnen.",
   "dialog.model.manage.provider.toggle": "Alle {{provider}}-modellen in- of uitschakelen",
   "dialog.model.unpaid.freeModels.title": "Gratis modellen geleverd door OpenCode",
+  "dialog.model.unpaid.freeModels.voidTitle": "Free models",
   "dialog.model.unpaid.addMore.title": "Voeg meer modellen toe van populaire aanbieders",
   "dialog.model.unpaid.viewMoreProviders": "Bekijk nog 70+ aanbieders",
   "dialog.provider.viewAll": "Toon meer aanbieders",

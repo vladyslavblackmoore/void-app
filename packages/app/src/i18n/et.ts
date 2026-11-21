@@ -208,6 +208,7 @@ export const dict = {
   "dialog.model.manage.description": "Kohandage, millised mudelid mudelivalijas kuvatakse.",
   "dialog.model.manage.provider.toggle": "Lülitab kõik {{provider}} mudelid sisse",
   "dialog.model.unpaid.freeModels.title": "Tasuta mudeleid pakub OpenCode",
+  "dialog.model.unpaid.freeModels.voidTitle": "Free models",
   "dialog.model.unpaid.addMore.title": "Lisage populaarsete pakkujate mudeleid",
   "dialog.model.unpaid.viewMoreProviders": "Vaadake veel 70+ pakkujat",
   "dialog.provider.viewAll": "Kuva rohkem teenusepakkujaid",

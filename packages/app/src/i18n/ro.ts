@@ -208,6 +208,7 @@ export const dict = {
   "dialog.model.manage.description": "Personalizează ce modele apar în selectorul de modele.",
   "dialog.model.manage.provider.toggle": "Activează toate modelele {{provider}}",
   "dialog.model.unpaid.freeModels.title": "Modele gratuite oferite de OpenCode",
+  "dialog.model.unpaid.freeModels.voidTitle": "Free models",
   "dialog.model.unpaid.addMore.title": "Adaugă mai multe modele de la furnizori populari",
   "dialog.model.unpaid.viewMoreProviders": "Vezi peste 70 de furnizori",
   "dialog.provider.viewAll": "Afișează mai mulți furnizori",
