@@ -9,6 +9,7 @@ import {
   initialDraft,
   selectModel,
   variantsFor,
+  withConfigProviders,
 } from "./agent-editor"
 
 const providers: Parameters<typeof groupModels>[0] = [
@@ -194,5 +195,41 @@ describe("effortControl", () => {
     expect(effortControl("oc-2")).toBe("chips")
     expect(effortControl("")).toBe("chips")
     expect(effortControl(undefined)).toBe("chips")
+  })
+})
+
+describe("withConfigProviders", () => {
+  const catalog: Parameters<typeof groupModels>[0] = [
+    { id: "openai", name: "OpenAI", models: { gpt: { id: "gpt", name: "GPT" } } },
+  ]
+  const configured = {
+    subscription: {
+      name: "Subscription",
+      models: {
+        sonnet: { name: "Sonnet", variants: { medium: { effort: "medium" }, high: { effort: "high" } } },
+        haiku: {},
+      },
+    },
+  }
+
+  test("adds configured providers missing from the catalog", () => {
+    const merged = withConfigProviders(catalog, configured)
+    expect(merged.map((provider) => provider.id)).toEqual(["openai", "subscription"])
+    expect(variantsFor(merged, { providerID: "subscription", modelID: "sonnet" })).toEqual(["medium", "high"])
+    expect(variantsFor(merged, { providerID: "subscription", modelID: "haiku" })).toEqual([])
+    expect(merged[1]?.models.haiku?.name).toBe("haiku")
+  })
+
+  test("keeps the catalog entry of a provider that is already listed", () => {
+    const merged = withConfigProviders(
+      [{ id: "subscription", name: "Live", models: { sonnet: { id: "sonnet", name: "Sonnet" } } }],
+      configured,
+    )
+    expect(merged).toHaveLength(1)
+    expect(merged[0]?.name).toBe("Live")
+  })
+
+  test("ignores missing config", () => {
+    expect(withConfigProviders(catalog, undefined)).toEqual(catalog)
   })
 })

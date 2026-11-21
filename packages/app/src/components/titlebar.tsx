@@ -30,6 +30,7 @@ import { useMajorUpdate } from "@/context/major-update"
 import { useSettings } from "@/context/settings"
 import { WindowsAppMenu } from "./windows-app-menu"
 import { applyPath, backPath, forwardPath } from "./titlebar-history"
+import { SESSION_DRAFT_KEYBIND } from "./titlebar-tab-commands"
 import { TitlebarTabStrip } from "@/components/titlebar-tab-strip"
 import { SpaceSwitcher } from "@/components/space-switcher"
 import { makeEventListener } from "@solid-primitives/event-listener"
@@ -372,6 +373,7 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
                   id: "session.draft",
                   category: "tab",
                   title: language.t("command.session.new"),
+                  keybind: SESSION_DRAFT_KEYBIND,
                   hidden: true,
                   onSelect: openNewTab,
                 },
@@ -468,6 +470,9 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
                     }}
                     onReorder={(keys) => tabsStoreActions.reorder(keys)}
                   />
+                </Show>
+                <Show when={!isVoid()}>
+                  <div class="flex-1" />
                 </Show>
                 <TitlebarV2Right
                   state={v2RightState()}

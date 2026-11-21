@@ -12,6 +12,11 @@ type ProviderInput = {
   models: Record<string, ModelInput>
 }
 
+export type ConfigProviders = Record<
+  string,
+  { name?: string; models?: Record<string, { name?: string; variants?: Record<string, unknown> } | undefined> } | undefined
+>
+
 export type ModelOption = {
   id: string
   name: string
@@ -55,6 +60,27 @@ export function groupModels(providers: ProviderInput[]): ModelGroup[] {
       })),
     }))
     .filter((group) => group.models.length > 0)
+}
+
+export function withConfigProviders(providers: ProviderInput[], configured: ConfigProviders | undefined) {
+  const listed = new Set(providers.map((provider) => provider.id))
+  const extra = Object.entries(configured ?? {}).flatMap(([id, provider]): ProviderInput[] =>
+    !provider || listed.has(id)
+      ? []
+      : [
+          {
+            id,
+            name: provider.name ?? id,
+            models: Object.fromEntries(
+              Object.entries(provider.models ?? {}).map(([modelID, model]) => [
+                modelID,
+                { id: modelID, name: model?.name ?? modelID, variants: model?.variants },
+              ]),
+            ),
+          },
+        ],
+  )
+  return [...providers, ...extra]
 }
 
 export function variantsFor(providers: ProviderInput[], model: ModelRef | undefined) {

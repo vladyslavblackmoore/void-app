@@ -1,4 +1,4 @@
-import { type Accessor, createMemo, For, type JSX, onCleanup, Show, splitProps } from "solid-js"
+import { type Accessor, createMemo, createSignal, For, type JSX, onCleanup, Show, splitProps } from "solid-js"
 import { createStore } from "solid-js/store"
 import { DragDropProvider, PointerSensor } from "@dnd-kit/solid"
 import { isSortable, useSortable } from "@dnd-kit/solid/sortable"
@@ -20,6 +20,8 @@ import { ServerRowMenuView, serverMenuLabels } from "@/components/server/server-
 import { ServerHealthIndicator } from "@/components/server/server-row"
 import { type ServerHealth } from "@/utils/server-health"
 import { fileManagerApp } from "@/utils/file-manager"
+import { type SettingsTabPage } from "@/context/settings-tabs"
+import { homeSettingsGroupItems, homeSettingsGroupOpen } from "./home-settings-group"
 
 const HOME_PROJECT_NAV_LABEL = "min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap"
 
@@ -56,7 +58,8 @@ export type HomeProjectsViewProps = {
   onRevealProject: (server: ServerConnection.Any, project: LocalProject) => void
   onClearNotifications: (server: ServerConnection.Any, project: LocalProject) => void
   onCloseProject: (server: ServerConnection.Any, directory: string) => void
-  onOpenSettings: () => void
+  settingsPage: Accessor<SettingsTabPage | undefined>
+  onOpenSettingsPage: (page: SettingsTabPage) => void
   onOpenHelp: () => void
 }
 
@@ -146,7 +149,8 @@ export function HomeProjectsView(props: HomeProjectsViewProps) {
       </ScrollView>
       <HomeUtilityNav
         class="mb-8 mt-4 hidden shrink-0 lg:flex"
-        onOpenSettings={props.onOpenSettings}
+        settingsPage={props.settingsPage}
+        onOpenSettingsPage={props.onOpenSettingsPage}
         onOpenHelp={props.onOpenHelp}
         language={props.language}
       />
@@ -156,20 +160,55 @@ export function HomeProjectsView(props: HomeProjectsViewProps) {
 
 export function HomeUtilityNav(props: {
   class?: string
-  onOpenSettings: () => void
+  settingsPage: Accessor<SettingsTabPage | undefined>
+  onOpenSettingsPage: (page: SettingsTabPage) => void
   onOpenHelp: () => void
   language: ReturnType<typeof useLanguage>
 }) {
+  const [toggled, setToggled] = createSignal(false)
+  const open = () => homeSettingsGroupOpen(toggled(), props.settingsPage())
   return (
     <div class={`${props.class ?? ""} min-w-0 flex-col gap-1 pr-3`}>
       <HomeProjectNavButton
         type="button"
+        data-component="home-settings-group"
         class="text-v2-text-text-faint [&>[data-slot=icon-svg]]:text-v2-icon-icon-muted"
-        onClick={props.onOpenSettings}
+        aria-expanded={open()}
+        onClick={() => setToggled(!open())}
       >
+        <span
+          class="-ml-0.5 -mr-1.5 inline-flex size-5 shrink-0 items-center justify-center rounded-[4px] text-v2-icon-icon-muted"
+          aria-hidden="true"
+        >
+          <IconV2
+            name="chevron-down"
+            size="small"
+            class="transition-transform duration-150 ease-in-out"
+            style={{ transform: `rotate(${open() ? 0 : -90}deg)` }}
+          />
+        </span>
         <IconV2 name="settings-gear" size="small" />
         <span class={HOME_PROJECT_NAV_LABEL}>{props.language.t("sidebar.settings")}</span>
       </HomeProjectNavButton>
+      <Show when={open()}>
+        <div class="flex min-w-0 flex-col gap-1" data-component="home-settings-group-items">
+          <For each={homeSettingsGroupItems}>
+            {(item) => (
+              <HomeProjectNavButton
+                type="button"
+                data-component="home-settings-group-item"
+                data-page={item.page}
+                class="pl-8"
+                data-selected={props.settingsPage() === item.page ? "" : undefined}
+                aria-current={props.settingsPage() === item.page ? "page" : undefined}
+                onClick={() => props.onOpenSettingsPage(item.page)}
+              >
+                <span class={HOME_PROJECT_NAV_LABEL}>{props.language.t(item.label)}</span>
+              </HomeProjectNavButton>
+            )}
+          </For>
+        </div>
+      </Show>
       <HomeProjectNavButton
         type="button"
         class="text-v2-text-text-faint [&>[data-slot=icon-svg]]:text-v2-icon-icon-muted"
