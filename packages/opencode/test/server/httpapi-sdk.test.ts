@@ -352,6 +352,23 @@ describe("HttpApi SDK", () => {
     }),
   )
 
+  httpapi(
+    "uses the generated SDK for secret routes without reading a value back",
+    Effect.gen(function* () {
+      const sdk = yield* client("raw")
+      const set = yield* call(() => sdk.secret.set({ name: "sdk/token", secretInput: { value: "sdk-secret-value" } }))
+      const listed = yield* call(() => sdk.secret.list())
+      const removed = yield* call(() => sdk.secret.remove({ name: "sdk/token" }))
+
+      expect(set.response.status).toBe(200)
+      expect(set.data).toBe(true)
+      expect(listed.data).toEqual([{ name: "sdk/token", updated: expect.any(Number) }])
+      expect(JSON.stringify(listed.data)).not.toContain("sdk-secret-value")
+      expect(removed.data).toBe(true)
+      expect((yield* call(() => sdk.secret.list())).data).toEqual([])
+    }),
+  )
+
   httpapiInstance(
     "uses the generated SDK for safe instance routes",
     { serverPath: "raw", git: false, setup: writeStandardFiles },

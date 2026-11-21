@@ -2049,6 +2049,21 @@ export type Config = {
   }
 }
 
+export type SecretEntry = {
+  /**
+   * Secret name
+   */
+  name: string
+  updated: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+}
+
+export type SecretInput = {
+  /**
+   * Secret value. It is stored encrypted and no route returns it.
+   */
+  value: string
+}
+
 export type Model = {
   id: string
   providerID: string
@@ -7405,6 +7420,91 @@ export type GlobalUpgradeResponses = {
 }
 
 export type GlobalUpgradeResponse = GlobalUpgradeResponses[keyof GlobalUpgradeResponses]
+
+export type SecretListData = {
+  body?: never
+  path?: never
+  query?: never
+  url: "/secret"
+}
+
+export type SecretListErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type SecretListError = SecretListErrors[keyof SecretListErrors]
+
+export type SecretListResponses = {
+  /**
+   * Secret names and update times
+   */
+  200: Array<SecretEntry>
+}
+
+export type SecretListResponse = SecretListResponses[keyof SecretListResponses]
+
+export type SecretRemoveData = {
+  body?: never
+  path: {
+    /**
+     * Secret name, for example tracker/token
+     */
+    name: string
+  }
+  query?: never
+  url: "/secret/{name}"
+}
+
+export type SecretRemoveErrors = {
+  /**
+   * BadRequest | InvalidRequestError
+   */
+  400: EffectHttpApiErrorBadRequest | InvalidRequestError
+}
+
+export type SecretRemoveError = SecretRemoveErrors[keyof SecretRemoveErrors]
+
+export type SecretRemoveResponses = {
+  /**
+   * Whether the secret existed and was removed
+   */
+  200: boolean
+}
+
+export type SecretRemoveResponse = SecretRemoveResponses[keyof SecretRemoveResponses]
+
+export type SecretSetData = {
+  body?: SecretInput
+  path: {
+    /**
+     * Secret name, for example tracker/token
+     */
+    name: string
+  }
+  query?: never
+  url: "/secret/{name}"
+}
+
+export type SecretSetErrors = {
+  /**
+   * BadRequest | InvalidRequestError
+   */
+  400: EffectHttpApiErrorBadRequest | InvalidRequestError
+}
+
+export type SecretSetError = SecretSetErrors[keyof SecretSetErrors]
+
+export type SecretSetResponses = {
+  /**
+   * Secret stored
+   */
+  200: boolean
+}
+
+export type SecretSetResponse = SecretSetResponses[keyof SecretSetResponses]
 
 export type EventSubscribeData = {
   body?: never

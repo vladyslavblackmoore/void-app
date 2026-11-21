@@ -27,7 +27,7 @@ import { McpOAuthCallback } from "./oauth-callback"
 import { McpAuth } from "./auth"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { TuiEvent } from "@/server/tui-event"
-import { Cause, Effect, Exit, Layer, Context, Schema, Stream } from "effect"
+import { Cause, Effect, Exit, Layer, Context, Redacted, Schema, Stream } from "effect"
 import { EffectBridge } from "@/effect/bridge"
 import { InstanceState } from "@/effect/instance-state"
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process"
@@ -35,8 +35,11 @@ import { CrossSpawnSpawner } from "@opencode-ai/core/cross-spawn-spawner"
 import { McpCatalog } from "./catalog"
 import { McpEvent } from "@opencode-ai/schema/mcp-event"
 import { McpBrowser } from "./browser"
+import { SecretStore } from "@opencode-ai/core/secret/store"
 
 const DEFAULT_TIMEOUT = 30_000
+const SECRET_PREFIX = "secret:"
+const KEYCHAIN_PREFIX = "keychain:"
 const CLIENT_OPTIONS = {
   capabilities: {
     // https://github.com/anomalyco/opencode/issues/11948
@@ -209,6 +212,32 @@ const layer = Layer.effect(
     const auth = yield* McpAuth.Service
     const events = yield* EventV2Bridge.Service
     const browser = yield* McpBrowser.Service
+    const secrets = yield* SecretStore.Service
+
+    // A `secret:<name>` value is read from the secret store only when a server
+    // starts; the config keeps the reference, and errors carry the name only.
+    const resolveSecrets = Effect.fnUntraced(function* (
+      server: string,
+      field: "environment" | "header",
+      values: Record<string, string> | undefined,
+    ) {
+      if (!values) return undefined
+      const entries = yield* Effect.forEach(Object.entries(values), ([item, value]) => {
+        if (value.startsWith(KEYCHAIN_PREFIX)) {
+          return Effect.fail(
+            new Error(
+              `MCP server "${server}" ${field} ${item}: keychain: references are not supported, store the value in the secret store and use ${SECRET_PREFIX}<name>`,
+            ),
+          )
+        }
+        if (!value.startsWith(SECRET_PREFIX)) return Effect.succeed([item, value] as const)
+        return secrets.get(value.slice(SECRET_PREFIX.length)).pipe(
+          Effect.map((secret) => [item, Redacted.value(secret)] as const),
+          Effect.mapError((error) => new Error(`MCP server "${server}" ${field} ${item}: ${error.message}`)),
+        )
+      })
+      return Object.fromEntries(entries)
+    })
 
     type Transport = StdioClientTransport | StreamableHTTPClientTransport | SSEClientTransport
 
@@ -267,19 +296,20 @@ const layer = Layer.effect(
         )
       }
 
+      const headers = yield* resolveSecrets(key, "header", mcp.headers)
       const transports: Array<{ name: string; transport: TransportWithAuth }> = [
         {
           name: "StreamableHTTP",
           transport: new StreamableHTTPClientTransport(url, {
             authProvider,
-            requestInit: mcp.headers ? { headers: mcp.headers } : undefined,
+            requestInit: headers ? { headers } : undefined,
           }),
         },
         {
           name: "SSE",
           transport: new SSEClientTransport(url, {
             authProvider,
-            requestInit: mcp.headers ? { headers: mcp.headers } : undefined,
+            requestInit: headers ? { headers } : undefined,
           }),
         },
       ]
@@ -345,6 +375,7 @@ const layer = Layer.effect(
       const [cmd, ...args] = mcp.command
       const baseDir = yield* InstanceState.directory
       const cwd = mcp.cwd ? path.resolve(baseDir, mcp.cwd) : baseDir
+      const environment = yield* resolveSecrets(key, "environment", mcp.environment)
       const transport = new StdioClientTransport({
         stderr: "pipe",
         command: cmd,
@@ -353,7 +384,7 @@ const layer = Layer.effect(
         env: {
           ...userEnv(),
           ...(cmd === "opencode" ? { BUN_BE_BUN: "1" } : {}),
-          ...mcp.environment,
+          ...environment,
         },
       })
 
@@ -844,9 +875,10 @@ const layer = Layer.effect(
         auth,
       )
 
+      const headers = yield* resolveSecrets(mcpName, "header", mcpConfig.headers).pipe(Effect.orDie)
       const transport = new StreamableHTTPClientTransport(url, {
         authProvider,
-        requestInit: mcpConfig.headers ? { headers: mcpConfig.headers } : undefined,
+        requestInit: headers ? { headers } : undefined,
       })
       const directory = yield* InstanceState.directory
 
@@ -999,7 +1031,7 @@ export type AuthStatus = "authenticated" | "expired" | "not_authenticated"
 export const node = LayerNode.make({
   service: Service,
   layer: layer,
-  deps: [CrossSpawnSpawner.node, McpAuth.node, EventV2Bridge.node, Config.node, McpBrowser.node],
+  deps: [CrossSpawnSpawner.node, McpAuth.node, EventV2Bridge.node, Config.node, McpBrowser.node, SecretStore.node],
 })
 
 export * as MCP from "."

@@ -658,6 +658,31 @@ const scenarios: Scenario[] = [
         check(auth.test === undefined, "auth remove should delete provider from isolated auth file")
       }),
     ),
+  http.protected
+    .put("/secret/{name}", "secret.set")
+    .global()
+    .at(() => ({ path: route("/secret/{name}", { name: encodeURIComponent("exercise/token") }), body: { value: "exercise-secret-value" } }))
+    .jsonEffect(200, (body) =>
+      Effect.gen(function* () {
+        check(body === true, "secret set should return true")
+        const store = yield* Effect.promise(() =>
+          Bun.file(path.join(path.dirname(exerciseDataDirectory), "secrets", "store.json")).text(),
+        )
+        check(store.includes('"exercise/token"'), "secret set should write the store")
+        check(!store.includes("exercise-secret-value"), "secret set should not store the value in plain text")
+      }),
+    ),
+  http.protected.get("/secret", "secret.list").global().json(200, (body) => {
+    array(body)
+    check(!JSON.stringify(body).includes("exercise-secret-value"), "secret list should not return values")
+  }),
+  http.protected
+    .delete("/secret/{name}", "secret.remove")
+    .global()
+    .at(() => ({ path: route("/secret/{name}", { name: encodeURIComponent("exercise/missing") }) }))
+    .json(200, (body) => {
+      check(body === false, "secret remove of an absent name should return false")
+    }),
   http.protected.get("/api/health", "v2.health.get").json(200, (body) => {
     object(body)
     check(body.healthy === true, "v2 server should report healthy")

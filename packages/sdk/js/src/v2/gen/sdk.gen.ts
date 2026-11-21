@@ -175,6 +175,13 @@ import type {
   QuestionReplyErrors,
   QuestionReplyResponses,
   QuestionV2Reply,
+  SecretInput,
+  SecretListErrors,
+  SecretListResponses,
+  SecretRemoveErrors,
+  SecretRemoveResponses,
+  SecretSetErrors,
+  SecretSetResponses,
   SessionAbortErrors,
   SessionAbortResponses,
   SessionChildrenErrors,
@@ -1379,6 +1386,74 @@ export class Global extends HeyApiClient {
   private _config?: Config
   get config(): Config {
     return (this._config ??= new Config({ client: this.client }))
+  }
+}
+
+export class Secret extends HeyApiClient {
+  /**
+   * List secrets
+   *
+   * List the names and update times of stored secrets. Values are never returned.
+   */
+  public list<ThrowOnError extends boolean = false>(options?: Options<never, ThrowOnError>) {
+    return (options?.client ?? this.client).get<SecretListResponses, SecretListErrors, ThrowOnError>({
+      url: "/secret",
+      ...options,
+    })
+  }
+
+  /**
+   * Remove secret
+   *
+   * Remove a secret from the encrypted secret store.
+   */
+  public remove<ThrowOnError extends boolean = false>(
+    parameters: {
+      name: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "name" }] }])
+    return (options?.client ?? this.client).delete<SecretRemoveResponses, SecretRemoveErrors, ThrowOnError>({
+      url: "/secret/{name}",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Set secret
+   *
+   * Store or replace a secret value in the encrypted secret store.
+   */
+  public set<ThrowOnError extends boolean = false>(
+    parameters: {
+      name: string
+      secretInput?: SecretInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "name" },
+            { key: "secretInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).put<SecretSetResponses, SecretSetErrors, ThrowOnError>({
+      url: "/secret/{name}",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
   }
 }
 
@@ -7100,6 +7175,11 @@ export class OpencodeClient extends HeyApiClient {
   private _global?: Global
   get global(): Global {
     return (this._global ??= new Global({ client: this.client }))
+  }
+
+  private _secret?: Secret
+  get secret(): Secret {
+    return (this._secret ??= new Secret({ client: this.client }))
   }
 
   private _event?: Event

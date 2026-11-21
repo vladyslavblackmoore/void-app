@@ -21,6 +21,7 @@ import { ProjectCopyApi } from "./groups/project-copy"
 import { ProviderApi } from "./groups/provider"
 import { PtyApi, PtyConnectApi } from "./groups/pty"
 import { QuestionApi } from "./groups/question"
+import { SecretApi } from "./groups/secret"
 import { SessionApi } from "./groups/session"
 import { SyncApi } from "./groups/sync"
 import { TuiApi } from "./groups/tui"
@@ -55,6 +56,7 @@ export const RootHttpApi = HttpApi.make("opencode-root")
   .addHttpApi(ControlApi)
   .addHttpApi(ControlPlaneApi)
   .addHttpApi(GlobalApi)
+  .addHttpApi(SecretApi)
   .middleware(SchemaErrorMiddleware)
   .middleware(Authorization)
 
