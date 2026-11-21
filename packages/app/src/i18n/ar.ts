@@ -842,7 +842,7 @@ export const dict = {
   "sidebar.project.clearNotifications": "مسح الإشعارات",
   "sidebar.empty.title": "لا توجد مشاريع مفتوحة",
   "sidebar.empty.description": "افتح مشروعًا للبدء",
-  "app.name.desktop": "OpenCode Desktop",
+  "app.name.desktop": "VOID",
   "settings.section.desktop": "سطح المكتب",
   "settings.section.server": "الخادم",
   "settings.tab.general": "عام",

@@ -934,7 +934,7 @@ export const dict = {
   "debugBar.direction.tip": "Buộc đặt hướng bố cục cho toàn bộ ứng dụng mà không thay đổi ngôn ngữ đã chọn",
   "debugBar.direction.ltr": "LTR",
   "debugBar.direction.rtl": "RTL",
-  "app.name.desktop": "OpenCode Desktop",
+  "app.name.desktop": "VOID",
   "settings.section.desktop": "Desktop",
   "settings.section.server": "Máy chủ",
   "settings.tab.general": "Tổng quan",

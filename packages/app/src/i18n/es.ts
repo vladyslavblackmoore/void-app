@@ -913,7 +913,7 @@ export const dict = {
   "sidebar.empty.title": "No hay proyectos abiertos",
   "sidebar.empty.description": "Abre un proyecto para empezar",
 
-  "app.name.desktop": "OpenCode Desktop",
+  "app.name.desktop": "VOID",
 
   "settings.section.desktop": "Escritorio",
   "settings.section.server": "Servidor",
