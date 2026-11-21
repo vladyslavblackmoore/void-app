@@ -4,6 +4,7 @@ import { usePlatform } from "@/context/platform"
 import { useLanguage } from "@/context/language"
 import { useMajorUpdate } from "@/context/major-update"
 import { showToast } from "@/utils/toast"
+import { useVoidTheme } from "./void/use-void-theme"
 
 export function updaterAction(state: UpdaterState | undefined, major?: MajorUpdateState["status"]) {
   if (!state) return { label: "settings.updates.action.checkNow" as const }
@@ -26,7 +27,14 @@ export function updaterAction(state: UpdaterState | undefined, major?: MajorUpda
   }
 }
 
+export function latestToastKey(isVoid: boolean) {
+  return isVoid
+    ? ("void.updates.toast.latest.description" as const)
+    : ("settings.updates.toast.latest.description" as const)
+}
+
 export function useUpdaterAction() {
+  const isVoid = useVoidTheme()
   const platform = usePlatform()
   const language = useLanguage()
   const major = useMajorUpdate()
@@ -48,7 +56,7 @@ export function useUpdaterAction() {
           variant: "success",
           icon: "circle-check",
           title: language.t("settings.updates.toast.latest.title"),
-          description: language.t("settings.updates.toast.latest.description", { version: platform.version ?? "" }),
+          description: language.t(latestToastKey(isVoid()), { version: platform.version ?? "" }),
         })
       }
       if (state?.status === "error") {

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { updaterAction } from "./updater-action"
+import { latestToastKey, updaterAction } from "./updater-action"
 
 describe("updaterAction", () => {
   test("disables update actions when the platform has no updater", () => {
@@ -33,5 +33,12 @@ describe("updaterAction", () => {
       run: "check",
     })
     expect(updaterAction({ status: "checking" }, "downloading")).toEqual({ label: "settings.updates.action.checking" })
+  })
+})
+
+describe("latestToastKey", () => {
+  test("void uses its own copy without the upstream product name", () => {
+    expect(latestToastKey(true)).toBe("void.updates.toast.latest.description")
+    expect(latestToastKey(false)).toBe("settings.updates.toast.latest.description")
   })
 })
