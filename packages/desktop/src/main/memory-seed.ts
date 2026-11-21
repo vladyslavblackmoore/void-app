@@ -36,3 +36,20 @@ export async function seedMemory(spaceDir: string, configDir: string, command: s
   await mkdir(join(spaceDir, "data", "memory"), { recursive: true })
   if (next !== text) await writeFile(file, next)
 }
+
+export function memoryPluginSource(sourceDir: string, database: string) {
+  return [
+    `import { memoryPlugin } from ${JSON.stringify(join(sourceDir, "src", "plugin.ts"))}`,
+    `export default memoryPlugin(${JSON.stringify(database)})`,
+    "",
+  ].join("\n")
+}
+
+export async function seedMemoryPlugin(spaceDir: string, configDir: string, sourceDir: string | undefined) {
+  if (sourceDir === undefined) return
+  const target = join(configDir, "plugins", "void-memory.js")
+  const content = memoryPluginSource(sourceDir, join(spaceDir, "data", "memory", "graph.db"))
+  if ((await readFile(target, "utf8").catch(() => undefined)) === content) return
+  await mkdir(join(configDir, "plugins"), { recursive: true })
+  await writeFile(target, content)
+}

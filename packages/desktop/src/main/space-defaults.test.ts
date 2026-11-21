@@ -130,3 +130,12 @@ describe("space seeder", () => {
     expect(parse(await readFile(join(spaceDir(root, "work"), "config", "opencode", "opencode.jsonc"), "utf8")).mcp).toBeUndefined()
   })
 })
+
+describe("memory plugin seeding", () => {
+  test("seedSpace puts the memory plugin shim into the plugins dir of the space", async () => {
+    await ensureDefaultSpaces(root, templates, legacy)
+    await seedSpace(root, "void", { agents: [], wrapper: "w", memoryPlugin: "/src/void-memory" })
+    const shim = join(spaceDir(root, "void"), "config", "opencode", "plugins", "void-memory.js")
+    expect(await readFile(shim, "utf8")).toContain(join(spaceDir(root, "void"), "data", "memory", "graph.db"))
+  })
+})

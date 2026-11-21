@@ -4,7 +4,7 @@ import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { parse } from "jsonc-parser"
-import { memoryCommand, seedMemory } from "./memory-seed"
+import { memoryCommand, seedMemory, seedMemoryPlugin } from "./memory-seed"
 
 let space = ""
 let configDir = ""
@@ -87,5 +87,34 @@ describe("memoryCommand", () => {
 
   test("returns nothing when packaged without the binary", () => {
     expect(memoryCommand({ packaged: true, sourceDir: "/s", resourcesPath: "/r", exists: () => false })).toBeUndefined()
+  })
+})
+
+describe("seedMemoryPlugin", () => {
+  test("writes a shim that loads the plugin source with the database path of the space", async () => {
+    await seedMemoryPlugin(space, configDir, "/src/void-memory")
+    const text = await readFile(join(configDir, "plugins", "void-memory.js"), "utf8")
+    expect(text).toContain(JSON.stringify("/src/void-memory/src/plugin.ts"))
+    expect(text).toContain(JSON.stringify(join(space, "data", "memory", "graph.db")))
+    expect(text).toContain("export default memoryPlugin(")
+  })
+
+  test("writes nothing without a source directory", async () => {
+    await seedMemoryPlugin(space, configDir, undefined)
+    expect(existsSync(join(configDir, "plugins", "void-memory.js"))).toBe(false)
+  })
+
+  test("does not create the database or its directory", async () => {
+    await seedMemoryPlugin(space, configDir, "/src/void-memory")
+    expect(existsSync(join(space, "data"))).toBe(false)
+  })
+
+  test("is idempotent", async () => {
+    await seedMemoryPlugin(space, configDir, "/src/void-memory")
+    const target = join(configDir, "plugins", "void-memory.js")
+    const first = (await stat(target)).mtimeMs
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    await seedMemoryPlugin(space, configDir, "/src/void-memory")
+    expect((await stat(target)).mtimeMs).toBe(first)
   })
 })

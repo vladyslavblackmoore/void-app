@@ -5,7 +5,7 @@
     "noEmit": true,
     "module": "preserve",
     "moduleResolution": "bundler",
-    "lib": ["ESNext"],
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "types": ["bun"]
   },
   "include": ["src", "test", "script"]

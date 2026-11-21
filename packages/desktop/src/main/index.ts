@@ -386,6 +386,7 @@ const main = Effect.gen(function* () {
       return yield* Effect.fail(migrationFailure)
     }
 
+    const memorySourceDir = join(dirname(fileURLToPath(import.meta.url)), "../../../void-memory")
     const seed: SpaceSeed = {
       agents: [
         { name: "main", content: mainAgent },
@@ -396,9 +397,10 @@ const main = Effect.gen(function* () {
       config: spaceConfigTemplate,
       memory: memoryCommand({
         packaged: app.isPackaged,
-        sourceDir: join(dirname(fileURLToPath(import.meta.url)), "../../../void-memory"),
+        sourceDir: memorySourceDir,
         resourcesPath: process.resourcesPath,
       }),
+      memoryPlugin: app.isPackaged ? undefined : memorySourceDir,
     }
     yield* Effect.promise(() =>
       ensureDefaultSpaces(
