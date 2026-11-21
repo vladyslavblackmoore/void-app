@@ -182,4 +182,20 @@ describe("Home V2 session index", () => {
     expect(queryClient.getQueryData(cache.indexKey)).toBeUndefined()
     expect(cache.sessions({ sessions, eventSequence: 0 }, undefined).map((item) => item.id)).toEqual(["b"])
   })
+
+  test("exposes the client that holds the Home index so readers observe live events", () => {
+    const queryClient = new QueryClient()
+    const cache = createHomeSessionIndexCache(queryClient, "server")
+    const created = session({ id: "created" })
+
+    queryClient.setQueryData(cache.indexKey, { sessions: [], eventSequence: 0 })
+    cache.apply({
+      type: "session.created",
+      properties: { sessionID: "created", info: { ...created, directory: "/project" } as unknown as Session },
+    })
+
+    const index = cache.queryClient.getQueryData<{ sessions: Session[] }>(cache.indexKey)
+    expect(cache.queryClient).toBe(queryClient)
+    expect(index?.sessions.map((item) => item.id)).toEqual(["created"])
+  })
 })
