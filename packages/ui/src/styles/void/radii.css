@@ -1,0 +1,43 @@
+html[data-theme="void"] [data-component="button-v2"],
+html[data-theme="void"] [data-component="icon-button-v2"],
+html[data-theme="void"] [data-component="text-input-v2"],
+html[data-theme="void"] [data-component="select-v2"],
+html[data-theme="void"] [data-slot="segmented-control-v2"] {
+  border-radius: 14px;
+}
+
+html[data-theme="void"] [data-component="button-v2"][data-size="small"],
+html[data-theme="void"] [data-component="icon-button-v2"][data-size="small"],
+html[data-theme="void"] [data-component="text-input-v2"] [data-slot="text-input-v2-icon-button"],
+html[data-theme="void"] [data-component="text-input-v2"] [data-slot="text-input-v2-icon-button"][data-variant="clear"],
+html[data-theme="void"] [data-component="select-v2"] [data-slot="select-v2-chevron"],
+html[data-theme="void"] [data-component="select-v2"][data-appearance="inline"],
+html[data-theme="void"] [data-slot="segmented-control-v2-item"],
+html[data-theme="void"] [data-component="tabs-v2"][data-variant="pill"][data-orientation="horizontal"] [data-slot="tabs-v2-trigger-wrapper"],
+html[data-theme="void"] [data-component="tabs-v2"][data-variant="settings"][data-orientation="vertical"] [data-slot="tabs-v2-trigger-wrapper"] {
+  border-radius: 10px;
+}
+
+html[data-theme="void"] [data-component="menu-v2-content"],
+html[data-theme="void"] [data-component="menu-v2-content"][data-slot="select-v2-content"] {
+  border-radius: 20px;
+}
+
+html[data-theme="void"] [data-component="menu-v2-item"] {
+  border-radius: 12px;
+}
+
+html[data-theme="void"] [data-component="dialog-v2"] [data-slot="dialog-container"] {
+  border-radius: 24px;
+}
+
+html[data-theme="void"] [data-component="dialog-v2"] [data-slot="dialog-container"] [data-slot="dialog-content"] [data-slot="dialog-header"] [data-slot="dialog-close-button"] {
+  border-radius: 8px;
+}
+
+html[data-theme="void"] [data-component="switch"] [data-slot="switch-control"],
+html[data-theme="void"] [data-component="switch"] [data-slot="switch-thumb"],
+html[data-theme="void"] [data-component="switch"]:hover:not([data-disabled], [data-readonly]) [data-slot="switch-thumb"],
+html[data-theme="void"] [data-component="switch"][data-checked] [data-slot="switch-thumb"] {
+  border-radius: 999px;
+}
