@@ -2,6 +2,7 @@ import { Effect } from "effect"
 import { HttpServerResponse } from "effect/unstable/http"
 import { HttpApiMiddleware } from "effect/unstable/httpapi"
 import { InvalidRequestError } from "../errors"
+import { SecretGroup } from "../groups/secret"
 
 // Effect's Issue formatter recursively dumps the rejected `actual` value with
 // no truncation, so a 5KB invalid array produces a ~360KB string. Cap to keep
@@ -23,7 +24,9 @@ export class SchemaErrorMiddleware extends HttpApiMiddleware.Service<SchemaError
 ) {}
 
 export const schemaErrorLayer = HttpApiMiddleware.layerSchemaErrorTransform(SchemaErrorMiddleware, (error, context) => {
-  const reason = truncateReason(error.cause.message)
+  // Secret routes carry secret values in the payload; their rejections name no input.
+  const reason =
+    context.group.identifier === SecretGroup ? "Invalid secret request" : truncateReason(error.cause.message)
   const response = context.endpoint.path.startsWith("/api/")
     ? Effect.fail(
         new InvalidRequestError({

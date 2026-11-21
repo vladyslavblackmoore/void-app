@@ -16,13 +16,15 @@ export const SecretEntry = Schema.Struct({
   updated: Schema.Number.annotate({ description: "Last update time in milliseconds since the epoch" }),
 }).annotate({ identifier: "SecretEntry" })
 
+export const SecretGroup = "secret"
+
 export const SecretPaths = {
   list: "/secret",
   secret: "/secret/:name",
 } as const
 
 export const SecretApi = HttpApi.make("secret").add(
-  HttpApiGroup.make("secret")
+  HttpApiGroup.make(SecretGroup)
     .add(
       HttpApiEndpoint.get("list", SecretPaths.list, {
         success: described(Schema.Array(SecretEntry), "Secret names and update times"),

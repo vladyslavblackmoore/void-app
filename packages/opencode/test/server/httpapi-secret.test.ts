@@ -1,7 +1,23 @@
 import { describe, expect } from "bun:test"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { FSUtil } from "@opencode-ai/core/fs-util"
-import { Effect, Layer } from "effect"
+import { NodeHttpServer } from "@effect/platform-node"
+import { Context, Effect, Layer, Logger, Option } from "effect"
+import { HttpRouter } from "effect/unstable/http"
+import { HttpApiBuilder } from "effect/unstable/httpapi"
+import { MoveSession } from "@opencode-ai/core/control-plane/move-session"
+import { SecretStore } from "@opencode-ai/core/secret/store"
+import { Auth } from "../../src/auth"
+import { Config } from "../../src/config/config"
+import { Installation } from "../../src/installation"
+import { ServerAuth } from "../../src/server/auth"
+import { RootHttpApi } from "../../src/server/routes/instance/httpapi/api"
+import { controlHandlers } from "../../src/server/routes/instance/httpapi/handlers/control"
+import { controlPlaneHandlers } from "../../src/server/routes/instance/httpapi/handlers/control-plane"
+import { globalHandlers } from "../../src/server/routes/instance/httpapi/handlers/global"
+import { secretHandlers } from "../../src/server/routes/instance/httpapi/handlers/secret"
+import { authorizationLayer } from "../../src/server/routes/instance/httpapi/middleware/authorization"
+import { schemaErrorLayer } from "../../src/server/routes/instance/httpapi/middleware/schema-error"
 import { resetDatabase } from "../fixture/db"
 import { TestInstance } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
@@ -87,6 +103,58 @@ describe("secret HttpApi", () => {
       )
       const listed = yield* request("/secret")
       expect(yield* listed.json).toEqual([])
+    }),
+  )
+})
+
+// The full app replaces the loggers with its own, so the root API is served
+// here with a capturing logger to see what the schema rejection writes.
+const logs: string[] = []
+const loggedApi = testEffect(
+  HttpRouter.serve(
+    HttpApiBuilder.layer(RootHttpApi).pipe(
+      Layer.provide([controlHandlers, controlPlaneHandlers, globalHandlers, secretHandlers]),
+      Layer.provide([authorizationLayer, schemaErrorLayer]),
+      // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
+      HttpRouter.provideRequest(Layer.succeedContext(Context.empty() as Context.Context<unknown>)),
+    ),
+    { disableListenLog: true, disableLogger: true },
+  ).pipe(
+    Layer.provideMerge(NodeHttpServer.layerTest),
+    Layer.provide(Logger.layer([Logger.make((options) => logs.push(Bun.inspect(options.message)))])),
+    Layer.provide(Layer.mock(Auth.Service)({})),
+    Layer.provide(Layer.mock(SecretStore.Service)({})),
+    Layer.provide(Layer.mock(Config.Service)({})),
+    Layer.provide(Layer.mock(MoveSession.Service)({})),
+    Layer.provide(Layer.mock(Installation.Service)({})),
+    Layer.provide(ServerAuth.Config.configLayer({ password: Option.none(), username: "opencode" })),
+  ),
+)
+
+describe("secret HttpApi malformed bodies", () => {
+  loggedApi.live("never echoes the payload in the response or the log", () =>
+    Effect.gen(function* () {
+      const secretText = "tok-91fe33-raw-body-value"
+      const secretNumber = 734591862
+      const bodies = [
+        { headers: json, body: JSON.stringify(secretText) },
+        { headers: { "content-type": "text/plain" }, body: secretText },
+        { headers: json, body: secretText },
+        { headers: json, body: JSON.stringify({ value: secretNumber }) },
+        { headers: json, body: JSON.stringify({ value: [secretText] }) },
+      ]
+      for (const init of bodies) {
+        const response = yield* request("/secret/demo", { method: "PUT", ...init })
+        expect([400, 415, 500]).toContain(response.status)
+        const text = yield* response.text
+        expect(text).not.toContain(secretText)
+        expect(text).not.toContain(String(secretNumber))
+      }
+      expect(logs.some((line) => line.includes("schema rejection"))).toBe(true)
+      for (const line of logs) {
+        expect(line).not.toContain(secretText)
+        expect(line).not.toContain(String(secretNumber))
+      }
     }),
   )
 })

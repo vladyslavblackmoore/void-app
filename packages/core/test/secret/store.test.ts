@@ -5,12 +5,14 @@ import { randomBytes } from "crypto"
 import { Effect, Redacted } from "effect"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { SecretStore } from "@opencode-ai/core/secret/store"
+import { Global } from "@opencode-ai/core/global"
 import { testEffect } from "../lib/effect"
 import { tmpdir } from "../fixture/tmpdir"
 
 const root = await tmpdir()
 afterAll(() => root[Symbol.asyncDispose]())
-const paths = SecretStore.paths({ data: path.join(root.path, "data"), state: path.join(root.path, "state") })
+const home = (dir: string) => ({ XDG_DATA_HOME: path.join(dir, "data"), XDG_STATE_HOME: path.join(dir, "state") })
+const paths = SecretStore.paths(home(root.path))
 const it = testEffect(LayerNode.compile(SecretStore.nodeAt(paths)))
 const value = "tok-3f9a1c-very-private"
 
@@ -23,13 +25,28 @@ const readStore = () => Effect.promise(() => Bun.file(paths.store).text())
 describe("SecretStore.paths", () => {
   it.live("keeps the key and the data in different directories under the VOID home", () =>
     Effect.sync(() => {
-      const home = SecretStore.paths({ data: "/v/data", state: "/v/state" })
-      expect(home.store).toBe(path.join("/v/data", "secrets", "store.json"))
-      expect(home.key).toBe(path.join("/v/state", "secrets", "master.key"))
-      expect(path.dirname(home.store)).not.toBe(path.dirname(home.key))
-      expect(SecretStore.paths({ data: "/v/data", state: "/v/state" }, "/vol/key/master.key").key).toBe(
-        "/vol/key/master.key",
-      )
+      const voidHome = SecretStore.paths({ XDG_DATA_HOME: "/v/data", XDG_STATE_HOME: "/v/state" })
+      expect(voidHome.store).toBe(path.join("/v/data", "secrets", "store.json"))
+      expect(voidHome.key).toBe(path.join("/v/state", "secrets", "master.key"))
+      expect(path.dirname(voidHome.store)).not.toBe(path.dirname(voidHome.key))
+      expect(
+        SecretStore.paths({
+          XDG_DATA_HOME: "/v/data",
+          XDG_STATE_HOME: "/v/state",
+          VOID_SECRET_KEY_FILE: "/vol/key/master.key",
+        }).key,
+      ).toBe("/vol/key/master.key")
+    }),
+  )
+
+  it.live("uses the namespaced app directories when the XDG variables are unset", () =>
+    Effect.sync(() => {
+      const fallback = SecretStore.paths({})
+      expect(fallback.store).toBe(path.join(Global.Path.data, "secrets", "store.json"))
+      expect(fallback.key).toBe(path.join(Global.Path.state, "secrets", "master.key"))
+      expect(path.basename(path.dirname(path.dirname(fallback.store)))).toBe("opencode")
+      expect(path.basename(path.dirname(path.dirname(fallback.key)))).toBe("opencode")
+      expect(SecretStore.paths({ XDG_DATA_HOME: "", XDG_STATE_HOME: "" })).toEqual(fallback)
     }),
   )
 })
@@ -118,18 +135,45 @@ describe("SecretStore", () => {
     }),
   )
 
-  it.live("creates files with mode 0600 and directories with mode 0700", () =>
+  it.live("creates files with mode 0600 and directories with mode 0700 on the first write", () =>
+    Effect.gen(function* () {
+      const fresh = yield* Effect.acquireRelease(
+        Effect.promise(() => tmpdir()),
+        (dir) => Effect.promise(() => dir[Symbol.asyncDispose]()),
+      )
+      const target = SecretStore.paths(home(fresh.path))
+      expect(yield* Effect.promise(() => fs.readdir(fresh.path))).toEqual([])
+      const previous = process.umask(0)
+      yield* SecretStore.Service.use((store) => store.set("mode/check", value)).pipe(
+        Effect.provide(LayerNode.compile(SecretStore.nodeAt(target))),
+        Effect.ensuring(Effect.sync(() => process.umask(previous))),
+      )
+      expect(yield* mode(target.store)).toBe(0o600)
+      expect(yield* mode(target.key)).toBe(0o600)
+      expect(yield* mode(path.dirname(target.store))).toBe(0o700)
+      expect(yield* mode(path.dirname(target.key))).toBe(0o700)
+      expect(yield* Effect.promise(() => fs.readdir(path.dirname(target.store)))).toEqual(["store.json"])
+      expect(yield* Effect.promise(() => fs.readdir(path.dirname(target.key)))).toEqual(["master.key"])
+    }),
+  )
+
+  it.live("refuses to create a new key while the store has entries", () =>
     Effect.gen(function* () {
       const store = yield* SecretStore.Service
-      const previous = process.umask(0)
-      yield* store.set("mode/check", value).pipe(Effect.ensuring(Effect.sync(() => process.umask(previous))))
-      expect(yield* mode(paths.store)).toBe(0o600)
-      expect(yield* mode(paths.key)).toBe(0o600)
-      expect(yield* mode(path.dirname(paths.store))).toBe(0o700)
-      expect(yield* mode(path.dirname(paths.key))).toBe(0o700)
-      expect(yield* Effect.promise(() => fs.readdir(path.dirname(paths.store)))).toEqual(["store.json"])
-      expect(yield* Effect.promise(() => fs.readdir(path.dirname(paths.key)))).toEqual(["master.key"])
-      yield* store.delete("mode/check")
+      yield* store.set("key/first", value)
+      const original = yield* Effect.promise(() => fs.readFile(paths.key))
+      yield* Effect.promise(() => fs.rm(paths.key))
+
+      expect(yield* failure(store.set("key/second", "other"))).toMatchObject({
+        _tag: "SecretKeyError",
+        reason: "missing",
+      })
+      expect(yield* Effect.promise(() => Bun.file(paths.key).exists())).toBe(false)
+
+      yield* Effect.promise(() => fs.writeFile(paths.key, original, { mode: 0o600 }))
+      expect(Redacted.value(yield* store.get("key/first"))).toBe(value)
+      expect(yield* failure(store.get("key/second"))).toBeInstanceOf(SecretStore.NotFoundError)
+      yield* store.delete("key/first")
     }),
   )
 

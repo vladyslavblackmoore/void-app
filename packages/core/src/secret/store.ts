@@ -2,9 +2,9 @@ export * as SecretStore from "./store"
 
 import path from "path"
 import { createCipheriv, createDecipheriv, randomBytes, randomUUID } from "crypto"
-import { xdgData, xdgState } from "xdg-basedir"
 import { Clock, Context, Effect, Layer, Option, Redacted, Schema } from "effect"
 import { FSUtil } from "../fs-util"
+import { Global } from "../global"
 import { EffectFlock } from "../util/effect-flock"
 import { makeGlobalNode } from "../effect/app-node"
 import { serviceUse } from "../effect/service-use"
@@ -65,15 +65,16 @@ export interface Paths {
   readonly key: string
 }
 
-// The only place that maps a VOID home (the XDG data and state directories the
-// desktop app sets for the core) to the store and key files.
-export function paths(
-  home: { readonly data: string; readonly state: string } = { data: xdgData!, state: xdgState! },
-  keyFile = process.env.VOID_SECRET_KEY_FILE,
-): Paths {
+// The only place that maps the environment to the store and key files. The
+// desktop app sets the XDG data and state directories to the VOID home, so the
+// files go to <home>/data/secrets and <home>/state/secrets; without those
+// variables they stay inside the app's own namespaced directories.
+export function paths(env: Readonly<Record<string, string | undefined>> = process.env): Paths {
+  const data = env.XDG_DATA_HOME || Global.Path.data
+  const state = env.XDG_STATE_HOME || Global.Path.state
   return {
-    store: path.join(home.data, "secrets", "store.json"),
-    key: keyFile ? path.resolve(keyFile) : path.join(home.state, "secrets", "master.key"),
+    store: path.join(data, "secrets", "store.json"),
+    key: env.VOID_SECRET_KEY_FILE ? path.resolve(env.VOID_SECRET_KEY_FILE) : path.join(state, "secrets", "master.key"),
   }
 }
 
@@ -175,8 +176,8 @@ export const layerAt = (input: Paths) =>
       const set = Effect.fn("SecretStore.set")(function* (name: string, value: string) {
         yield* requireName(name)
         yield* Effect.gen(function* () {
-          const key = yield* readKey(true)
           const current = yield* readStore()
+          const key = yield* readKey(Object.keys(current.entries).length === 0)
           const sealed = seal(key, name, value, yield* Clock.currentTimeMillis)
           yield* writeStore({ ...current.entries, [name]: sealed })
         }).pipe(flock.withLock(lockKey), Effect.catchTag(["LockTimeoutError", "LockCompromisedError"], Effect.die))

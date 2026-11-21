@@ -124,6 +124,15 @@ function isMcpConfigured(entry: McpEntry): entry is ConfigMCPV1.Info {
   return typeof entry === "object" && entry !== null && "type" in entry
 }
 
+function userDefined(entry: ConfigMCPV1.Info, user: McpEntry | undefined) {
+  if (!user || !isMcpConfigured(user)) return false
+  return Bun.deepEquals(launchFields(entry), launchFields(user))
+}
+
+function launchFields(entry: ConfigMCPV1.Info) {
+  return Object.fromEntries(Object.entries(entry).filter(([key]) => key !== "enabled" && key !== "timeout"))
+}
+
 function remoteURL(value: string) {
   if (URL.canParse(value)) return new URL(value)
 }
@@ -213,16 +222,31 @@ const layer = Layer.effect(
     const events = yield* EventV2Bridge.Service
     const browser = yield* McpBrowser.Service
     const secrets = yield* SecretStore.Service
+    const cfgSvc = yield* Config.Service
 
     // A `secret:<name>` value is read from the secret store only when a server
     // starts; the config keeps the reference, and errors carry the name only.
+    // Only a server defined in the user config, and started exactly as defined
+    // there, gets secrets: a project config or a runtime entry could otherwise
+    // send a stored secret to a command or URL of its own.
     const resolveSecrets = Effect.fnUntraced(function* (
       server: string,
       field: "environment" | "header",
       values: Record<string, string> | undefined,
+      entry: ConfigMCPV1.Info,
     ) {
       if (!values) return undefined
+      const trusted = Object.values(values).some((value) => value.startsWith(SECRET_PREFIX))
+        ? userDefined(entry, (yield* cfgSvc.getGlobal()).mcp?.[server])
+        : false
       const entries = yield* Effect.forEach(Object.entries(values), ([item, value]) => {
+        if (value.startsWith(SECRET_PREFIX) && !trusted) {
+          return Effect.fail(
+            new Error(
+              `MCP server "${server}" ${field} ${item}: ${SECRET_PREFIX} references are resolved only for servers defined in the user config`,
+            ),
+          )
+        }
         if (value.startsWith(KEYCHAIN_PREFIX)) {
           return Effect.fail(
             new Error(
@@ -296,7 +320,7 @@ const layer = Layer.effect(
         )
       }
 
-      const headers = yield* resolveSecrets(key, "header", mcp.headers)
+      const headers = yield* resolveSecrets(key, "header", mcp.headers, mcp)
       const transports: Array<{ name: string; transport: TransportWithAuth }> = [
         {
           name: "StreamableHTTP",
@@ -375,7 +399,7 @@ const layer = Layer.effect(
       const [cmd, ...args] = mcp.command
       const baseDir = yield* InstanceState.directory
       const cwd = mcp.cwd ? path.resolve(baseDir, mcp.cwd) : baseDir
-      const environment = yield* resolveSecrets(key, "environment", mcp.environment)
+      const environment = yield* resolveSecrets(key, "environment", mcp.environment, mcp)
       const transport = new StdioClientTransport({
         stderr: "pipe",
         command: cmd,
@@ -445,7 +469,6 @@ const layer = Layer.effect(
         })
       }),
     )
-    const cfgSvc = yield* Config.Service
 
     const descendants = Effect.fnUntraced(
       function* (pid: number) {
@@ -875,7 +898,7 @@ const layer = Layer.effect(
         auth,
       )
 
-      const headers = yield* resolveSecrets(mcpName, "header", mcpConfig.headers).pipe(Effect.orDie)
+      const headers = yield* resolveSecrets(mcpName, "header", mcpConfig.headers, mcpConfig).pipe(Effect.orDie)
       const transport = new StreamableHTTPClientTransport(url, {
         authProvider,
         requestInit: headers ? { headers } : undefined,
