@@ -24,7 +24,7 @@ html[data-theme="void"] [data-component="void-section-tabs"] {
   display: flex;
   flex: none;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   -webkit-app-region: no-drag;
 }
 
@@ -33,7 +33,7 @@ html[data-theme="void"] [data-slot="void-section-tab"] {
   align-items: center;
   gap: 8px;
   height: 34px;
-  padding: 0 18px;
+  padding: 0 14px;
   border: 1px solid var(--void-border);
   border-radius: var(--void-radius-control);
   background: var(--void-card);
@@ -69,6 +69,7 @@ html[data-theme="void"] [data-void-row] {
   display: grid;
   grid-template-columns: minmax(min-content, 1fr) minmax(0, auto) minmax(min-content, 1fr);
   gap: 12px;
+  padding-right: var(--void-inset, 12px);
 }
 
 html[data-theme="void"] [data-component="void-titlebar-left"] {

@@ -203,6 +203,7 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
         "min-height": minHeight(),
         // Keep native macOS traffic lights clear even when the desktop window is narrow.
         "padding-left": macTrafficLights() ? `${macTrafficLightsBaseWidth / zoom()}px` : 0,
+        "--void-inset": `${macTrafficLights() ? macTrafficLightsBaseWidth / zoom() + 8 : 16}px`,
         width: windows() ? `env(titlebar-area-width, calc(100vw - ${windowsControlsWidth()}))` : undefined,
         "max-width": windows() ? `env(titlebar-area-width, calc(100vw - ${windowsControlsWidth()}))` : undefined,
         // Native Windows caption controls remain on the physical right in both writing directions.
