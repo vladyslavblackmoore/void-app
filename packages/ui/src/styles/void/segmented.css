@@ -1,0 +1,29 @@
+html[data-theme="void"] [data-slot="segmented-control-v2"] {
+  height: auto;
+  padding: 3px;
+  gap: 2px;
+  background: var(--void-inner);
+  box-shadow: none;
+  border: 1px solid var(--void-border);
+}
+
+html[data-theme="void"] [data-slot="segmented-control-v2-item"] {
+  font-weight: var(--void-weight-regular);
+  color: var(--void-text-2);
+}
+
+html[data-theme="void"] [data-slot="segmented-control-v2-item"]:where(:hover):not([data-pressed]):not(:disabled) {
+  background: var(--void-hover);
+  color: var(--void-text-1);
+}
+
+html[data-theme="void"] [data-slot="segmented-control-v2-item"]:where([data-pressed]) {
+  background: var(--void-pill);
+  color: var(--void-pill-text);
+  font-weight: var(--void-weight-medium);
+  box-shadow: none;
+}
+
+html[data-theme="void"] [data-slot="segmented-control-v2-item"]:where(:disabled) {
+  opacity: var(--void-disabled-opacity);
+}

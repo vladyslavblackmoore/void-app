@@ -1,11 +1,14 @@
 import { createMemo, For, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { ButtonV2 } from "@opencode-ai/ui/v2/button-v2"
+import { SegmentedControlItemV2, SegmentedControlV2 } from "@opencode-ai/ui/v2/segmented-control-v2"
 import { Switch } from "@opencode-ai/ui/v2/switch-v2"
+import { useTheme } from "@opencode-ai/ui/theme"
 import { useLanguage } from "@/context/language"
 import {
   buildAgentPatch,
   canSave,
+  effortControl,
   groupModels,
   initialDraft,
   selectModel,
@@ -27,6 +30,7 @@ export function AgentEditorPanel(props: {
   onClose: () => void
 }) {
   const language = useLanguage()
+  const theme = useTheme()
   const [draft, setDraft] = createStore<AgentDraft>(initialDraft(props.node))
   const [state, setState] = createStore({ confirming: false, saving: false })
   const groups = createMemo(() => groupModels(props.providers))
@@ -128,24 +132,42 @@ export function AgentEditorPanel(props: {
               {language.t("agents.editor.fromFile")}
             </p>
           </Show>
-          <div role="radiogroup" aria-label={language.t("agents.editor.effort")} class="flex flex-wrap gap-1.5">
-            <For each={variants()}>
-              {(variant) => (
-                <button
-                  type="button"
-                  role="radio"
-                  aria-checked={draft.variant === variant}
-                  data-slot="agents-option"
-                  data-selected={draft.variant === variant}
-                  disabled={props.locked.variant}
-                  class="rounded-xl px-3 py-1.5 text-[13px]"
-                  onClick={() => setDraft("variant", draft.variant === variant ? undefined : variant)}
-                >
-                  {variant}
-                </button>
-              )}
-            </For>
-          </div>
+          <Show
+            when={effortControl(theme.themeId()) === "segmented"}
+            fallback={
+              <div role="radiogroup" aria-label={language.t("agents.editor.effort")} class="flex flex-wrap gap-1.5">
+                <For each={variants()}>
+                  {(variant) => (
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={draft.variant === variant}
+                      data-slot="agents-option"
+                      data-selected={draft.variant === variant}
+                      disabled={props.locked.variant}
+                      class="rounded-xl px-3 py-1.5 text-[13px]"
+                      onClick={() => setDraft("variant", draft.variant === variant ? undefined : variant)}
+                    >
+                      {variant}
+                    </button>
+                  )}
+                </For>
+              </div>
+            }
+          >
+            <SegmentedControlV2
+              class="segmented-control-v2--full-width"
+              aria-label={language.t("agents.editor.effort")}
+              value={draft.variant ?? null}
+              allowDeselect
+              disabled={props.locked.variant}
+              onChange={(next) => setDraft("variant", next ?? undefined)}
+            >
+              <For each={variants()}>
+                {(variant) => <SegmentedControlItemV2 value={variant}>{variant}</SegmentedControlItemV2>}
+              </For>
+            </SegmentedControlV2>
+          </Show>
         </Show>
       </div>
 
