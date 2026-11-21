@@ -11,6 +11,8 @@ import { useModels } from "@/context/models"
 import { useServerSDK } from "@/context/server-sdk"
 import { popularProviders } from "@/hooks/use-providers"
 import { Persist, persisted } from "@/utils/persist"
+import { providerLabel } from "../void/provider-branding"
+import { useVoidTheme } from "../void/use-void-theme"
 import { SettingsListV2 } from "./parts/list"
 import { SettingsRowV2 } from "./parts/row"
 import "./settings-v2.css"
@@ -23,6 +25,7 @@ export const SettingsModelsV2: Component = () => {
   const language = useLanguage()
   const models = useModels()
   const serverSdk = useServerSDK()
+  const isVoid = useVoidTheme()
   const [store, setStore] = persisted(
     Persist.serverGlobal(serverSdk().scope, "settings-v2.models.providers"),
     createStore({ collapsed: {} as Record<string, boolean> }),
@@ -147,7 +150,9 @@ export const SettingsModelsV2: Component = () => {
                             height={PROVIDER_ICON_SIZE}
                             class="settings-v2-models-provider-icon shrink-0"
                           />
-                          <span class="settings-v2-section-title">{group.items[0].provider.name}</span>
+                          <span class="settings-v2-section-title">
+                            {providerLabel(isVoid(), group.category, group.items[0].provider.name)}
+                          </span>
                         </span>
                       </button>
                     </h3>

@@ -14,6 +14,7 @@
 @import "@opencode-ai/ui/styles/void/dock.css";
 @import "@opencode-ai/ui/styles/void/chat.css";
 @import "@opencode-ai/ui/styles/void/model-picker.css";
+@import "@opencode-ai/ui/styles/void/models.css";
 
 @font-face {
   font-family: "JetBrainsMono Nerd Font Mono";
