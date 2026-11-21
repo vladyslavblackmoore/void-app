@@ -96,6 +96,10 @@ html[data-theme="void"] [data-slot="void-sheet-search"]:focus {
   border-color: var(--void-border-strong);
 }
 
+html[data-theme="void"] [data-slot="void-run-body"] {
+  display: contents;
+}
+
 html[data-theme="void"] [data-slot="void-sheet-scroll"] {
   display: flex;
   flex: 1;

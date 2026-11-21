@@ -19,8 +19,15 @@ export type RunViewProps = {
 export function VoidRunView(props: RunViewProps) {
   const compact = () => new Intl.NumberFormat(props.intl, { notation: "compact" })
   return (
-    <>
-      <Show when={props.id}>
+    <div data-slot="void-run-body">
+      <Show
+        when={props.id}
+        fallback={
+          <Show when={props.empty}>
+            <div data-slot="void-sheet-empty">{props.t("void.run.empty")}</div>
+          </Show>
+        }
+      >
         <section data-slot="void-run-status">
           <div data-slot="void-run-context">
             <span>{props.t("void.run.status")}</span>
@@ -81,9 +88,6 @@ export function VoidRunView(props: RunViewProps) {
           </div>
         </section>
       </Show>
-      <Show when={props.empty && !props.id}>
-        <div data-slot="void-sheet-empty">{props.t("void.run.empty")}</div>
-      </Show>
-    </>
+    </div>
   )
 }

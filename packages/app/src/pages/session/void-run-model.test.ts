@@ -52,6 +52,14 @@ describe("run summary", () => {
   test("a selected session with a model and nothing else is not empty and the view hides the empty text for it", () => {
     expect(runSummary({ id: "s", messages: [user], providers, todos: 0, files: 0 }).empty).toBe(false)
     const view = readFileSync(new URL("./void-run-view.tsx", import.meta.url), "utf8")
-    expect(view).toContain("props.empty && !props.id")
+    expect(view).toContain("fallback={")
+    expect(view).not.toContain("props.empty && !props.id")
+  })
+
+  test("the view renders its sections inside one stable root so a session switch replaces them cleanly", () => {
+    const view = readFileSync(new URL("./void-run-view.tsx", import.meta.url), "utf8")
+    const css = readFileSync(new URL("./void-session-sheets.css", import.meta.url), "utf8")
+    expect(view).toContain('<div data-slot="void-run-body">')
+    expect(css).toContain('[data-slot="void-run-body"] {\n  display: contents;')
   })
 })
