@@ -19,6 +19,15 @@ import {
 import { createOverviewAgents, OverviewAgentMap } from "@/components/void/overview-agent-map"
 import { memoryCard } from "@/components/void/overview-memory-model"
 import { brokerCard } from "@/components/void/overview-broker-model"
+import {
+  overviewDockRequest,
+  overviewSubtitle,
+  overviewTelemetry,
+  type OverviewTelemetryItem,
+} from "@/components/void/overview-extras-model"
+import { buildTiles, hubSummary } from "@/components/void/connector-model"
+import { Identifier } from "@/utils/id"
+import { normalizeSessionInfo } from "@/utils/session"
 import { pathKey } from "@/utils/path-key"
 import { sessionTitle } from "@/utils/session-title"
 import type { HomeController } from "./home-controller"
@@ -101,6 +110,79 @@ export function VoidOverview(props: { home: HomeController; sessions: HomeSessio
   })
   const broker = createMemo(() => brokerCard(brokerStatus()))
   const agentCount = () => 1 + agents().subagents.length
+  const subtitle = createMemo(() =>
+    overviewSubtitle({
+      version: (() => {
+        const conn = props.home.server.focused()
+        return conn ? props.home.server.health(conn)?.version : undefined
+      })(),
+      agents: agentCount(),
+      broker: !!broker(),
+    }),
+  )
+  const [draft, setDraft] = createSignal("")
+  const [sending, setSending] = createSignal(false)
+  const dockRequest = createMemo(() =>
+    overviewDockRequest({
+      text: draft(),
+      agent: agents().main.name,
+      model: agents().main.model,
+      directory: props.home.project.newSession()?.worktree,
+    }),
+  )
+  const send = async () => {
+    const request = dockRequest()
+    const ctx = props.home.server.focusedContext()
+    if (!request || !ctx || sending()) return
+    setSending(true)
+    try {
+      const created = await ctx.sdk.api.session
+        .create({
+          agent: request.agent,
+          model: { id: request.model.modelID, providerID: request.model.providerID },
+          location: { directory: request.directory },
+        })
+        .then(normalizeSessionInfo)
+        .catch((err: unknown) => {
+          showToast({
+            title: language.t("prompt.toast.sessionCreateFailed.title"),
+            description: err instanceof Error ? err.message : String(err),
+          })
+          return undefined
+        })
+      if (!created) return
+      await ctx.sdk.api.session
+        .prompt({
+          sessionID: created.id,
+          id: Identifier.ascending("message"),
+          agent: request.agent,
+          model: request.model,
+          text: request.text,
+          files: [],
+          agents: [],
+        })
+        .then(() => {
+          setDraft("")
+        })
+        .catch((err: unknown) => {
+          showToast({
+            title: language.t("prompt.toast.promptSendFailed.title"),
+            description: err instanceof Error ? err.message : String(err),
+          })
+        })
+      props.sessions.session.open(created)
+    } finally {
+      setSending(false)
+    }
+  }
+  const telemetry = createMemo(() =>
+    overviewTelemetry({
+      broker: brokerStatus()?.state,
+      hub: hubSummary(buildTiles(mcp.data)),
+      sessions: items().length,
+      agents: agentCount(),
+    }),
+  )
   const stats = createMemo(() => overviewStats(items()))
   const visible = createMemo(() => filterOverview(items(), filter()))
 
@@ -110,7 +192,18 @@ export function VoidOverview(props: { home: HomeController; sessions: HomeSessio
         <div>
           <h1 data-slot="void-overview-title">{language.t("void.overview.title")}</h1>
           <div data-slot="void-overview-subtitle">
-            {language.t("void.overview.agents.count", { count: String(agentCount()) })}
+            <For each={subtitle()}>
+              {(part, index) => (
+                <>
+                  <Show when={index() > 0}>{" \u00b7 "}</Show>
+                  {part.key === "core"
+                    ? language.t("void.overview.subtitle.core", { version: part.version })
+                    : part.key === "agents"
+                      ? language.t("void.overview.agents.count", { count: String(part.count) })
+                      : language.t("void.overview.subtitle.broker", { count: String(part.count) })}
+                </>
+              )}
+            </For>
           </div>
         </div>
         <div data-slot="void-overview-stats">
@@ -193,6 +286,10 @@ export function VoidOverview(props: { home: HomeController; sessions: HomeSessio
                       {language.t(`hub.state.${card().state}`)}
                     </span>
                   </div>
+                  <div data-slot="void-overview-card-text">{language.t("void.overview.memory.text")}</div>
+                  <Show when={card().error}>
+                    <div data-slot="void-overview-card-error">{card().error}</div>
+                  </Show>
                 </CardV2>
               )}
             </Show>
@@ -206,12 +303,79 @@ export function VoidOverview(props: { home: HomeController; sessions: HomeSessio
                       {language.t(`void.overview.broker.${card().state}`)}
                     </span>
                   </div>
+                  <div data-slot="void-overview-card-text">{language.t("void.overview.broker.text")}</div>
+                  <Show when={card().exitCode !== undefined}>
+                    <div data-slot="void-overview-card-error">
+                      {language.t("void.overview.broker.exit", { code: String(card().exitCode) })}
+                    </div>
+                  </Show>
                 </CardV2>
               )}
             </Show>
           </aside>
         </Show>
       </div>
+      <footer data-slot="void-overview-foot">
+        <Telemetry side="left" items={telemetry().left} />
+        <form
+          data-slot="void-overview-dock"
+          onSubmit={(event) => {
+            event.preventDefault()
+            void send()
+          }}
+        >
+          <input
+            data-slot="void-overview-dock-input"
+            type="text"
+            value={draft()}
+            placeholder={language.t("void.overview.dock.placeholder")}
+            aria-label={language.t("void.overview.dock.placeholder")}
+            disabled={sending()}
+            onInput={(event) => setDraft(event.currentTarget.value)}
+          />
+          <button
+            type="submit"
+            data-slot="void-overview-dock-send"
+            aria-label={language.t("void.overview.dock.send")}
+            disabled={!dockRequest() || sending()}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M8 13V3M3.5 7.5 8 3l4.5 4.5" />
+            </svg>
+          </button>
+        </form>
+        <Telemetry side="right" items={telemetry().right} />
+      </footer>
+    </div>
+  )
+}
+
+function Telemetry(props: { side: "left" | "right"; items: OverviewTelemetryItem[] }) {
+  const language = useLanguage()
+  const label = (item: OverviewTelemetryItem) => {
+    if (item.key === "broker")
+      return language.t("void.overview.tele.broker", { state: language.t(`void.overview.broker.${item.state}`) })
+    if (item.key === "hub")
+      return language.t("void.overview.tele.hub", {
+        connected: String(item.connected),
+        configured: String(item.configured),
+      })
+    if (item.key === "sessions") return language.t("void.overview.tele.sessions", { count: String(item.count) })
+    return language.t("void.overview.tele.agents", { count: String(item.count) })
+  }
+  return (
+    <div data-slot="void-overview-tele" data-side={props.side}>
+      <For each={props.items}>{(item) => <div>{label(item)}</div>}</For>
     </div>
   )
 }

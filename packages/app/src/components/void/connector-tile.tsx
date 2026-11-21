@@ -1,7 +1,18 @@
 import { For, Show } from "solid-js"
 import { StatusDotV2 } from "@opencode-ai/ui/v2/status-dot-v2"
 import { useLanguage } from "@/context/language"
-import type { ConnectorTile } from "./connector-model"
+import { Icon } from "@opencode-ai/ui/icon"
+import type { ConnectorKind, ConnectorTile } from "./connector-model"
+
+const iconNames = { memory: "brain", google: "cloud-upload", generic: "mcp" } as const
+
+export function ConnectorIcon(props: { kind: ConnectorKind }) {
+  return (
+    <div data-slot="void-connector-icon">
+      <Icon name={iconNames[props.kind]} size="normal" />
+    </div>
+  )
+}
 
 export function ConnectorTileView(props: {
   tile: ConnectorTile
@@ -29,21 +40,7 @@ export function ConnectorTileView(props: {
       }}
     >
       <div data-slot="void-connector-top">
-        <div data-slot="void-connector-icon">
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 16 16"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.4"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M6 2v3M10 2v3M4.5 5h7v2.5a3.5 3.5 0 01-7 0zM8 11v3" />
-          </svg>
-        </div>
+        <ConnectorIcon kind={props.tile.kind} />
         <div data-slot="void-connector-heading">
           <div data-slot="void-connector-name">{props.tile.name}</div>
           <div data-slot="void-connector-state">
@@ -52,6 +49,9 @@ export function ConnectorTileView(props: {
           </div>
         </div>
       </div>
+      <Show when={props.tile.kind === "memory"}>
+        <div data-slot="void-connector-desc">{language.t("hub.desc.memory")}</div>
+      </Show>
       <Show when={props.tile.services.length > 0}>
         <div data-slot="void-connector-services">
           <For each={props.tile.services}>{(service) => <span data-slot="void-connector-service">{service}</span>}</For>

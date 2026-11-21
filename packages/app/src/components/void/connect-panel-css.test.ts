@@ -24,12 +24,30 @@ describe("connect panel and hub styles", () => {
     )
   })
 
+  test("renders Disconnect as a secondary danger outline and Close as the primary", () => {
+    const tsx = read("./connect-panel.tsx")
+    const start = panel.indexOf('[data-slot="void-panel-disconnect"] {\n  background')
+    const rule = start < 0 ? "" : panel.slice(start, panel.indexOf("}", start))
+    expect(rule).toContain("var(--void-red")
+    expect(rule).toContain("background: transparent")
+    expect(tsx).toMatch(/data-slot="void-panel-disconnect"[^>]*onClick=\{props\.onToggle\}/)
+    expect(tsx).toMatch(/data-slot="void-panel-next" onClick=\{props\.onClose\}/)
+  })
+
   test("sizes the panel to its content without a spacer", () => {
     expect(body(panel, '[data-component="void-connect-panel"]')).toContain("align-self: flex-start")
     expect(panel).not.toContain("void-panel-spacer")
   })
 
-  test("does not stretch tiles to the tallest tile in a row", () => {
-    expect(body(hub, '[data-component="void-hub"] [data-slot="void-hub-grid"]')).toContain("align-items: start")
+  test("gives every tile the height of the tallest tile", () => {
+    const grid = body(hub, '[data-component="void-hub"] [data-slot="void-hub-grid"]')
+    expect(grid).toContain("grid-auto-rows: 1fr")
+    expect(grid).toContain("align-items: stretch")
+    expect(grid).not.toContain("align-items: start")
+  })
+
+  test("styles the tile description, the tool count and the manage list", () => {
+    expect(hub).toContain('[data-slot="void-connector-desc"]')
+    expect(panel).toContain('[data-slot="void-panel-facts"]')
   })
 })

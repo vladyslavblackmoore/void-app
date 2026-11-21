@@ -8,6 +8,7 @@ import {
   connectorFilters,
   filterCounts,
   filterTiles,
+  hubServer,
   hubSummary,
   type ConnectorFilter,
   type ConnectorTile,
@@ -28,6 +29,7 @@ function HubBody(props: { query: string }) {
   const tiles = createMemo(() => buildTiles(sync().data.mcp))
   const counts = createMemo(() => filterCounts(tiles()))
   const summary = createMemo(() => hubSummary(tiles()))
+  const hub = createMemo(() => hubServer(sync().data.mcp))
   const visible = createMemo(() => filterTiles(tiles(), filter(), props.query))
 
   const current = createMemo(() => tiles().find((tile) => tile.id === selected()))
@@ -41,8 +43,16 @@ function HubBody(props: { query: string }) {
       <div data-slot="void-hub-main">
         <div data-slot="void-hub-bar">
           <span data-slot="void-hub-summary">
-            <StatusDotV2 tone={summary().tone} />
-            {language.plural("hub.summary", summary().configured)}
+            <StatusDotV2 tone={hub()?.tone ?? summary().tone} />
+            <Show when={hub()}>
+              {(item) => (
+                <>
+                  <span data-slot="void-hub-hub">{language.t(`hub.hubStatus.${item().state}`)}</span>
+                  <span aria-hidden="true">·</span>
+                </>
+              )}
+            </Show>
+            {language.plural("hub.summary", summary().total)}
           </span>
           <SegmentedControlV2
             aria-label={language.t("hub.filter.label")}

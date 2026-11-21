@@ -9,7 +9,7 @@ describe("overview memory card", () => {
 
   test("reads state and tone from the memory connector", () => {
     expect(memoryCard({ memory: { status: "connected" } })).toEqual({ state: "connected", tone: "green" })
-    expect(memoryCard({ memory: { status: "failed", error: "x" } })).toEqual({ state: "error", tone: "red" })
+    expect(memoryCard({ memory: { status: "failed", error: "x" } })).toEqual({ state: "error", tone: "red", error: "x" })
     expect(memoryCard({ memory: { status: "disabled" } })).toEqual({ state: "disabled", tone: "grey" })
   })
 })

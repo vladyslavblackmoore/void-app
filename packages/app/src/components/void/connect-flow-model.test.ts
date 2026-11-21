@@ -4,6 +4,7 @@ import {
   canAdvance,
   flowSteps,
   initialStep,
+  isManage,
   isPlaceholder,
   nextStep,
   prevStep,
@@ -11,6 +12,11 @@ import {
 } from "./connect-flow-model"
 
 describe("connect flow model", () => {
+  test("a connected connector opens the manage view, every other state the connect flow", () => {
+    expect(isManage("connected")).toBe(true)
+    for (const state of ["needs_auth", "error", "disabled", "available"] as const) expect(isManage(state)).toBe(false)
+  })
+
   test("lists the four steps in order", () => {
     expect(flowSteps).toEqual(["authorize", "account", "access", "done"])
   })

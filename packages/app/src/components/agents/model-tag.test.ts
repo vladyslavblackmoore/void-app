@@ -33,3 +33,9 @@ describe("modelChipLabel", () => {
     expect(modelChipLabel(undefined)).toBeUndefined()
   })
 })
+
+describe("haiku tier", () => {
+  test("maps haiku models to their own kind", () => {
+    expect(modelTagKind({ providerID: "sub", modelID: "haiku-4" })).toBe("haiku")
+  })
+})

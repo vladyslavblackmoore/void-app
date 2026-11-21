@@ -17,10 +17,13 @@ describe("agents screen void styles", () => {
     expect(css).not.toContain("/*")
   })
 
-  test("light tag fills stay bright with dark text", () => {
-    const body = bodyOf(`${light} [data-slot="agents-model-tag"][data-kind="other"]`)
-    expect(body).toContain("background:")
-    expect(body).not.toContain("var(--void-blue)")
+  test("other and haiku tags use one token in both themes", () => {
+    expect(bodyOf(`${light} [data-slot="agents-model-tag"][data-kind="other"]`)).toBe("")
+    const base = 'html[data-theme="void"] [data-slot="agents-model-tag"]'
+    expect(bodyOf(`${base}[data-kind="haiku"]`)).toContain("var(--void-model-tier-other)")
+    expect(bodyOf('html[data-theme="void"] [data-component="agents-node"] [data-slot="agents-model-tag"]')).toContain(
+      "var(--void-model-tier-other)",
+    )
   })
 
   test("tags use the on-tag text colour", () => {
@@ -51,5 +54,38 @@ describe("agents screen void styles", () => {
     expect(body).toContain("flex: 1 1 auto")
     expect(body).toContain("min-width: max-content")
     expect(body).toContain("padding: 0 8px")
+  })
+
+  test("active links are dashed in green and blue", () => {
+    const base = 'html[data-theme="void"] [data-component="agents-canvas"] [data-slot="agents-link"]'
+    expect(bodyOf(`${base}[data-state="ok"]`)).toContain("stroke: var(--void-green)")
+    expect(bodyOf(`${base}[data-state="ok"]`)).toContain("stroke-dasharray")
+    expect(bodyOf(`${base}[data-state="busy"]`)).toContain("stroke: var(--void-blue)")
+    expect(bodyOf(`${base}[data-state="busy"]`)).toContain("stroke-dasharray")
+  })
+
+  test("editor panel is 400 wide and in flow beside the map", () => {
+    const body = bodyOf('html[data-theme="void"] [data-component="agents-panel"]')
+    expect(body).toContain("width: var(--void-panel-w-lg, 400px)")
+    expect(body).toContain("position: relative")
+    expect(bodyOf('html[data-theme="void"] [data-component="agents-stage"]')).toContain("display: flex")
+  })
+
+  test("node descriptions and editor labels use text-2", () => {
+    expect(bodyOf('html[data-theme="void"] [data-component="agents-node"] [data-slot="agents-description"]')).toContain(
+      "color: var(--void-text-2)",
+    )
+    expect(bodyOf('html[data-theme="void"] [data-component="agents-panel"] [data-slot="agents-label"]')).toContain(
+      "color: var(--void-text-2)",
+    )
+    expect(bodyOf('html[data-theme="void"] [data-component="agents-panel"] [data-slot="agents-meta"]')).toContain(
+      "color: var(--void-text-2)",
+    )
+  })
+
+  test("zoom rail and map scaling are styled", () => {
+    expect(bodyOf('html[data-theme="void"] [data-component="agents-rail"]')).toContain("background")
+    expect(bodyOf('html[data-theme="void"] [data-component="agents-rail"] button')).toContain("width")
+    expect(bodyOf('[data-component="agents-map"]')).toContain("transform-origin")
   })
 })

@@ -1,5 +1,16 @@
 import { describe, expect, test } from "bun:test"
-import { buildAgentsDiagram, mainAgentName, formatModelRef, linkPaths, parseModelRef } from "./agents-diagram-model"
+import {
+  buildAgentsDiagram,
+  formatModelRef,
+  linkPaths,
+  linkState,
+  mainAgentName,
+  nodeStateRows,
+  parseModelRef,
+  ZOOM_FIT,
+  zoomIn,
+  zoomOut,
+} from "./agents-diagram-model"
 
 const providers = [
   {
@@ -216,5 +227,49 @@ describe("main agent name", () => {
       ] as never),
     ).toBe("lead")
     expect(mainAgentName([])).toBe("main")
+  })
+})
+
+describe("zoom", () => {
+  test("steps and clamps", () => {
+    expect(ZOOM_FIT).toBe(1)
+    expect(zoomIn(1)).toBeCloseTo(1.1)
+    expect(zoomOut(1)).toBeCloseTo(0.9)
+    expect(zoomIn(1.5)).toBe(1.5)
+    expect(zoomOut(0.5)).toBe(0.5)
+  })
+})
+
+describe("linkState", () => {
+  const node = (status: "ready" | "unavailable") => ({
+    name: "a",
+    inherits: false,
+    isMain: false,
+    status,
+  })
+
+  test("selected path is busy, ready is ok, unavailable is idle", () => {
+    expect(linkState(node("ready"), true)).toBe("busy")
+    expect(linkState(node("unavailable"), true)).toBe("busy")
+    expect(linkState(node("ready"), false)).toBe("ok")
+    expect(linkState(node("unavailable"), false)).toBe("idle")
+  })
+})
+
+describe("nodeStateRows", () => {
+  const base = { name: "n", inherits: false, isMain: false, status: "ready" as const }
+
+  test("always lists ready and unavailable", () => {
+    const rows = nodeStateRows({ main: { ...base, isMain: true }, subagents: [], mainCanStartSubagents: true })
+    expect(rows).toEqual(["ready", "unavailable"])
+  })
+
+  test("adds inherits and cannotStart only when the data shows them", () => {
+    const rows = nodeStateRows({
+      main: { ...base, isMain: true },
+      subagents: [{ ...base, inherits: true }],
+      mainCanStartSubagents: false,
+    })
+    expect(rows).toEqual(["ready", "unavailable", "inherits", "cannotStart"])
   })
 })

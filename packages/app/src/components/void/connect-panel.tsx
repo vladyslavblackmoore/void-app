@@ -7,6 +7,7 @@ import {
   canAdvance,
   flowSteps,
   initialStep,
+  isManage,
   isPlaceholder,
   nextStep,
   prevStep,
@@ -14,6 +15,7 @@ import {
   type FlowStep,
 } from "./connect-flow-model"
 import type { ConnectorTile } from "./connector-model"
+import { ConnectorIcon } from "./connector-tile"
 
 const check = (
   <svg
@@ -37,6 +39,7 @@ export function ConnectPanel(props: { tile: ConnectorTile; busy: boolean; onTogg
   const authorized = () => props.tile.state === "connected"
   const mode = () => authorizeMode(props.tile.state)
   const name = () => props.tile.name
+  const manage = () => isManage(props.tile.state)
 
   createEffect(
     on(authorized, (value, previous) => {
@@ -51,26 +54,14 @@ export function ConnectPanel(props: { tile: ConnectorTile; busy: boolean; onTogg
     return language.t("hub.panel.connect.button")
   }
 
+  const title = () => language.t(manage() ? "hub.panel.manage.title" : "hub.panel.title", { name: name() })
+
   return (
-    <aside data-component="void-connect-panel" aria-label={language.t("hub.panel.title", { name: name() })}>
+    <aside data-component="void-connect-panel" data-mode={manage() ? "manage" : "connect"} aria-label={title()}>
       <div data-slot="void-panel-head">
-        <div data-slot="void-connector-icon">
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 16 16"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.4"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M6 2v3M10 2v3M4.5 5h7v2.5a3.5 3.5 0 01-7 0zM8 11v3" />
-          </svg>
-        </div>
+        <ConnectorIcon kind={props.tile.kind} />
         <div data-slot="void-panel-heading">
-          <h2 data-slot="void-panel-title">{language.t("hub.panel.title", { name: name() })}</h2>
+          <h2 data-slot="void-panel-title">{title()}</h2>
           <div data-slot="void-panel-meta">
             <StatusDotV2 tone={props.tile.tone} />
             {language.t(`hub.state.${props.tile.state}`)}
@@ -97,6 +88,46 @@ export function ConnectPanel(props: { tile: ConnectorTile; busy: boolean; onTogg
           </svg>
         </button>
       </div>
+      <Show
+        when={!manage()}
+        fallback={
+          <>
+            <div data-slot="void-panel-card" data-step="manage">
+              <div data-slot="void-panel-card-title">{language.t("hub.panel.ready.title", { name: name() })}</div>
+              <div data-slot="void-panel-card-text">{language.t("hub.panel.manage.description")}</div>
+              <dl data-slot="void-panel-facts">
+                <div data-slot="void-panel-fact">
+                  <dt>{language.t("hub.panel.manage.status")}</dt>
+                  <dd>
+                    <StatusDotV2 tone={props.tile.tone} />
+                    {language.t(`hub.state.${props.tile.state}`)}
+                  </dd>
+                </div>
+                <Show when={props.tile.serverName}>
+                  <div data-slot="void-panel-fact">
+                    <dt>{language.t("hub.panel.manage.server")}</dt>
+                    <dd>{props.tile.serverName}</dd>
+                  </div>
+                </Show>
+                <Show when={props.tile.services.length > 0}>
+                  <div data-slot="void-panel-fact">
+                    <dt>{language.t("hub.panel.manage.services")}</dt>
+                    <dd>{props.tile.services.join(", ")}</dd>
+                  </div>
+                </Show>
+              </dl>
+            </div>
+            <div data-slot="void-panel-actions">
+              <button type="button" data-slot="void-panel-disconnect" disabled={props.busy} onClick={props.onToggle}>
+                {language.t("hub.panel.ready.disconnect")}
+              </button>
+              <button type="button" data-slot="void-panel-next" onClick={props.onClose}>
+                {language.t("hub.panel.close")}
+              </button>
+            </div>
+          </>
+        }
+      >
       <ol data-slot="void-stepper" aria-label={language.t("hub.panel.steps.label")}>
         <For each={flowSteps}>
           {(item, index) => (
@@ -195,6 +226,7 @@ export function ConnectPanel(props: { tile: ConnectorTile; busy: boolean; onTogg
           {step() === "done" ? language.t("hub.panel.finish") : language.t("hub.panel.continue")}
         </button>
       </div>
+      </Show>
     </aside>
   )
 }
