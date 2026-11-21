@@ -12,6 +12,7 @@ const entry = z
     cwd: z.string().min(1).optional(),
     account: z.string().min(1).optional(),
     mode: z.string().min(1).optional(),
+    settingSources: z.string().optional(),
     mcp: z.array(z.string().min(1)).default([]),
     warm: z.boolean().default(false),
     description: z.string().default(""),

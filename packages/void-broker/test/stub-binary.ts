@@ -30,7 +30,7 @@ const emit = (batch: string[]) => {
   for (const line of batch) process.stdout.write(line + "\n")
 }
 
-log({ type: "start", argv: process.argv.slice(2), configDir: process.env["CLAUDE_CONFIG_DIR"] ?? null, cwd: process.cwd() })
+log({ type: "start", pid: process.pid, argv: process.argv.slice(2), configDir: process.env["CLAUDE_CONFIG_DIR"] ?? null, cwd: process.cwd() })
 
 process.on("SIGINT", () => {
   emit(tail)

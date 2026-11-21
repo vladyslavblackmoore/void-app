@@ -207,13 +207,21 @@ describe("void-cli-acp", () => {
     expect(await Bun.file(file).exists()).toBe(false)
   })
 
-  test("a stdio mcp server is rejected", async () => {
+  test("a stdio mcp server is mapped to a command entry with an env object", async () => {
     const harness = await launch({})
     await init(harness)
-    const error = await harness.connection
-      .newSession({ cwd: harness.dir, mcpServers: [{ name: "x", command: "x", args: [], env: [] }] })
-      .catch((reason: unknown) => reason)
-    expect(error).toBeInstanceOf(Error)
+    await harness.connection.newSession({
+      cwd: harness.dir,
+      mcpServers: [
+        { name: "memory", command: "bun", args: ["main.ts", "--x"], env: [{ name: "VOID_MEMORY_DB", value: "/tmp/g.db" }] },
+      ],
+    })
+    const argv = (await starts(harness))[0]?.argv ?? []
+    expect(argv).toContain("--strict-mcp-config")
+    const file = text(argv[argv.indexOf("--mcp-config") + 1])
+    expect(await Bun.file(file).json()).toEqual({
+      mcpServers: { memory: { command: "bun", args: ["main.ts", "--x"], env: { VOID_MEMORY_DB: "/tmp/g.db" } } },
+    })
   })
 
   test("session/cancel sends an interrupt and the turn ends with cancelled", async () => {
