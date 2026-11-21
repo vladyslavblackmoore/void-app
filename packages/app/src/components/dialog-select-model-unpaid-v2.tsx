@@ -14,6 +14,7 @@ import { ModelTooltip } from "./model-tooltip"
 
 type ModelState = ReturnType<typeof useLocal>["model"]
 const featuredProviders = ["opencode", "opencode-go", "openai", "anthropic", "google", "github-copilot"]
+const tooltipGutter = () => (document.documentElement.dataset.theme === "void" ? 14 : 6)
 const displayModelName = (name: string) => name.replace(/\s+(?:\(free\)|free)$/i, "")
 
 export const DialogSelectModelUnpaidV2: Component<{ model?: ModelState }> = (props) => {
@@ -75,9 +76,12 @@ export const DialogSelectModelUnpaidV2: Component<{ model?: ModelState }> = (pro
         <DialogTitle>{language.t("dialog.model.select.title")}</DialogTitle>
       </DialogHeader>
       <DialogBody class="max-h-[calc(100vh_-_68px)] min-h-0 flex-none gap-0 overflow-y-auto px-2 pb-2">
-        <div ref={listEl} class="flex min-h-0 flex-col">
+        <div ref={listEl} data-void-model-picker class="flex min-h-0 flex-col">
           <div data-section="free-models" class="flex w-full flex-col items-start pb-3">
-            <div class="flex h-8 w-full flex-none select-none flex-row items-center px-3 pb-2">
+            <div
+              data-slot="free-models-title"
+              class="flex h-8 w-full flex-none select-none flex-row items-center px-3 pb-2"
+            >
               <div class="flex h-5 items-center text-[13px] font-[440] leading-5 tracking-[-0.04px] text-v2-text-text-muted [font-family:var(--v2-font-family-sans)] [font-variant-numeric:tabular-nums] [font-variation-settings:'slnt'_0]">
                 {language.t("dialog.model.unpaid.freeModels.title")}
               </div>
@@ -87,7 +91,7 @@ export const DialogSelectModelUnpaidV2: Component<{ model?: ModelState }> = (pro
                 <TooltipV2
                   class="w-full"
                   placement="right-start"
-                  gutter={6}
+                  gutter={tooltipGutter()}
                   openDelay={0}
                   contentStyle={{ "font-family": "var(--v2-font-family-sans)" }}
                   value={
@@ -101,6 +105,8 @@ export const DialogSelectModelUnpaidV2: Component<{ model?: ModelState }> = (pro
                 >
                   <button
                     type="button"
+                    data-slot="model-option"
+                    data-selected={currentKey() === modelKey(item) ? "" : undefined}
                     class="flex w-full scroll-my-3.5 flex-row items-center gap-1.5 rounded-md px-3 py-2 text-left text-[13px] font-[530] leading-5 tracking-[-0.04px] text-v2-text-text-base [font-family:var(--v2-font-family-sans)] [font-variation-settings:'slnt'_0] hover:bg-v2-overlay-simple-overlay-hover focus:bg-v2-overlay-simple-overlay-hover focus:outline-none"
                     onClick={() => selectModel(item)}
                   >
@@ -119,7 +125,10 @@ export const DialogSelectModelUnpaidV2: Component<{ model?: ModelState }> = (pro
           </div>
 
           <div class="flex w-full flex-col">
-            <div class="flex w-full flex-col items-start rounded-lg border-[0.5px] border-v2-border-border-muted bg-v2-background-bg-layer-02 p-2.5 pt-2">
+            <div
+              data-slot="add-more-models"
+              class="flex w-full flex-col items-start rounded-lg border-[0.5px] border-v2-border-border-muted bg-v2-background-bg-layer-02 p-2.5 pt-2"
+            >
               <div class="flex h-8 w-full select-none items-center px-0.5 pb-2">
                 <div class="flex h-5 items-center text-[13px] font-[440] leading-5 tracking-[-0.04px] text-v2-text-text-muted [font-family:var(--v2-font-family-sans)] [font-variant-numeric:tabular-nums] [font-variation-settings:'slnt'_0]">
                   {language.t("dialog.model.unpaid.addMore.title")}
@@ -161,6 +170,7 @@ export const DialogSelectModelUnpaidV2: Component<{ model?: ModelState }> = (pro
                 </For>
                 <button
                   type="button"
+                  data-slot="view-more-providers"
                   class="col-span-full flex h-8 w-full scroll-my-3.5 items-center justify-start rounded-md px-3 text-left text-[13px] font-[440] leading-5 tracking-[-0.04px] text-v2-text-text-muted [font-family:var(--v2-font-family-sans)] [font-variation-settings:'slnt'_0] hover:bg-v2-overlay-simple-overlay-hover focus:bg-v2-overlay-simple-overlay-hover focus:outline-none"
                   onClick={() => openProviders()}
                 >

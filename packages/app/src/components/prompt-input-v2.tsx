@@ -60,6 +60,7 @@ export function PromptInputV2Composer(props: PromptInputV2ComposerProps) {
         class={props.class}
         variantControlVisible={!props.controller.model.loading}
         variantStyle={effortControl(theme.themeId()) === "segmented" ? "segmented" : "menu"}
+        menuStyle={theme.themeId() === "void" ? "void" : undefined}
         attachKeybind={command.keybindParts("file.attach")}
         attachShortcut={command.keybind("file.attach")}
         modelControl={

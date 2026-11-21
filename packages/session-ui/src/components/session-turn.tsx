@@ -26,6 +26,7 @@ import { TextReveal } from "@opencode-ai/ui/text-reveal"
 import { createAutoScroll } from "@opencode-ai/ui/hooks"
 import { useI18n } from "@opencode-ai/ui/context/i18n"
 import { normalize } from "./session-diff"
+import { neutralErrorText } from "./error-text"
 
 function record(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === "object" && !Array.isArray(value)
@@ -527,7 +528,7 @@ export function SessionTurn(
               </Show>
               <Show when={error()}>
                 <Card variant="error" class="error-card">
-                  {errorText()}
+                  {neutralErrorText(errorText())}
                 </Card>
               </Show>
             </div>

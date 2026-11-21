@@ -24,6 +24,7 @@ import type {
 } from "./types"
 import type { PromptInputV2Interaction, PromptInputV2SelectControl } from "./interaction"
 import { variantControlKind, type PromptInputV2VariantStyle } from "./variant-control"
+import { dockAnchorRect, type PromptInputV2MenuStyle } from "./menu-anchor"
 import "./attachments.css"
 
 export type {
@@ -45,6 +46,7 @@ export type PromptInputV2Props = {
   modelControl?: JSX.Element
   variantControlVisible?: boolean
   variantStyle?: PromptInputV2VariantStyle
+  menuStyle?: PromptInputV2MenuStyle
   attachKeybind?: string[]
   attachShortcut?: string
 }
@@ -214,6 +216,7 @@ export function PromptInputV2(props: PromptInputV2Props) {
               commandsLabel={i18n.t("ui.promptInput.commands")}
               contextLabel={i18n.t("ui.promptInput.context")}
               shellLabel={i18n.t("ui.promptInput.shell")}
+              menuStyle={props.menuStyle}
               onAttach={props.controller.attach}
               onCommands={props.controller.openCommands}
               onContext={props.controller.openContext}
@@ -225,6 +228,8 @@ export function PromptInputV2(props: PromptInputV2Props) {
                   title={i18n.t("ui.promptInput.chooseAgent")}
                   keybind={["Mod", "."]}
                   control={control}
+                  kind="agent"
+                  menuStyle={props.menuStyle}
                 />
               )}
             </Show>
@@ -237,6 +242,8 @@ export function PromptInputV2(props: PromptInputV2Props) {
                       title={i18n.t("ui.promptInput.chooseModel")}
                       keybind={["Mod", "M"]}
                       control={control}
+                      kind="model"
+                      menuStyle={props.menuStyle}
                       model
                     />
                   )}
@@ -257,6 +264,8 @@ export function PromptInputV2(props: PromptInputV2Props) {
                           title={i18n.t("ui.promptInput.chooseVariant")}
                           keybind={["Shift", "Mod", "D"]}
                           control={control}
+                          kind="variant"
+                          menuStyle={props.menuStyle}
                         />
                       }
                     >
@@ -499,6 +508,7 @@ export function PromptInputV2AddMenu(props: {
   commandsLabel: string
   contextLabel: string
   shellLabel: string
+  menuStyle?: PromptInputV2MenuStyle
   onAttach: () => void
   onCommands: () => void
   onContext: () => void
@@ -514,7 +524,12 @@ export function PromptInputV2AddMenu(props: {
         </>
       }
     >
-      <MenuV2 gutter={6} modal={false} placement="top-start">
+      <MenuV2
+        gutter={6}
+        modal={false}
+        placement="top-start"
+        getAnchorRect={props.menuStyle === "void" ? dockAnchorRect : undefined}
+      >
         <MenuV2.Trigger
           as={IconButtonV2}
           data-action="prompt-attach"
@@ -526,18 +541,25 @@ export function PromptInputV2AddMenu(props: {
           aria-label={props.title}
         />
         <MenuV2.Portal>
-          <MenuV2.Content style={{ "min-width": "180px" }}>
+          <MenuV2.Content
+            data-menu={props.menuStyle === "void" ? "prompt-add" : undefined}
+            style={props.menuStyle === "void" ? undefined : { "min-width": "180px" }}
+          >
             <MenuV2.Item onSelect={props.onAttach} shortcut={props.attachShortcut}>
+              <PromptInputV2MenuIcon style={props.menuStyle} name="open-file" />
               {props.attachLabel}
             </MenuV2.Item>
             <MenuV2.Separator />
             <MenuV2.Item onSelect={props.onCommands} shortcut="/">
+              <PromptInputV2MenuIcon style={props.menuStyle} name="prompt" />
               {props.commandsLabel}
             </MenuV2.Item>
             <MenuV2.Item onSelect={props.onContext} shortcut="@">
+              <PromptInputV2MenuIcon style={props.menuStyle} name="file-tree" />
               {props.contextLabel}
             </MenuV2.Item>
             <MenuV2.Item onSelect={props.onShell} shortcut="!">
+              <PromptInputV2MenuIcon style={props.menuStyle} name="terminal" />
               {props.shellLabel}
             </MenuV2.Item>
           </MenuV2.Content>
@@ -547,10 +569,20 @@ export function PromptInputV2AddMenu(props: {
   )
 }
 
+function PromptInputV2MenuIcon(props: { style?: PromptInputV2MenuStyle; name: "open-file" | "prompt" | "file-tree" | "terminal" }) {
+  return (
+    <Show when={props.style === "void"}>
+      <Icon name={props.name} size="small" class="shrink-0" />
+    </Show>
+  )
+}
+
 function PromptInputV2ConfiguredSelect(props: {
   title: string
   keybind?: string[]
   control: PromptInputV2SelectControl
+  kind?: "agent" | "model" | "variant"
+  menuStyle?: PromptInputV2MenuStyle
   model?: boolean
 }) {
   const current = () => props.control.current()
@@ -561,6 +593,8 @@ function PromptInputV2ConfiguredSelect(props: {
       keybind={props.control.keybind?.() ?? props.keybind}
       options={props.control.options()}
       current={current()}
+      kind={props.kind}
+      menuStyle={props.menuStyle}
       currentIcon={
         <Show when={props.model && providerID()}>
           <ProviderIcon id={providerID()!} class="size-4 shrink-0 opacity-60" />
@@ -577,6 +611,8 @@ export function PromptInputV2Select(props: {
   options: PromptInputV2Option[]
   current: string
   currentIcon?: JSX.Element
+  kind?: "agent" | "model" | "variant"
+  menuStyle?: PromptInputV2MenuStyle
   class?: string
   onOpenChange?: (open: boolean) => void
   onSelect: (id: string) => void
@@ -591,9 +627,16 @@ export function PromptInputV2Select(props: {
         </>
       }
     >
-      <MenuV2 gutter={6} modal={false} placement="top-start" onOpenChange={props.onOpenChange}>
+      <MenuV2
+        gutter={6}
+        modal={false}
+        placement="top-start"
+        getAnchorRect={props.menuStyle === "void" ? dockAnchorRect : undefined}
+        onOpenChange={props.onOpenChange}
+      >
         <MenuV2.Trigger
           as={ButtonV2}
+          data-select={props.kind}
           variant="ghost-muted"
           size="normal"
           class={`max-w-[220px] justify-start ![font-weight:440] ${props.class ?? ""}`}
@@ -608,7 +651,7 @@ export function PromptInputV2Select(props: {
           </span>
         </MenuV2.Trigger>
         <MenuV2.Portal>
-          <MenuV2.Content>
+          <MenuV2.Content data-menu={props.menuStyle === "void" ? "prompt-select" : undefined}>
             <MenuV2.RadioGroup value={props.current} onChange={props.onSelect}>
               <For each={props.options}>
                 {(option) => (

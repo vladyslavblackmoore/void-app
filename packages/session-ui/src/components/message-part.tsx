@@ -1329,6 +1329,10 @@ export function UserMessageDisplay(props: {
             dir="auto"
             data-comments={messageComments().length > 0 ? "true" : undefined}
           >
+            <span data-slot="user-message-label">
+              {i18n.t("ui.message.you")}
+              <Show when={stamp()}>{` \u00B7 ${stamp()}`}</Show>
+            </span>
             <HighlightedText text={text()} references={inlineFiles()} agents={agents()} />
             <Show when={messageComments().length > 0}>
               <UserMessageComments comments={messageComments()} bounded />

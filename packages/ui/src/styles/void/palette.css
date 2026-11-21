@@ -1,0 +1,112 @@
+html[data-theme="void"] {
+  --void-palette-scrim: rgba(5, 6, 8, 0.62);
+}
+
+html[data-theme="void"][data-color-scheme="light"] {
+  --void-palette-scrim: rgba(226, 230, 240, 0.55);
+}
+
+html[data-theme="void"] [data-component="dialog-overlay"]:has(+ [data-dialog-layer] .command-palette-v2) {
+  background-color: var(--void-palette-scrim);
+}
+
+html[data-theme="void"] [data-component="dialog-v2"]:has(.command-palette-v2) [data-slot="dialog-container"] {
+  background: var(--void-glass);
+  -webkit-backdrop-filter: blur(var(--void-blur));
+  backdrop-filter: blur(var(--void-blur));
+  border: 1px solid var(--void-border);
+  border-radius: var(--void-radius-card);
+  box-shadow: var(--void-shadow);
+  color: var(--void-text-1);
+}
+
+html[data-theme="void"] .command-palette-v2-search {
+  padding: 10px 10px 6px;
+}
+
+html[data-theme="void"] .command-palette-v2-search [data-component="text-input-v2"],
+html[data-theme="void"] .command-palette-v2-search [data-component="text-input-v2"] [data-slot="text-input-v2-value"],
+html[data-theme="void"] .command-palette-v2-search [data-component="text-input-v2"] [data-slot="text-input-v2-input"] {
+  border-radius: var(--void-radius-inner);
+}
+
+html[data-theme="void"] .command-palette-v2-search [data-component="text-input-v2"],
+html[data-theme="void"] .command-palette-v2-search [data-component="text-input-v2"]:where(:hover, :focus-within):not([data-disabled], [data-invalid]) {
+  background: var(--void-inner);
+  box-shadow: none;
+}
+
+html[data-theme="void"] .command-palette-v2-search [data-component="text-input-v2"] [data-slot="text-input-v2-input"] {
+  color: var(--void-text-1);
+}
+
+html[data-theme="void"] .command-palette-v2-search [data-component="text-input-v2"] [data-slot="text-input-v2-input"]::placeholder {
+  color: var(--void-text-2);
+  opacity: 1;
+}
+
+html[data-theme="void"] .command-palette-v2-search [data-component="text-input-v2"] [data-slot="text-input-v2-leading-icon"] {
+  color: var(--void-text-2);
+}
+
+html[data-theme="void"] .command-palette-v2-results {
+  padding: 6px 10px 10px;
+}
+
+html[data-theme="void"] .command-palette-v2-group-title {
+  color: var(--void-text-2);
+  font-weight: var(--void-weight-medium);
+}
+
+html[data-theme="void"] .command-palette-v2-row {
+  border-radius: var(--void-radius-inner);
+  color: var(--void-text-1);
+}
+
+html[data-theme="void"] .command-palette-v2-title,
+html[data-theme="void"] .command-palette-v2-file-name {
+  color: var(--void-text-1);
+}
+
+html[data-theme="void"] .command-palette-v2-description,
+html[data-theme="void"] .command-palette-v2-meta,
+html[data-theme="void"] .command-palette-v2-file-dir,
+html[data-theme="void"] .command-palette-v2-state {
+  color: var(--void-text-2);
+}
+
+html[data-theme="void"] .command-palette-v2-row[data-active],
+html[data-theme="void"] .command-palette-v2-row:focus-visible {
+  background: var(--void-pill);
+  color: var(--void-pill-text);
+}
+
+html[data-theme="void"] .command-palette-v2-row[data-active] :is(.command-palette-v2-title, .command-palette-v2-file-name),
+html[data-theme="void"] .command-palette-v2-row[data-active] .command-palette-v2-row-icon {
+  color: var(--void-pill-text);
+}
+
+html[data-theme="void"] .command-palette-v2-row[data-active] :is(.command-palette-v2-description, .command-palette-v2-meta, .command-palette-v2-file-dir) {
+  color: var(--void-pill-text);
+  opacity: 0.7;
+}
+
+html[data-theme="void"] .command-palette-v2-row [data-component="keybind-v2"][data-variant="neutral"] [data-slot="keybind-v2-key"] {
+  height: 18px;
+  min-width: 18px;
+  padding: 0 3px;
+  border-radius: var(--void-radius-chip);
+  background: var(--void-inner);
+}
+
+html[data-theme="void"] .command-palette-v2-row [data-component="keybind-v2"][data-variant="neutral"] [data-slot="keybind-v2-label"] {
+  color: var(--void-text-2);
+}
+
+html[data-theme="void"] .command-palette-v2-row[data-active] [data-component="keybind-v2"][data-variant="neutral"] [data-slot="keybind-v2-key"] {
+  background: rgba(127, 127, 135, 0.28);
+}
+
+html[data-theme="void"] .command-palette-v2-row[data-active] [data-component="keybind-v2"][data-variant="neutral"] [data-slot="keybind-v2-label"] {
+  color: var(--void-pill-text);
+}

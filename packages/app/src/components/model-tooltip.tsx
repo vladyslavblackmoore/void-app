@@ -98,7 +98,7 @@ export const ModelTooltip: Component<{ model: ModelInfo; latest?: boolean; free?
 
   if (props.v2) {
     return (
-      <div class="flex w-[180px] flex-col gap-2">
+      <div data-void-model-tooltip class="flex w-[180px] flex-col gap-2">
         <ModelTooltipRow name={language.t("model.tooltip.model")} value={name()} />
         <ModelTooltipRow name={language.t("model.tooltip.provider")} value={props.model.provider.name} />
         <Show when={inputs()}>

@@ -1,9 +1,76 @@
 html[data-theme="void"] [data-component="user-message"] [data-slot="user-message-text"] {
-  padding: 10px 16px;
+  padding: 12px 14px;
   border-radius: var(--void-radius-bubble);
   background: var(--void-pill);
   color: var(--void-pill-text);
   font-weight: var(--void-weight-regular);
+  line-height: 1.5;
+}
+
+html[data-theme="void"] [data-component="user-message"] [data-slot="user-message-label"] {
+  display: block;
+  margin-bottom: 4px;
+  font-size: var(--void-fs-meta);
+  line-height: 1.4;
+  opacity: 0.7;
+}
+
+html[data-theme="void"] [data-component="card"][data-variant="error"] {
+  padding: 12px 14px;
+  border: 1px solid var(--void-error-border);
+  border-radius: var(--void-radius-inner);
+  background: var(--void-error-bg);
+  color: var(--void-text-1);
+  font-size: var(--void-fs-small);
+  line-height: 1.5;
+}
+
+html[data-theme="void"] [data-component="card"][data-variant="error"]::before {
+  content: none;
+}
+
+html[data-theme="void"] [data-void-sheets] > [data-slot="void-session-main"] {
+  overflow: hidden;
+  border: 1px solid var(--void-border);
+  border-radius: var(--void-radius-sheet);
+  background: var(--void-glass);
+  -webkit-backdrop-filter: blur(var(--void-blur-sheet));
+  backdrop-filter: blur(var(--void-blur-sheet));
+  box-shadow: var(--void-shadow);
+  color: var(--void-text-1);
+}
+
+html[data-theme="void"] [data-slot="void-session-main"] [data-component="session-panel-frame"] {
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+html[data-theme="void"] [data-slot="void-session-main"] [data-session-title] {
+  padding-inline: 18px;
+  border-bottom: 1px solid var(--void-border);
+  background: transparent;
+}
+
+html[data-theme="void"] [data-slot="void-session-main"] [data-slot="session-title-child"] {
+  color: var(--void-text-1);
+  font-size: var(--void-fs-card-title);
+  font-weight: var(--void-weight-medium);
+}
+
+html[data-theme="void"] [data-slot="void-session-main"] [data-slot="session-title-meta"],
+html[data-theme="void"] [data-slot="void-session-main"] [data-slot="session-title-parent"],
+html[data-theme="void"] [data-slot="void-session-main"] [data-slot="user-message-meta"],
+html[data-theme="void"] [data-slot="void-session-main"] [data-slot="user-message-meta-sep"],
+html[data-theme="void"] [data-slot="void-session-main"] [data-slot="user-message-meta-tail"] {
+  color: var(--void-text-2);
+  font-family: var(--void-font-mono);
+  font-size: var(--void-fs-meta);
+}
+
+html[data-theme="void"] [data-component="session-new-design"] {
+  background: transparent;
+  box-shadow: none;
 }
 
 html[data-theme="void"] [data-component="text-part"] [data-slot="text-part-body"] {

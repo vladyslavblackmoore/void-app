@@ -57,6 +57,7 @@ import { downloadSessionExport, fetchSessionExport, sessionExportFilename } from
 import { getDirectory, getFilename } from "@opencode-ai/core/util/path"
 import { Popover as KobaltePopover } from "@kobalte/core/popover"
 import { normalize } from "@opencode-ai/session-ui/session-diff"
+import { neutralErrorText } from "@opencode-ai/session-ui/error-text"
 import { useFileComponent } from "@opencode-ai/ui/context/file"
 import { shouldMarkBoundaryGesture, normalizeWheelDelta } from "@/pages/session/message-gesture"
 import { SessionContextUsage } from "@/components/session-context-usage"
@@ -341,6 +342,17 @@ export function MessageTimeline(props: {
     return language.t("command.session.new")
   })
   const showHeader = createMemo(() => !!(titleValue() || parentID()))
+  const lastUser = createMemo(() => sessionMessages().findLast((message) => message.role === "user"))
+  const headerMeta = createMemo(() => {
+    const message = lastUser()
+    if (!message || message.role !== "user") return ""
+    const modelID = message.model?.modelID
+    const providerID = message.model?.providerID
+    const model = modelID
+      ? ((providerID ? sync().data.provider?.all?.get(providerID)?.models?.[modelID]?.name : undefined) ?? modelID)
+      : ""
+    return [message.agent, model].filter((item) => !!item).join("\u00A0\u00B7\u00A0")
+  })
   const projection = createTimelineProjection({
     messages: sessionMessages,
     userMessages: () => props.userMessages,
@@ -1228,7 +1240,7 @@ export function MessageTimeline(props: {
           <TimelineRowFrame row={errorRow}>
             <div data-slot="session-turn-message-container" class="w-full px-4 md:px-5">
               <Card variant="error" class="error-card">
-                {errorRow().text}
+                {neutralErrorText(errorRow().text)}
               </Card>
             </div>
           </TimelineRowFrame>
@@ -1473,6 +1485,11 @@ export function MessageTimeline(props: {
                         onBlur={saveTitleEditor}
                       />
                     </Show>
+                  </Show>
+                  <Show when={headerMeta()}>
+                    <span data-slot="session-title-meta" class="shrink-0 truncate pl-2 text-[12px] text-v2-text-text-faint">
+                      {headerMeta()}
+                    </span>
                   </Show>
                 </div>
               </div>

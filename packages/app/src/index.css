@@ -8,9 +8,11 @@
 @import "@opencode-ai/ui/styles/void/buttons.css";
 @import "@opencode-ai/ui/styles/void/segmented.css";
 @import "@opencode-ai/ui/styles/void/glass.css";
+@import "@opencode-ai/ui/styles/void/palette.css";
 @import "@opencode-ai/ui/styles/void/canvas.css";
 @import "@opencode-ai/ui/styles/void/dock.css";
 @import "@opencode-ai/ui/styles/void/chat.css";
+@import "@opencode-ai/ui/styles/void/model-picker.css";
 
 @font-face {
   font-family: "JetBrainsMono Nerd Font Mono";
