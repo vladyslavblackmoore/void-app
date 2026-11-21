@@ -139,3 +139,14 @@ describe("memory plugin seeding", () => {
     expect(await readFile(shim, "utf8")).toContain(join(spaceDir(root, "void"), "data", "memory", "graph.db"))
   })
 })
+
+describe("memory permission seeding", () => {
+  test("seedSpace adds the memory rules to a worker that predates them", async () => {
+    await ensureDefaultSpaces(root, templates, legacy)
+    const agents = join(spaceDir(root, "void"), "config", "opencode", "agents")
+    await mkdir(agents, { recursive: true })
+    await writeFile(join(agents, "worker.md"), "---\npermission:\n  bash: allow\n---\nbody\n")
+    await seedSpace(root, "void", { agents: [], wrapper: "w" })
+    expect(await readFile(join(agents, "worker.md"), "utf8")).toContain("  memory_board_changes: allow\n---\nbody\n")
+  })
+})

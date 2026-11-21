@@ -5,7 +5,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { pathToFileURL } from "node:url"
 import { parse } from "jsonc-parser"
-import { memoryCommand, memoryPluginFile, seedMemory, seedMemoryPlugin } from "./memory-seed"
+import { memoryCommand, memoryPluginFile, seedMemory, seedMemoryPermissions, seedMemoryPlugin } from "./memory-seed"
 
 let space = ""
 let configDir = ""
@@ -131,5 +131,94 @@ describe("seedMemoryPlugin", () => {
     await new Promise((resolve) => setTimeout(resolve, 20))
     await seedMemoryPlugin(space, configDir, "/src/void-memory/src/plugin.ts")
     expect((await stat(target)).mtimeMs).toBe(first)
+  })
+})
+
+describe("seedMemoryPermissions", () => {
+  const state = () => join(space, "state")
+  const agentFile = (name: string) => join(configDir, "agents", `${name}.md`)
+  const legacyWorker = [
+    "---",
+    "description: Does one task.",
+    "mode: subagent",
+    "permission:",
+    "  bash: allow",
+    "  edit: allow",
+    "  task: deny",
+    "---",
+    "",
+    "You are a worker.",
+    "",
+  ].join("\n")
+  const legacyMain = [
+    "---",
+    "mode: primary",
+    "permission:",
+    "  bash: allow",
+    "  task:",
+    '    "*": allow',
+    "---",
+    "",
+    "## Role",
+    "",
+  ].join("\n")
+
+  beforeEach(async () => {
+    await mkdir(join(configDir, "agents"), { recursive: true })
+    await writeFile(agentFile("worker"), legacyWorker)
+    await writeFile(agentFile("main"), legacyMain)
+  })
+
+  test("adds the memory rules to the permission block of the worker and the main agent", async () => {
+    await seedMemoryPermissions(configDir, state())
+    const worker = await readFile(agentFile("worker"), "utf8")
+    expect(worker).toBe(
+      legacyWorker.replace(
+        "  task: deny\n",
+        [
+          "  task: deny",
+          '  "memory_*": deny',
+          "  memory_remember: allow",
+          "  memory_recall: allow",
+          "  memory_open: allow",
+          "  memory_link: allow",
+          "  memory_task_create: allow",
+          "  memory_task_claim: allow",
+          "  memory_task_update: allow",
+          "  memory_task_result: allow",
+          "  memory_task_list: allow",
+          "  memory_board_changes: allow",
+          "",
+        ].join("\n"),
+      ),
+    )
+    expect(await readFile(agentFile("main"), "utf8")).toBe(legacyMain.replace('    "*": allow\n', '    "*": allow\n  "memory_*": allow\n'))
+  })
+
+  test("keeps a rule the owner already set and adds only the missing ones", async () => {
+    await writeFile(agentFile("worker"), legacyWorker.replace("  task: deny\n", "  task: deny\n  memory_recall: deny\n"))
+    await seedMemoryPermissions(configDir, state())
+    const worker = await readFile(agentFile("worker"), "utf8")
+    expect(worker.match(/memory_recall/g)).toHaveLength(1)
+    expect(worker).toContain("  memory_recall: deny\n")
+    expect(worker).toContain("  memory_remember: allow\n")
+    expect(worker).toContain("You are a worker.")
+  })
+
+  test("runs once", async () => {
+    await seedMemoryPermissions(configDir, state())
+    expect(existsSync(join(state(), "memory-seeded-1"))).toBe(true)
+    await writeFile(agentFile("worker"), legacyWorker)
+    await seedMemoryPermissions(configDir, state())
+    expect(await readFile(agentFile("worker"), "utf8")).toBe(legacyWorker)
+  })
+
+  test("leaves an agent without a permission block untouched and skips a missing one", async () => {
+    await writeFile(agentFile("worker"), "no frontmatter\n")
+    await rm(agentFile("main"))
+    await seedMemoryPermissions(configDir, state())
+    expect(await readFile(agentFile("worker"), "utf8")).toBe("no frontmatter\n")
+    expect(existsSync(agentFile("main"))).toBe(false)
+    expect(existsSync(join(state(), "memory-seeded-1"))).toBe(true)
   })
 })
