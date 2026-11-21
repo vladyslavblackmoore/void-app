@@ -11,6 +11,7 @@ const sources = [
   "../../v2/components/segmented-control-v2.tsx",
   "../../v2/components/menu-v2.css",
   "../../../../app/src/pages/new-session/new-session-view.tsx",
+  "../../../../app/src/pages/new-session.tsx",
 ]
 
 function rules() {
@@ -76,11 +77,40 @@ describe("void chat dock", () => {
     expect(body('[data-slot="segmented-control-v2-item-label"]')).toContain("overflow: visible")
   })
 
-  test("bottom-anchors the empty-chat dock at 680px", () => {
+  test("bottom-anchors the empty-chat dock at 680px when it stays inside the view", () => {
     const body = (needle: string) => rules().find((rule) => rule.selectors.some((s) => s.endsWith(needle)))?.body ?? ""
     expect(body('[data-component="session-new-design"] > div:first-child')).toContain("bottom: 26px")
     expect(body('[data-component="session-new-design"] > div:first-child')).toContain("top: auto")
     expect(body('[data-component="session-new-design"] > div:first-child > div')).toContain("max-width: 680px")
+  })
+
+  test("sizes the dock below the sheet to 680px with no bottom padding of its own", () => {
+    const body = (needle: string) => rules().find((rule) => rule.selectors.some((s) => s.endsWith(needle)))?.body ?? ""
+    expect(body('[data-slot="void-session-column"] [data-slot="new-session-dock"] > div')).toContain("max-width: 680px")
+    expect(body('[data-slot="void-session-column"] [data-component="session-prompt-dock"]')).toContain(
+      "padding-bottom: 0",
+    )
+  })
+
+  test("places the dock as its own surface below the sheet in both chat states", () => {
+    const chat = readFileSync(new URL("chat.css", dir), "utf8")
+    const column = chat.match(/\[data-void-sheets\] > \[data-slot="void-session-column"\] \{([^}]*)\}/)?.[1] ?? ""
+    expect(column).toContain("display: flex")
+    expect(column).toContain("flex-direction: column")
+    expect(column).toContain("gap: var(--void-thread-gap)")
+    expect(chat).toContain('[data-void-sheets] [data-slot="void-session-main"] {')
+    expect(chat).not.toContain("new-session-dock")
+    const page = readFileSync(new URL("../../../../app/src/pages/session.tsx", dir), "utf8")
+    const main = page.indexOf('"void-session-main"')
+    expect(page).toContain('"void-session-column"')
+    expect(main).toBeGreaterThan(0)
+    expect(page.indexOf("{sessionComposer()}", main)).toBeGreaterThan(main)
+    expect(page).toContain("<Show when={!voidSheets()}>{sessionComposer()}</Show>")
+    const empty = readFileSync(new URL("../../../../app/src/pages/new-session.tsx", dir), "utf8")
+    const emptyMain = empty.indexOf('"void-session-main"')
+    expect(empty).toContain('"void-session-column"')
+    expect(empty.indexOf("<NewSessionDock", emptyMain)).toBeGreaterThan(emptyMain)
+    expect(empty.indexOf("<NewSessionDock", emptyMain)).toBeLessThan(empty.indexOf("<VoidRunDetails"))
   })
 
   test("shows a neutral dot before the agent name and never adds a mic", () => {
@@ -113,10 +143,16 @@ describe("void chat dock", () => {
     expect(empty).toContain("bottom: 26px")
     expect(empty).toContain("padding-left: 0")
     expect(empty).toContain("padding-right: 0")
-    expect(chat).toContain('[data-slot="new-session-dock"] {\n  top: auto;\n  bottom: 26px;')
     expect(chat).not.toContain("bottom: 20px")
     expect(body('[data-component="prompt-input-v2"]')).toContain("box-shadow: var(--void-shadow)")
     expect(css).toContain("[data-dock-border-underlay]")
+  })
+
+  test("mounts the session panel once so a sheet flip does not remount the thread", () => {
+    const page = readFileSync(new URL("../../../../app/src/pages/session.tsx", dir), "utf8")
+    expect(page.split("{sessionPanel()}").length - 1).toBe(1)
+    expect(page).not.toContain("<Show when={voidSheets()} fallback={sessionPanel()}>")
+    expect(page).toContain("<ErrorBoundary fallback={sessionErrorFallback}>{sessionComposer()}</ErrorBoundary>")
   })
 
   test("keeps the plus menu shortcut hints legible", () => {

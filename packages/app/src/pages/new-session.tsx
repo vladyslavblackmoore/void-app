@@ -8,7 +8,7 @@ import { VoidRunDetails } from "@/pages/session/void-run-details"
 import { VoidSessionList } from "@/pages/session/void-session-list"
 import { createNewSessionDraftController } from "./new-session/new-session-draft-controller"
 import { newSessionSheets } from "./new-session/new-session-sheets"
-import { NewSessionStatus, NewSessionView } from "./new-session/new-session-view"
+import { NewSessionDock, NewSessionStatus, NewSessionView } from "./new-session/new-session-view"
 import { createNewSessionWorkspaceController } from "./new-session/new-session-workspace-controller"
 import { useNewSessionCommands } from "./new-session/use-new-session-commands"
 
@@ -59,8 +59,11 @@ export default function NewSessionPage() {
       >
         <div data-void-sheets class="flex-1 min-h-0 flex flex-row">
           <VoidSessionList />
-          <div data-slot="void-session-main" class="relative flex min-h-0 flex-col">
-            <NewSessionView input={draft.input} project={project} workspace={workspace} />
+          <div data-slot="void-session-column" class="flex min-h-0 flex-col">
+            <div data-slot="void-session-main" class="relative flex min-h-0 flex-col">
+              <NewSessionView input={draft.input} project={project} workspace={workspace} dockOutside />
+            </div>
+            <NewSessionDock input={draft.input} project={project} workspace={workspace} flow />
           </div>
           <VoidRunDetails diffs={() => []} />
         </div>

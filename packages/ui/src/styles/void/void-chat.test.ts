@@ -112,18 +112,13 @@ describe("void chat messages", () => {
     expect(list).toContain("<circle")
   })
 
-  test("anchors the empty chat dock to the bottom of the thread column", () => {
-    const rule = rules().find((item) =>
-      item.selectors.some((selector) =>
-        selector.endsWith('[data-slot="void-session-main"] [data-slot="new-session-dock"]'),
-      ),
-    )
-    expect(rule?.body).toContain("top: auto")
-    expect(rule?.body).toContain("bottom:")
+  test("renders the empty chat dock below the sheet inside the thread column", () => {
     const page = readFileSync(new URL("../../../../app/src/pages/new-session.tsx", dir), "utf8")
     expect(page).toContain("VoidSessionList")
     expect(page).toContain("VoidRunDetails")
     expect(page).toContain('data-slot="void-session-main"')
+    expect(page).toContain('data-slot="void-session-column"')
+    expect(page).toContain("<NewSessionDock")
   })
 
   test("bottom-anchors the thread in a flex viewport with an 18px gap under the header", () => {
@@ -159,7 +154,6 @@ describe("void empty chat hint", () => {
     const view = readFileSync(new URL("../../../../app/src/pages/new-session/new-session-view.tsx", dir), "utf8")
     expect(view).toContain('data-slot="new-session-hint"')
     expect(view).toContain("void.chat.hint")
-    expect(view.indexOf('data-slot="new-session-hint"')).toBeGreaterThan(view.indexOf('data-slot="new-session-dock"'))
     const css = readFileSync(new URL("chat.css", dir), "utf8")
     const rule = rules().find((item) =>
       item.selectors.some((selector) =>

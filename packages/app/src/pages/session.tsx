@@ -2064,6 +2064,123 @@ export default function Page() {
     return <SessionErrorFallback error={error} sessionID={params.id} />
   }
 
+  const sessionComposer = () => (
+    <Show when={(params.id || !newSessionDesign()) && !mobileChanges()}>
+      {(_) => {
+        const controller = createSessionComposerRegionController({
+          state: composer,
+          sessionKey,
+          sessionID: () => params.id,
+          prompt,
+          ready: () => !store.deferRender && messagesReady(),
+          centered,
+          todo: {
+            collapsed: () => view().todoCollapsed.get(),
+            onToggle: () => view().todoCollapsed.set(!view().todoCollapsed.get()),
+          },
+          followup: () =>
+            params.id && !isChildSession()
+              ? {
+                  items: followupDock(),
+                  sending: sendingFollowup(),
+                  onSend: (id) => void sendFollowup(params.id!, id, { manual: true }),
+                  onEdit: editFollowup,
+                }
+              : undefined,
+          revert: () =>
+            rolled().length > 0
+              ? {
+                  items: rolled(),
+                  restoring: restoring(),
+                  disabled: reverting(),
+                  onRestore: restore,
+                }
+              : undefined,
+          onResponseSubmit: resumeScroll,
+          openParent: () => {
+            const id = info()?.parentID
+            if (!id) return
+            navigate(
+              params.serverKey
+                ? sessionHref(requireServerKey(params.serverKey), id)
+                : legacySessionHref(sdk().directory, id),
+            )
+          },
+          setPromptRef: (el) => {
+            inputRef = el
+          },
+          setDockRef: (el) => {
+            promptDock = el
+          },
+        })
+        return (
+          <SessionComposerRegion
+            controller={controller}
+            promptInput={
+              <Show
+                when={newSessionDesign()}
+                fallback={
+                  <PromptInput
+                    controls={inputController()}
+                    ref={(el) => {
+                      inputRef = el
+                    }}
+                    newSessionWorktree={newSessionWorktree()}
+                    onNewSessionWorktreeReset={() => setStore("newSessionWorktree", "main")}
+                    onSubmit={() => {
+                      comments.clear()
+                      resumeScroll()
+                    }}
+                    edit={editingFollowup()}
+                    onEditLoaded={clearFollowupEdit}
+                    shouldQueue={queueEnabled}
+                    onQueue={queueFollowup}
+                    onAbort={() => {
+                      const id = params.id
+                      if (!id) return
+                      setFollowup("paused", id, true)
+                    }}
+                  />
+                }
+              >
+                {(_) => {
+                  const controller = usePromptInputV2Controller({
+                    get controls() {
+                      return inputController()
+                    },
+                    ref: (el) => {
+                      inputRef = el
+                    },
+                    get newSessionWorktree() {
+                      return newSessionWorktree()
+                    },
+                    onNewSessionWorktreeReset: () => setStore("newSessionWorktree", "main"),
+                    onSubmit: () => {
+                      comments.clear()
+                      resumeScroll()
+                    },
+                    get edit() {
+                      return editingFollowup()
+                    },
+                    onEditLoaded: clearFollowupEdit,
+                    shouldQueue: queueEnabled,
+                    onQueue: queueFollowup,
+                    onAbort: () => {
+                      const id = params.id
+                      if (!id) return
+                      setFollowup("paused", id, true)
+                    },
+                  })
+                  return <PromptInputV2Composer controller={controller} borderUnderlay />
+                }}
+              </Show>
+            }
+          />
+        )
+      }}
+    </Show>
+  )
+
   const sessionPanelContent = () => (
     <>
       {sessionSync() ?? ""}
@@ -2134,123 +2251,25 @@ export default function Page() {
         </Switch>
       </div>
 
-      <Show when={(params.id || !newSessionDesign()) && !mobileChanges()}>
-        {(_) => {
-          const controller = createSessionComposerRegionController({
-            state: composer,
-            sessionKey,
-            sessionID: () => params.id,
-            prompt,
-            ready: () => !store.deferRender && messagesReady(),
-            centered,
-            todo: {
-              collapsed: () => view().todoCollapsed.get(),
-              onToggle: () => view().todoCollapsed.set(!view().todoCollapsed.get()),
-            },
-            followup: () =>
-              params.id && !isChildSession()
-                ? {
-                    items: followupDock(),
-                    sending: sendingFollowup(),
-                    onSend: (id) => void sendFollowup(params.id!, id, { manual: true }),
-                    onEdit: editFollowup,
-                  }
-                : undefined,
-            revert: () =>
-              rolled().length > 0
-                ? {
-                    items: rolled(),
-                    restoring: restoring(),
-                    disabled: reverting(),
-                    onRestore: restore,
-                  }
-                : undefined,
-            onResponseSubmit: resumeScroll,
-            openParent: () => {
-              const id = info()?.parentID
-              if (!id) return
-              navigate(
-                params.serverKey
-                  ? sessionHref(requireServerKey(params.serverKey), id)
-                  : legacySessionHref(sdk().directory, id),
-              )
-            },
-            setPromptRef: (el) => {
-              inputRef = el
-            },
-            setDockRef: (el) => {
-              promptDock = el
-            },
-          })
-          return (
-            <SessionComposerRegion
-              controller={controller}
-              promptInput={
-                <Show
-                  when={newSessionDesign()}
-                  fallback={
-                    <PromptInput
-                      controls={inputController()}
-                      ref={(el) => {
-                        inputRef = el
-                      }}
-                      newSessionWorktree={newSessionWorktree()}
-                      onNewSessionWorktreeReset={() => setStore("newSessionWorktree", "main")}
-                      onSubmit={() => {
-                        comments.clear()
-                        resumeScroll()
-                      }}
-                      edit={editingFollowup()}
-                      onEditLoaded={clearFollowupEdit}
-                      shouldQueue={queueEnabled}
-                      onQueue={queueFollowup}
-                      onAbort={() => {
-                        const id = params.id
-                        if (!id) return
-                        setFollowup("paused", id, true)
-                      }}
-                    />
-                  }
-                >
-                  {(_) => {
-                    const controller = usePromptInputV2Controller({
-                      get controls() {
-                        return inputController()
-                      },
-                      ref: (el) => {
-                        inputRef = el
-                      },
-                      get newSessionWorktree() {
-                        return newSessionWorktree()
-                      },
-                      onNewSessionWorktreeReset: () => setStore("newSessionWorktree", "main"),
-                      onSubmit: () => {
-                        comments.clear()
-                        resumeScroll()
-                      },
-                      get edit() {
-                        return editingFollowup()
-                      },
-                      onEditLoaded: clearFollowupEdit,
-                      shouldQueue: queueEnabled,
-                      onQueue: queueFollowup,
-                      onAbort: () => {
-                        const id = params.id
-                        if (!id) return
-                        setFollowup("paused", id, true)
-                      },
-                    })
-                    return <PromptInputV2Composer controller={controller} borderUnderlay />
-                  }}
-                </Show>
-              }
-            />
-          )
-        }}
-      </Show>
+      <Show when={!voidSheets()}>{sessionComposer()}</Show>
       <Show when={!!params.id && mobileTabsBottom()}>{mobileTabs(true, true)}</Show>
     </>
   )
+
+  const sessionPanel = () =>
+    settings.general.newLayoutDesigns() ? (
+      <Show when={sessionPanelKey()} keyed>
+        {(_) => (
+          <SessionPanelFrame newLayout raised={!!params.id}>
+            <ErrorBoundary fallback={sessionErrorFallback}>{sessionPanelContent()}</ErrorBoundary>
+          </SessionPanelFrame>
+        )}
+      </Show>
+    ) : (
+      <SessionPanelFrame newLayout={false} raised={!!params.id}>
+        {sessionPanelContent()}
+      </SessionPanelFrame>
+    )
 
   return (
     <SessionRouteFrame>
@@ -2270,7 +2289,7 @@ export default function Page() {
         </Show>
 
         <div
-          data-slot={voidSheets() ? "void-session-main" : undefined}
+          data-slot={voidSheets() ? "void-session-column" : undefined}
           classList={{
             "@container relative shrink-0 flex flex-col min-h-0 h-full flex-1 md:flex-none transition-[width]": true,
             "duration-[240ms] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-[width] motion-reduce:transition-none":
@@ -2280,19 +2299,17 @@ export default function Page() {
             width: sessionPanelWidth(),
           }}
         >
-          {settings.general.newLayoutDesigns() ? (
+          <div
+            data-slot={voidSheets() ? "void-session-main" : undefined}
+            class="@container relative flex min-h-0 flex-1 flex-col"
+          >
+            {sessionPanel()}
+          </div>
+          <Show when={voidSheets()}>
             <Show when={sessionPanelKey()} keyed>
-              {(_) => (
-                <SessionPanelFrame newLayout raised={!!params.id}>
-                  <ErrorBoundary fallback={sessionErrorFallback}>{sessionPanelContent()}</ErrorBoundary>
-                </SessionPanelFrame>
-              )}
+              {(_) => <ErrorBoundary fallback={sessionErrorFallback}>{sessionComposer()}</ErrorBoundary>}
             </Show>
-          ) : (
-            <SessionPanelFrame newLayout={false} raised={!!params.id}>
-              {sessionPanelContent()}
-            </SessionPanelFrame>
-          )}
+          </Show>
 
           <Show when={desktopSessionResizeOpen() && !voidSheets()}>
             <div onPointerDown={() => size.start()}>

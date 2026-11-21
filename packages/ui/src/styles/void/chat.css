@@ -34,7 +34,19 @@ html[data-theme="void"] [data-void-sheets] {
   --void-thread-gap: 18px;
 }
 
-html[data-theme="void"] [data-void-sheets] > [data-slot="void-session-main"] {
+html[data-theme="void"] [data-void-sheets] > [data-slot="void-session-column"] {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: var(--void-thread-gap);
+  width: auto !important;
+  min-width: 0;
+  min-height: 0;
+}
+
+html[data-theme="void"] [data-void-sheets] [data-slot="void-session-main"] {
+  flex: 1 1 0;
+  min-height: 0;
   overflow: hidden;
   border: 1px solid var(--void-border);
   border-radius: var(--void-radius-sheet);
@@ -183,14 +195,9 @@ html[data-theme="void"]
   color: var(--void-text-2);
 }
 
-html[data-theme="void"] [data-slot="void-session-main"] [data-slot="new-session-dock"] {
-  top: auto;
-  bottom: 26px;
-}
-
 html[data-theme="void"] [data-slot="void-session-main"] [data-slot="new-session-hint"] {
   position: absolute;
-  inset: 0 0 180px;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
