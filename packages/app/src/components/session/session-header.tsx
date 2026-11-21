@@ -33,6 +33,8 @@ import { KeybindV2 } from "@opencode-ai/ui/v2/keybind-v2"
 import { TooltipV2 } from "@opencode-ai/ui/v2/tooltip-v2"
 import { reviewTooltipKeybind } from "../command-tooltip-keybind"
 import { useTitlebarRightMount } from "../titlebar"
+import { useVoidTheme } from "@/components/void/use-void-theme"
+import { reviewToggleVisible } from "@/pages/session/void-sheet-model"
 
 const OPEN_APPS = [
   "vscode",
@@ -165,6 +167,7 @@ export function SessionHeader() {
   const search = settings.visibility.search
   const status = settings.visibility.status
   const isDesktop = createMediaQuery("(min-width: 768px)")
+  const voidTheme = useVoidTheme()
 
   const [exists, setExists] = createStore<Partial<Record<OpenApp, boolean>>>({
     finder: true,
@@ -239,7 +242,7 @@ export function SessionHeader() {
     statusLabel: language.t("status.popover.trigger"),
     reviewLabel: language.t("command.review.toggle"),
     reviewKeybind: reviewTooltipKeybind(command),
-    reviewVisible: isDesktop(),
+    reviewVisible: reviewToggleVisible({ desktop: isDesktop(), void: voidTheme() }),
     reviewOpened: view().reviewPanel.opened(),
     onReviewToggle: () => view().reviewPanel.toggle(),
   }))

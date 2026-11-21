@@ -48,26 +48,39 @@ describe("void command palette", () => {
     for (const name of names) expect(upstream).toContain(name)
   })
 
-  test("the panel is a glass surface with an edge, radius 20 and the void shadow", () => {
+  test("the panel is an opaque menu surface with an edge, radius 20 and the void shadow", () => {
     const panel = body(
       'html[data-theme="void"] [data-component="dialog-v2"]:has(.command-palette-v2) [data-slot="dialog-container"]',
     )
-    expect(panel).toContain("background: var(--void-glass)")
-    expect(panel).toContain("backdrop-filter: blur(var(--void-blur))")
+    expect(panel).toContain("background: var(--void-menu-bg)")
+    expect(panel).not.toContain("backdrop-filter")
     expect(panel).toContain("border: 1px solid var(--void-border)")
     expect(panel).toContain("border-radius: var(--void-radius-card)")
     expect(panel).toContain("box-shadow: var(--void-shadow)")
   })
 
-  test("the scrim is tinted per scheme and applies only while the palette is open", () => {
+  test("the panel background resolves to an opaque colour in dark and light", () => {
+    const tokens = readFileSync(new URL("tokens.css", dir), "utf8")
+    const values = [...tokens.matchAll(/--void-menu-bg:\s*([^;]+);/g)].map((match) => match[1]!.trim())
+    expect(values.length).toBe(2)
+    for (const value of values) {
+      expect(value).toMatch(/^#[0-9a-f]{6}$/i)
+      expect(value).not.toContain("rgba")
+      expect(value).not.toContain("transparent")
+    }
+    for (const selector of ["search", "results"]) {
+      const rule = rules().find((item) => item.selectors.includes(`${prefix}.command-palette-v2-${selector}`))
+      expect(rule!.body).not.toContain("background")
+    }
+  })
+
+  test("the palette shares the dialog scrim and defines none of its own", () => {
     const text = css()
-    expect(text).toContain("--void-palette-scrim: rgba(5, 6, 8, 0.62)")
-    expect(text).toContain('html[data-theme="void"][data-color-scheme="light"] {\n  --void-palette-scrim:')
-    const overlay = body(
-      'html[data-theme="void"] [data-component="dialog-overlay"]:has(+ [data-dialog-layer] .command-palette-v2)',
-    )
-    expect(overlay).toContain("background-color: var(--void-palette-scrim)")
-    expect(text).not.toContain('html[data-theme="void"] [data-component="dialog-overlay"] {')
+    expect(text).not.toContain("scrim")
+    expect(text).not.toContain('[data-component="dialog-overlay"]')
+    const tokens = readFileSync(new URL("tokens.css", dir), "utf8")
+    expect(tokens).toContain("--void-scrim: rgba(5, 6, 8, 0.62)")
+    expect(tokens).toContain("--void-scrim: rgba(226, 230, 240, 0.55)")
   })
 
   test("the search row has an inner fill, radius 14 and a readable placeholder", () => {

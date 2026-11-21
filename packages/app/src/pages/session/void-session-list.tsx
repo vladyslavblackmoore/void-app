@@ -9,6 +9,8 @@ import { createHomeController } from "@/pages/home/home-controller"
 import { createHomeSessionsController } from "@/pages/home/home-sessions-controller"
 import { createVoidSessionItems } from "@/pages/home/void-session-items"
 import { sessionTitle } from "@/utils/session-title"
+import { VoidSessionsEmpty } from "./void-sessions-empty"
+import { VoidSpaceCard } from "./void-space-card"
 import "./void-session-sheets.css"
 
 export function VoidSessionList() {
@@ -110,9 +112,22 @@ export function VoidSessionList() {
           )}
         </For>
         <Show when={groups().length === 0}>
-          <div data-slot="void-sheet-empty">{language.t("void.sessions.empty")}</div>
+          <VoidSessionsEmpty
+            title={language.t(query() ? "void.sessions.empty.searchTitle" : "void.sessions.empty.title")}
+            text={language.t(query() ? "void.sessions.empty.searchText" : "void.sessions.empty.text")}
+            action={
+              query()
+                ? undefined
+                : {
+                    label: language.t("void.sessions.new"),
+                    disabled: !sessions.session.canCreate(),
+                    run: () => sessions.session.create(),
+                  }
+            }
+          />
         </Show>
       </div>
+      <VoidSpaceCard />
     </aside>
   )
 }

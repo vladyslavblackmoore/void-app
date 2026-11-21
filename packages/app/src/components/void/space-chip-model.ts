@@ -30,3 +30,13 @@ export function spaceRowCore(
   if (live === "up") return "running"
   return spaceCore(space)
 }
+
+export function spaceCardModel(
+  spaces: { id: string; name: string; color: string | undefined; running: boolean }[],
+  viewed: string | undefined,
+  live: "restarting" | "up" | "failed" | undefined,
+) {
+  const space = spaces.find((item) => item.id === viewed)
+  if (!space) return undefined
+  return { name: space.name, color: spaceIdentityColor(space), core: spaceRowCore(space, live) }
+}

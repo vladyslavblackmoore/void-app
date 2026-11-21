@@ -76,6 +76,9 @@ import { sessionTitle } from "@/utils/session-title"
 import { scheduleConnectedMeasure } from "./measure"
 import { observeElementOffsetReconnectAware } from "./observe-element-offset"
 import { createTimelineProjection } from "./projection"
+import { useVoidTheme } from "@/components/void/use-void-theme"
+import { sheetHeaderOffset, sheetView, type SheetView } from "@/pages/session/void-sheet-model"
+import { VoidSheetDot, VoidSheetTabs, VoidSheetTasks } from "./void-sheet-head"
 import { OpenInAppV2 } from "@/components/session/open-in-app-v2"
 import { changedPaths } from "@/components/session/open-in-targets"
 import { MessageComment, SummaryDiff, TimelineRow, TimelineRowMap } from "./rows"
@@ -342,6 +345,10 @@ export function MessageTimeline(props: {
     return language.t("command.session.new")
   })
   const showHeader = createMemo(() => !!(titleValue() || parentID()))
+  const voidTheme = useVoidTheme()
+  const [requestedView, setRequestedView] = createSignal<SheetView>("chat")
+  const activeView = createMemo(() => sheetView({ void: voidTheme(), requested: requestedView() }))
+  const headerOffset = createMemo(() => sheetHeaderOffset({ header: showHeader(), void: voidTheme() }))
   const lastUser = createMemo(() => sessionMessages().findLast((message) => message.role === "user"))
   const headerMeta = createMemo(() => {
     const message = lastUser()
@@ -463,7 +470,7 @@ export function MessageTimeline(props: {
     followOnAppend: true,
     scrollEndThreshold: 80,
     get scrollMargin() {
-      return showHeader() ? 64 : 0
+      return headerOffset()
     },
     overscan: 50,
     paddingEnd: 64,
@@ -1290,7 +1297,7 @@ export function MessageTimeline(props: {
         data-timeline-key={props.rowKey}
         style={{
           position: "absolute",
-          top: `${item().start - (showHeader() ? 64 : 0)}px`,
+          top: `${item().start - headerOffset()}px`,
           left: "0",
           width: "100%",
           height: `${item().size}px`,
@@ -1320,7 +1327,7 @@ export function MessageTimeline(props: {
   }
 
   return (
-    <div class="relative w-full h-full min-w-0">
+    <div class="relative w-full h-full min-w-0" data-void-view={voidTheme() ? activeView() : undefined}>
       <div
         class="absolute left-1/2 -translate-x-1/2 z-[60] pointer-events-none transition-all duration-200 ease-out"
         classList={{
@@ -1374,6 +1381,7 @@ export function MessageTimeline(props: {
         </Show>
       </div>
       <ScrollView
+        data-timeline-scroll
         viewportRef={bindListRoot}
         onWheel={handleListWheel}
         onTouchStart={handleListTouchStart}
@@ -1415,6 +1423,9 @@ export function MessageTimeline(props: {
                 }}
               >
                 <div class="flex items-center min-w-0 flex-1 w-full">
+                  <Show when={voidTheme()}>
+                    <VoidSheetDot sessionID={sessionID()} />
+                  </Show>
                   <Show when={parentID()}>
                     <button
                       type="button"
@@ -1502,6 +1513,9 @@ export function MessageTimeline(props: {
                       "gap-3": !settings.general.newLayoutDesigns(),
                     }}
                   >
+                    <Show when={voidTheme()}>
+                      <VoidSheetTabs view={activeView()} onChange={setRequestedView} />
+                    </Show>
                     <SessionContextUsage
                       placement="bottom"
                       buttonAppearance={settings.general.newLayoutDesigns() ? "v2" : "default"}
@@ -1870,6 +1884,9 @@ export function MessageTimeline(props: {
           </Show>
         </div>
       </ScrollView>
+      <Show when={voidTheme() && activeView() === "tasks"}>
+        <VoidSheetTasks sessionID={sessionID()} />
+      </Show>
     </div>
   )
 }

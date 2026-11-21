@@ -13,6 +13,8 @@ const sources = [
   "../../components/card.tsx",
   "../../../../app/src/pages/session.tsx",
   "../../../../app/src/pages/session/timeline/message-timeline.tsx",
+  "../../../../app/src/pages/session/timeline/void-sheet-head.tsx",
+  "../../../../app/src/pages/session/void-todo-row.tsx",
   "../../../../app/src/pages/new-session/new-session-view.tsx",
   "../../../../app/src/pages/new-session.tsx",
 ]
@@ -76,17 +78,23 @@ describe("void chat messages", () => {
   })
 
   test("turns the thread column into a glass sheet with a transparent frame", () => {
-    const rule = rules().find((item) => item.selectors.some((selector) => selector.endsWith('[data-slot="void-session-main"]')))
+    const rule = rules().find((item) =>
+      item.selectors.some((selector) => selector.endsWith('[data-slot="void-session-main"]')),
+    )
     expect(rule?.body).toContain("var(--void-glass)")
     expect(rule?.body).toContain("var(--void-border)")
     expect(rule?.body).toContain("var(--void-radius-sheet)")
     expect(rule?.body).toContain("backdrop-filter")
-    const frame = rules().find((item) => item.selectors.some((selector) => selector.endsWith('[data-component="session-panel-frame"]')))
+    const frame = rules().find((item) =>
+      item.selectors.some((selector) => selector.endsWith('[data-component="session-panel-frame"]')),
+    )
     expect(frame?.body).toContain("background: transparent")
   })
 
   test("lets the canvas show through the empty chat", () => {
-    const rule = rules().find((item) => item.selectors.some((selector) => selector.endsWith('[data-component="session-new-design"]')))
+    const rule = rules().find((item) =>
+      item.selectors.some((selector) => selector.endsWith('[data-component="session-new-design"]')),
+    )
     expect(rule?.body).toContain("background: transparent")
   })
 
@@ -106,7 +114,9 @@ describe("void chat messages", () => {
 
   test("anchors the empty chat dock to the bottom of the thread column", () => {
     const rule = rules().find((item) =>
-      item.selectors.some((selector) => selector.endsWith('[data-slot="void-session-main"] [data-slot="new-session-dock"]')),
+      item.selectors.some((selector) =>
+        selector.endsWith('[data-slot="void-session-main"] [data-slot="new-session-dock"]'),
+      ),
     )
     expect(rule?.body).toContain("top: auto")
     expect(rule?.body).toContain("bottom:")
@@ -114,5 +124,50 @@ describe("void chat messages", () => {
     expect(page).toContain("VoidSessionList")
     expect(page).toContain("VoidRunDetails")
     expect(page).toContain('data-slot="void-session-main"')
+  })
+
+  test("bottom-anchors the thread in a flex viewport with an 18px gap under the header", () => {
+    const rule = (selector: string) =>
+      rules().find((item) => item.selectors.some((value) => value === `${prefix}${selector}`))?.body ?? ""
+    const main = '[data-slot="void-session-main"]'
+    expect(rule(`${main} [data-timeline-scroll] .scroll-view__viewport`)).toContain("flex-direction: column")
+    expect(rule(`${main} [data-timeline-virtual-content]`)).toContain("margin-top: auto")
+    expect(rule(`${main} [data-session-title]`)).toContain("margin-bottom: 18px")
+  })
+
+  test("styles the sheet dot, the tabs and the tasks view", () => {
+    const css = readFileSync(new URL("chat.css", dir), "utf8")
+    expect(css).toContain('[data-slot="void-sheet-dot"]')
+    expect(css).toContain('[data-slot="void-sheet-tab"][data-active="true"]')
+    expect(css).toContain("var(--void-pill)")
+    expect(css).toContain('[data-void-view="tasks"] [data-timeline-virtual-content]')
+    expect(css).toContain("visibility: hidden")
+  })
+})
+
+describe("void canvas glow in light", () => {
+  test("has no blue glow in light, where it bleeds along the sheet edge", () => {
+    const tokens = readFileSync(new URL("tokens.css", dir), "utf8")
+    const light = tokens.slice(tokens.indexOf('html[data-theme="void"][data-color-scheme="light"] {'))
+    expect(/--void-glow-blue: rgba\(\d+, \d+, \d+, 0\)/.test(light)).toBe(true)
+    expect(/--void-glow-blue: rgba\([^)]*0\.\d+\)/.test(tokens.slice(0, tokens.indexOf('data-color-scheme="light"] {')))).toBe(true)
+  })
+})
+
+describe("void empty chat hint", () => {
+  test("renders a centred hint above the dock in the empty sheet", () => {
+    const view = readFileSync(new URL("../../../../app/src/pages/new-session/new-session-view.tsx", dir), "utf8")
+    expect(view).toContain('data-slot="new-session-hint"')
+    expect(view).toContain("void.chat.hint")
+    expect(view.indexOf('data-slot="new-session-hint"')).toBeGreaterThan(view.indexOf('data-slot="new-session-dock"'))
+    const css = readFileSync(new URL("chat.css", dir), "utf8")
+    const rule = rules().find((item) =>
+      item.selectors.some((selector) =>
+        selector.endsWith('[data-slot="void-session-main"] [data-slot="new-session-hint"]'),
+      ),
+    )
+    expect(css).toContain('[data-slot="new-session-hint"]')
+    expect(rule?.body).toContain("justify-content: center")
+    expect(rule?.body).toContain("pointer-events: none")
   })
 })

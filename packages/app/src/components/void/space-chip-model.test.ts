@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { spaceChipColor, spaceCore, spaceIdentityColor, spaceRowCore } from "./space-chip-model"
+import { spaceCardModel, spaceChipColor, spaceCore, spaceIdentityColor, spaceRowCore } from "./space-chip-model"
 
 describe("space chip model", () => {
   test("accepts hex colours", () => {
@@ -41,5 +41,31 @@ describe("space chip model", () => {
     expect(spaceRowCore({ running: false }, "failed")).toBe("failed")
     expect(spaceRowCore({ running: false }, "up")).toBe("running")
     expect(spaceRowCore(undefined, undefined)).toBe("stopped")
+  })
+})
+
+describe("space card model", () => {
+  const spaces = [
+    { id: "void", name: "VOID", color: undefined, running: true },
+    { id: "work", name: "Work", color: "#123456", running: false },
+  ]
+
+  test("describes the viewed space with its core state", () => {
+    expect(spaceCardModel(spaces, "void", undefined)).toEqual({
+      name: "VOID",
+      color: "var(--void-space-void)",
+      core: "running",
+    })
+    expect(spaceCardModel(spaces, "work", undefined)?.core).toBe("stopped")
+  })
+
+  test("a live core status wins over the running flag", () => {
+    expect(spaceCardModel(spaces, "void", "restarting")?.core).toBe("starting")
+    expect(spaceCardModel(spaces, "void", "failed")?.core).toBe("failed")
+  })
+
+  test("is undefined when the viewed space is unknown", () => {
+    expect(spaceCardModel(spaces, "other", undefined)).toBeUndefined()
+    expect(spaceCardModel(spaces, undefined, undefined)).toBeUndefined()
   })
 })
