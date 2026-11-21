@@ -1,4 +1,4 @@
-import { createEffect, createMemo, For, on, Show } from "solid-js"
+import { createEffect, createMemo, For, Match, on, Show, Switch } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useQuery } from "@tanstack/solid-query"
 import { useLanguage } from "@/context/language"
@@ -6,7 +6,17 @@ import { useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
 import { loadSpaceAgentsQuery } from "@/context/global-sync/bootstrap"
 import { useProviders } from "@/hooks/use-providers"
-import { buildAgentsDiagram, LINK_HEIGHT, linkPaths, type AgentNode } from "./agents-diagram-model"
+import {
+  buildAgentsDiagram,
+  LINK_HEIGHT,
+  linkPaths,
+  linkState,
+  nodeStateRows,
+  ZOOM_FIT,
+  zoomIn,
+  zoomOut,
+  type AgentNode,
+} from "./agents-diagram-model"
 import { showToast } from "@/utils/toast"
 import { fileFields, hasRunningSessions, withConfigProviders, type AgentConfigPatch } from "./agent-editor"
 import { AgentEditorPanel } from "./agent-editor-panel"
@@ -48,7 +58,7 @@ function AgentNodeCard(props: { node: AgentNode; main?: boolean; selected: boole
         <span data-slot="agents-dot" data-status={props.node.status} class="size-2 shrink-0 rounded-full" />
         <span class="min-w-0 truncate text-[14px] font-semibold">{props.node.name}</span>
       </div>
-      <p class="min-h-8 text-[12px] leading-4 text-v2-text-text-faint">
+      <p data-slot="agents-description" class="min-h-8 text-[12px] leading-4 text-v2-text-text-faint">
         {props.node.description ??
           (props.main ? language.t("agents.node.main.description") : language.t("agents.node.subagent.description"))}
       </p>
@@ -82,9 +92,7 @@ export function AgentsDiagram() {
     },
     staleTime: 0,
   }))
-  const spaceAgents = useQuery(() =>
-    loadSpaceAgentsQuery(serverSDK().scope, serverSDK().client, serverSDK().protocol),
-  )
+  const spaceAgents = useQuery(() => loadSpaceAgentsQuery(serverSDK().scope, serverSDK().client, serverSDK().protocol))
   const providers = useProviders(() => undefined)
   const agents = createMemo(() => spaceAgents.data ?? [])
 
@@ -102,7 +110,7 @@ export function AgentsDiagram() {
       configModel: globalAgents.data?.model,
     }),
   )
-  const [state, setState] = createStore({ selected: undefined as string | undefined })
+  const [state, setState] = createStore({ selected: undefined as string | undefined, zoom: ZOOM_FIT })
   const nodes = createMemo(() => [diagram().main, ...diagram().subagents])
   createEffect(
     on(
@@ -128,58 +136,150 @@ export function AgentsDiagram() {
   const links = createMemo(() => linkPaths(diagram().subagents.length))
 
   return (
-    <div class="relative h-full w-full">
-      <div data-component="agents-canvas" class="px-9 py-8">
-        <h2 class="text-[28px] font-semibold text-v2-text-text-base">{language.t("agents.title")}</h2>
-        <p class="mt-1 text-[13px] text-v2-text-text-faint">{language.t("agents.description")}</p>
-        <div class="mx-auto mt-10 flex max-w-[1200px] flex-col items-center">
-          <AgentNodeCard
-            node={diagram().main}
-            main
-            selected={state.selected === diagram().main.name}
-            onSelect={() => setState("selected", diagram().main.name)}
-          />
-          <Show when={!diagram().mainCanStartSubagents}>
-            <span class="mt-3 rounded-md bg-v2-background-bg-layer-02 px-2 py-1 text-[12px] text-v2-text-text-base">
-              {language.t("agents.note.noToolCalls")}
-            </span>
-          </Show>
-          <Show
-            when={diagram().subagents.length > 0}
-            fallback={<p class="mt-10 text-[13px] text-v2-text-text-faint">{language.t("agents.empty")}</p>}
+    <div data-component="agents-stage" class="relative h-full w-full">
+      <div data-component="agents-column" class="relative h-full w-full">
+        <div data-component="agents-canvas" class="px-9 py-8">
+          <h2 class="text-[28px] font-semibold text-v2-text-text-base">{language.t("agents.title")}</h2>
+          <p class="mt-1 text-[13px] text-v2-text-text-faint">{language.t("agents.description")}</p>
+          <div
+            data-component="agents-map"
+            class="mx-auto mt-10 flex max-w-[1200px] flex-col items-center"
+            style={{ transform: `scale(${state.zoom})` }}
           >
-            <div class="relative w-full" style={{ height: `${LINK_HEIGHT}px` }}>
+            <AgentNodeCard
+              node={diagram().main}
+              main
+              selected={state.selected === diagram().main.name}
+              onSelect={() => setState("selected", diagram().main.name)}
+            />
+            <Show when={!diagram().mainCanStartSubagents}>
+              <span class="mt-3 rounded-md bg-v2-background-bg-layer-02 px-2 py-1 text-[12px] text-v2-text-text-base">
+                {language.t("agents.note.noToolCalls")}
+              </span>
+            </Show>
+            <Show
+              when={diagram().subagents.length > 0}
+              fallback={<p class="mt-10 text-[13px] text-v2-text-text-faint">{language.t("agents.empty")}</p>}
+            >
+              <div class="relative w-full" style={{ height: `${LINK_HEIGHT}px` }}>
+                <svg
+                  class="absolute inset-0 size-full"
+                  viewBox={`0 0 100 ${LINK_HEIGHT}`}
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                >
+                  <For each={links()}>
+                    {(link, index) => {
+                      const node = () => diagram().subagents[index()]
+                      return (
+                        <path
+                          data-slot="agents-link"
+                          data-state={node() ? linkState(node()!, state.selected === node()!.name) : undefined}
+                          d={link.d}
+                        />
+                      )
+                    }}
+                  </For>
+                </svg>
+              </div>
+              <div
+                class="grid w-full justify-items-center gap-4"
+                style={{ "grid-template-columns": `repeat(${diagram().subagents.length}, minmax(0, 1fr))` }}
+              >
+                <For each={diagram().subagents}>
+                  {(node) => (
+                    <AgentNodeCard
+                      node={node}
+                      selected={state.selected === node.name}
+                      onSelect={() => setState("selected", node.name)}
+                    />
+                  )}
+                </For>
+              </div>
+            </Show>
+          </div>
+        </div>
+        <div data-component="agents-dock">
+          <div data-component="agents-legend" aria-hidden="false">
+            <span data-slot="agents-title">{language.t("agents.states.title")}</span>
+            <For each={nodeStateRows(diagram())}>
+              {(row) => (
+                <div data-slot="agents-state-row" data-row={row}>
+                  <Switch>
+                    <Match when={row === "ready" || row === "unavailable"}>
+                      <span data-slot="agents-dot" data-status={row} class="size-2 rounded-full" />
+                      <span>{language.t(row === "ready" ? "agents.legend.ready" : "agents.legend.unavailable")}</span>
+                    </Match>
+                    <Match when={row === "inherits"}>
+                      <span data-slot="agents-chip" class="rounded-md px-2 py-1 text-[11px]">
+                        {language.t("agents.model.inherits")}
+                      </span>
+                      <span>{language.t("agents.states.inherits")}</span>
+                    </Match>
+                    <Match when={row === "cannotStart"}>
+                      <span data-slot="agents-chip" class="rounded-md px-2 py-1 text-[11px]">
+                        {language.t("agents.note.noToolCalls")}
+                      </span>
+                    </Match>
+                  </Switch>
+                </div>
+              )}
+            </For>
+          </div>
+          <div data-component="agents-rail" role="group" aria-label={language.t("agents.zoom.label")}>
+            <button
+              type="button"
+              aria-label={language.t("agents.zoom.in")}
+              onClick={() => setState("zoom", zoomIn(state.zoom))}
+            >
               <svg
-                class="absolute inset-0 size-full"
-                viewBox={`0 0 100 ${LINK_HEIGHT}`}
-                preserveAspectRatio="none"
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
                 aria-hidden="true"
               >
-                <For each={links()}>{(link) => <path data-slot="agents-link" d={link.d} />}</For>
+                <path d="M8 3v10M3 8h10" />
               </svg>
-            </div>
-            <div
-              class="grid w-full justify-items-center gap-4"
-              style={{ "grid-template-columns": `repeat(${diagram().subagents.length}, minmax(0, 1fr))` }}
+            </button>
+            <button
+              type="button"
+              aria-label={language.t("agents.zoom.out")}
+              onClick={() => setState("zoom", zoomOut(state.zoom))}
             >
-              <For each={diagram().subagents}>
-                {(node) => (
-                  <AgentNodeCard
-                    node={node}
-                    selected={state.selected === node.name}
-                    onSelect={() => setState("selected", node.name)}
-                  />
-                )}
-              </For>
-            </div>
-          </Show>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                aria-hidden="true"
+              >
+                <path d="M3 8h10" />
+              </svg>
+            </button>
+            <button type="button" aria-label={language.t("agents.zoom.fit")} onClick={() => setState("zoom", ZOOM_FIT)}>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10" />
+              </svg>
+            </button>
+          </div>
         </div>
-      </div>
-      <div data-component="agents-legend" aria-hidden="false">
-        <span data-slot="agents-dot" data-status="ready" class="size-2 rounded-full" />
-        <span>{language.t("agents.legend.ready")}</span>
-        <span data-slot="agents-dot" data-status="unavailable" class="size-2 rounded-full" />
-        <span>{language.t("agents.legend.unavailable")}</span>
       </div>
       <Show when={state.selected} keyed>
         {(name) => (

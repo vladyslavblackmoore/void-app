@@ -131,3 +131,34 @@ export function buildAgentsDiagram(input: {
 
   return { main, subagents, mainCanStartSubagents: toolcall !== false }
 }
+
+export const ZOOM_FIT = 1
+const ZOOM_MIN = 0.5
+const ZOOM_MAX = 1.5
+const ZOOM_STEP = 0.1
+
+const clampZoom = (value: number) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(value * 100) / 100))
+
+export function zoomIn(scale: number) {
+  return clampZoom(scale + ZOOM_STEP)
+}
+
+export function zoomOut(scale: number) {
+  return clampZoom(scale - ZOOM_STEP)
+}
+
+export type LinkState = "ok" | "busy" | "idle"
+
+export function linkState(node: AgentNode, selected: boolean): LinkState {
+  if (selected) return "busy"
+  return node.status === "ready" ? "ok" : "idle"
+}
+
+export type NodeStateRow = "ready" | "unavailable" | "inherits" | "cannotStart"
+
+export function nodeStateRows(diagram: AgentsDiagram): NodeStateRow[] {
+  const rows: NodeStateRow[] = ["ready", "unavailable"]
+  if (diagram.subagents.some((node) => node.inherits)) rows.push("inherits")
+  if (!diagram.mainCanStartSubagents) rows.push("cannotStart")
+  return rows
+}

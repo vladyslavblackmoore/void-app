@@ -80,7 +80,7 @@ export function AgentEditorPanel(props: {
 
       <div data-slot="agents-body" class="flex min-h-0 flex-col gap-3 overflow-y-auto">
       <div class="flex flex-col gap-2">
-        <div class="flex items-center justify-between text-[12px] text-v2-text-text-faint">
+        <div data-slot="agents-label" class="flex items-center justify-between text-[12px] text-v2-text-text-faint">
           <span>{language.t("agents.editor.model")}</span>
           <span>{language.t("agents.editor.model.hint")}</span>
         </div>
@@ -129,7 +129,7 @@ export function AgentEditorPanel(props: {
       </div>
 
       <div class="flex flex-col gap-2">
-        <div class="flex items-center justify-between text-[12px] text-v2-text-text-faint">
+        <div data-slot="agents-label" class="flex items-center justify-between text-[12px] text-v2-text-text-faint">
           <span>{language.t("agents.editor.effort")}</span>
           <span>{language.t("agents.editor.effort.hint")}</span>
         </div>
