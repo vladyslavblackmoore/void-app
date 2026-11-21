@@ -4,7 +4,9 @@ import {
   connectorCatalog,
   filterCounts,
   filterTiles,
+  countTools,
   hubSummary,
+  hubServer,
   tileAction,
   tileState,
   tileTone,
@@ -102,11 +104,39 @@ describe("connector model", () => {
   })
 
   test("summarises the hub from configured servers only", () => {
-    expect(hubSummary(buildTiles({}))).toEqual({ configured: 0, connected: 0, tone: "grey" })
-    expect(hubSummary(buildTiles({ a: { status: "connected" } }))).toEqual({ configured: 1, connected: 1, tone: "green" })
+    expect(hubSummary(buildTiles({}))).toEqual({ total: 1, configured: 0, connected: 0, tone: "grey" })
+    expect(hubSummary(buildTiles({ a: { status: "connected" } }))).toEqual({ total: 2, configured: 1, connected: 1, tone: "green" })
     expect(hubSummary(buildTiles({ a: { status: "connected" }, b: { status: "needs_auth" } })).tone).toBe("yellow")
     expect(hubSummary(buildTiles({ a: { status: "connected" }, b: { status: "failed" } })).tone).toBe("red")
-    expect(hubSummary(buildTiles({ a: { status: "disabled" } }))).toEqual({ configured: 1, connected: 0, tone: "grey" })
+    expect(hubSummary(buildTiles({ a: { status: "disabled" } }))).toEqual({ total: 2, configured: 1, connected: 0, tone: "grey" })
+  })
+})
+
+describe("connector kinds, hub status and tool counts", () => {
+  test("marks memory, google and generic tiles", () => {
+    const tiles = buildTiles({ memory: { status: "connected" }, files: { status: "connected" } })
+    expect(tiles.find((tile) => tile.serverName === "memory")?.kind).toBe("memory")
+    expect(tiles.find((tile) => tile.serverName === "files")?.kind).toBe("generic")
+    expect(tiles.find((tile) => tile.id === "google-workspace")?.kind).toBe("google")
+  })
+
+  test("keeps the hub server out of the tiles and reports its status", () => {
+    const mcp = { hub: { status: "connected" }, memory: { status: "connected" } }
+    expect(buildTiles(mcp).map((tile) => tile.name)).toEqual(["memory", "Google Workspace"])
+    expect(hubServer(mcp)).toEqual({ state: "connected", tone: "green" })
+    expect(hubServer({ hub: { status: "failed" } })).toEqual({ state: "error", tone: "red" })
+    expect(hubServer({ memory: { status: "connected" } })).toBeUndefined()
+    expect(hubServer(undefined)).toBeUndefined()
+  })
+
+  test("counts the tools of each server by id prefix", () => {
+    const ids = ["bash", "memory_add", "memory_search", "google_workspace_gmail_list", "memory-extra_x"]
+    expect(countTools(ids, "memory")).toBe(2)
+    expect(countTools(ids, "google_workspace")).toBe(1)
+    expect(countTools(ids, "memory-extra")).toBe(1)
+    expect(countTools(ids, "files")).toBe(0)
+    expect(countTools(ids, "My Server.1")).toBe(0)
+    expect(countTools(["My_Server_1_ping"], "My Server.1")).toBe(1)
   })
 })
 

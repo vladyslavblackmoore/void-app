@@ -1,13 +1,15 @@
-import { createMemo, createSignal, For, Show } from "solid-js"
+import { createEffect, createMemo, createSignal, For, on, Show } from "solid-js"
 import { StatusDotV2 } from "@opencode-ai/ui/v2/status-dot-v2"
 import { SegmentedControlItemV2, SegmentedControlV2 } from "@opencode-ai/ui/v2/segmented-control-v2"
 import { ConnectPanel } from "@/components/void/connect-panel"
 import { ConnectorTileView } from "@/components/void/connector-tile"
 import {
   buildTiles,
+  countTools,
   connectorFilters,
   filterCounts,
   filterTiles,
+  hubServer,
   hubSummary,
   type ConnectorFilter,
   type ConnectorTile,
@@ -16,6 +18,7 @@ import "@/components/void/hub.css"
 import "@/components/void/connect-panel.css"
 import { useLanguage } from "@/context/language"
 import { useMcpToggle } from "@/context/mcp"
+import { useSDK } from "@/context/sdk"
 import { useSync } from "@/context/sync"
 
 function HubBody(props: { query: string }) {
@@ -28,6 +31,27 @@ function HubBody(props: { query: string }) {
   const tiles = createMemo(() => buildTiles(sync().data.mcp))
   const counts = createMemo(() => filterCounts(tiles()))
   const summary = createMemo(() => hubSummary(tiles()))
+  const hub = createMemo(() => hubServer(sync().data.mcp))
+  const sdk = useSDK()
+  const [toolIds, setToolIds] = createSignal<string[]>([])
+  const mcpKey = createMemo(() => JSON.stringify(sync().data.mcp ?? {}))
+  createEffect(
+    on(mcpKey, () => {
+      let live = true
+      void Promise.resolve(sdk().client.tool.ids())
+        .then((result) => {
+          if (live && Array.isArray(result?.data)) setToolIds(result.data)
+        })
+        .catch(() => undefined)
+      return () => {
+        live = false
+      }
+    }),
+  )
+  const toolCount = (tile: ConnectorTile) => {
+    if (!tile.serverName || tile.state !== "connected") return undefined
+    return countTools(toolIds(), tile.serverName) || undefined
+  }
   const visible = createMemo(() => filterTiles(tiles(), filter(), props.query))
 
   const current = createMemo(() => tiles().find((tile) => tile.id === selected()))
@@ -41,8 +65,16 @@ function HubBody(props: { query: string }) {
       <div data-slot="void-hub-main">
         <div data-slot="void-hub-bar">
           <span data-slot="void-hub-summary">
-            <StatusDotV2 tone={summary().tone} />
-            {language.plural("hub.summary", summary().configured)}
+            <StatusDotV2 tone={hub()?.tone ?? summary().tone} />
+            <Show when={hub()}>
+              {(item) => (
+                <>
+                  <span data-slot="void-hub-hub">{language.t(`hub.hubStatus.${item().state}`)}</span>
+                  <span aria-hidden="true">·</span>
+                </>
+              )}
+            </Show>
+            {language.plural("hub.summary", summary().total)}
           </span>
           <SegmentedControlV2
             aria-label={language.t("hub.filter.label")}
@@ -66,6 +98,7 @@ function HubBody(props: { query: string }) {
                   tile={tile}
                   selected={selected() === tile.id}
                   busy={toggle.isPending && toggle.variables === tile.serverName}
+                  tools={toolCount(tile)}
                   onSelect={() => setSelected(tile.id)}
                   onAction={() => setSelected(tile.id)}
                 />
@@ -81,6 +114,7 @@ function HubBody(props: { query: string }) {
               <ConnectPanel
                 tile={tile()}
                 busy={toggle.isPending && toggle.variables === tile().serverName}
+                tools={toolCount(tile())}
                 onToggle={() => toggleTile(tile())}
                 onClose={() => setSelected(undefined)}
               />

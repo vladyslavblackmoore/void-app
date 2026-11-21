@@ -10,6 +10,8 @@ export const flowSteps: FlowStep[] = ["authorize", "account", "access", "done"]
 
 const placeholders: FlowStep[] = ["account", "access"]
 
+export const isManage = (state: TileState) => state === "connected"
+
 export const isPlaceholder = (step: FlowStep) => placeholders.includes(step)
 
 export const initialStep = (state: TileState): FlowStep => (state === "connected" ? "account" : "authorize")

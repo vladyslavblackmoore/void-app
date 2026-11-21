@@ -109,7 +109,8 @@
 [data-component="void-hub"] [data-slot="void-hub-grid"] {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  align-items: start;
+  grid-auto-rows: 1fr;
+  align-items: stretch;
   gap: 14px;
 }
 
@@ -191,6 +192,17 @@
   gap: 7px;
   font-size: var(--void-fs-small, 13px);
   color: var(--void-text-2, var(--v2-text-text-weak));
+}
+
+[data-component="void-connector-tile"] [data-slot="void-connector-desc"] {
+  font-size: var(--void-fs-meta, 12px);
+  line-height: 1.5;
+  color: var(--void-text-2, var(--v2-text-text-weak));
+}
+
+[data-component="void-hub"] [data-slot="void-hub-hub"] {
+  font-weight: var(--void-weight-medium, 500);
+  color: var(--void-text-1, var(--v2-text-text-base));
 }
 
 [data-component="void-connector-tile"] [data-slot="void-connector-services"] {
