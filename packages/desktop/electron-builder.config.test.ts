@@ -4,9 +4,9 @@ import type { Configuration } from "electron-builder"
 const legacyDesktopEntry = "resources/linux/opencode-desktop.desktop"
 
 const channels = [
-  { channel: "dev", appId: "ai.opencode.desktop.dev" },
-  { channel: "beta", appId: "ai.opencode.desktop.beta" },
-  { channel: "prod", appId: "ai.opencode.desktop" },
+  { channel: "dev", appId: "app.void.desktop.dev" },
+  { channel: "beta", appId: "app.void.desktop.beta" },
+  { channel: "prod", appId: "app.void.desktop" },
 ] as const
 
 for (const channel of channels) {
