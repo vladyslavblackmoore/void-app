@@ -86,7 +86,9 @@ export function AgentEditorPanel(props: {
           <For each={groups()}>
             {(group) => (
               <>
-                <span class="mt-1 text-[11px] uppercase tracking-wide text-v2-text-text-faint">{group.name}</span>
+                <span data-slot="agents-group" class="mt-1 text-[11px] uppercase tracking-wide text-v2-text-text-faint">
+                  {group.name}
+                </span>
                 <For each={group.models}>
                   {(model) => (
                     <button

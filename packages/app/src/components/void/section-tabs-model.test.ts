@@ -18,10 +18,14 @@ describe("section tabs model", () => {
     expect(sectionForRoute({ type: "settings", page: "settings" })).toBe("settings")
   })
 
-  test("the hub section has no route and is not visible", () => {
+  test("the hub route is the hub section", () => {
+    expect(sectionForRoute({ type: "hub" })).toBe("hub")
+  })
+
+  test("the hub section is visible and has a route", () => {
     expect(voidSections.map((item) => item.id)).toEqual(["overview", "chat", "agents", "models", "hub", "settings"])
-    expect(visibleSections().map((item) => item.id)).toEqual(["overview", "chat", "agents", "models", "settings"])
-    expect(sectionTarget("hub")).toBeUndefined()
+    expect(visibleSections().map((item) => item.id)).toEqual(["overview", "chat", "agents", "models", "hub", "settings"])
+    expect(sectionTarget("hub")).toEqual({ type: "hub" })
   })
 
   test("section targets point at the existing routes", () => {
@@ -40,8 +44,8 @@ describe("section action", () => {
     expect(sectionAction({ ...base, section: "overview" })).toEqual({ type: "none" })
   })
 
-  test("hub has no action", () => {
-    expect(sectionAction({ ...base, section: "hub" })).toEqual({ type: "none" })
+  test("hub maps to the hub action", () => {
+    expect(sectionAction({ ...base, section: "hub" })).toEqual({ type: "hub" })
   })
 
   test("overview and settings pages map to home and settings actions", () => {

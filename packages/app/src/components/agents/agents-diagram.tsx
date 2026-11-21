@@ -8,8 +8,9 @@ import { useServerSync } from "@/context/server-sync"
 import { useProviders } from "@/hooks/use-providers"
 import { buildAgentsDiagram, formatModelRef, LINK_HEIGHT, linkPaths, type AgentNode } from "./agents-diagram-model"
 import { showToast } from "@/utils/toast"
-import { fileFields, hasRunningSessions, type AgentConfigPatch } from "./agent-editor"
+import { fileFields, hasRunningSessions, withConfigProviders, type AgentConfigPatch } from "./agent-editor"
 import { AgentEditorPanel } from "./agent-editor-panel"
+import { modelTagKind, modelTagLabel } from "./model-tag"
 import "./agents-diagram.css"
 
 function AgentNodeCard(props: { node: AgentNode; main?: boolean; selected: boolean; onSelect: () => void }) {
@@ -24,11 +25,25 @@ function AgentNodeCard(props: { node: AgentNode; main?: boolean; selected: boole
       type="button"
       data-component="agents-node"
       data-agent={props.node.name}
+      data-main={props.main ? "true" : undefined}
       data-selected={props.selected}
       aria-pressed={props.selected}
       onClick={props.onSelect}
-      class="flex w-full max-w-[280px] flex-col gap-3 rounded-2xl p-4 text-left text-v2-text-text-base"
+      class="relative flex w-full max-w-[280px] flex-col gap-3 rounded-2xl p-4 text-left text-v2-text-text-base"
     >
+      <Show when={!props.main}>
+        <span data-slot="agents-port" data-edge="top" aria-hidden="true" />
+      </Show>
+      <Show when={props.main}>
+        <span data-slot="agents-port" data-edge="bottom" aria-hidden="true" />
+      </Show>
+      <Show when={modelTagLabel(props.node.model)}>
+        {(label) => (
+          <span data-slot="agents-model-tag" data-kind={modelTagKind(props.node.model)}>
+            {label()}
+          </span>
+        )}
+      </Show>
       <div class="flex min-w-0 items-center gap-2">
         <span data-slot="agents-dot" data-status={props.node.status} class="size-2 shrink-0 rounded-full" />
         <span class="min-w-0 truncate text-[14px] font-semibold">{props.node.name}</span>
@@ -58,9 +73,9 @@ export function AgentsDiagram() {
   const globalAgents = useQuery(() => ({
     queryKey: [serverSDK().scope, "agents-global-config"],
     queryFn: async () => {
-      if ((await serverSDK().protocol) !== "v1") return {}
+      if ((await serverSDK().protocol) !== "v1") return { agent: {}, provider: {} }
       const result = await serverSDK().client.global.config.get()
-      return structuredClone(result.data?.agent ?? {})
+      return structuredClone({ agent: result.data?.agent ?? {}, provider: result.data?.provider ?? {} })
     },
     staleTime: 0,
   }))
@@ -74,7 +89,7 @@ export function AgentsDiagram() {
   const diagram = createMemo(() =>
     buildAgentsDiagram({
       agents: agents(),
-      config: globalAgents.data,
+      config: globalAgents.data?.agent,
       providers: providers.connected(),
       defaultModel: providers.defaultModel(),
     }),
@@ -160,9 +175,9 @@ export function AgentsDiagram() {
                 node={node()}
                 locked={fileFields(
                   agents().find((agent) => agent.name === node().name),
-                  globalAgents.data?.[node().name],
+                  globalAgents.data?.agent[node().name],
                 )}
-                providers={providers.connected()}
+                providers={withConfigProviders(providers.connected(), globalAgents.data?.provider)}
                 running={running()}
                 onSave={save}
                 onClose={() => setState("selected", undefined)}

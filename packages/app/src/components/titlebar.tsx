@@ -30,6 +30,7 @@ import { useMajorUpdate } from "@/context/major-update"
 import { useSettings } from "@/context/settings"
 import { WindowsAppMenu } from "./windows-app-menu"
 import { applyPath, backPath, forwardPath } from "./titlebar-history"
+import { SESSION_DRAFT_KEYBIND } from "./titlebar-tab-commands"
 import { TitlebarTabStrip } from "@/components/titlebar-tab-strip"
 import { SpaceSwitcher } from "@/components/space-switcher"
 import { makeEventListener } from "@solid-primitives/event-listener"
@@ -235,7 +236,7 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
             )
 
             const matchRoute = (route: LayoutRoute) => {
-              if (route.type === "home") return
+              if (route.type === "home" || route.type === "hub") return
               if (route.type === "settings") return settingsTabs.find((item) => item.page === route.page)
               if (route.type === "draft") {
                 return tabsStore.find((item) => item.type === "draft" && item.draftID === route.draftID)
@@ -357,6 +358,7 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
                 const tab = chatTabs.find((item) => tabKey(item) === action.key)
                 if (tab) tabs.select(tab)
               }
+              if (action.type === "hub") navigate("/hub")
               if (action.type === "chat-new") openNewTab()
             }
 
@@ -380,6 +382,7 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
                   id: "session.draft",
                   category: "tab",
                   title: language.t("command.session.new"),
+                  keybind: SESSION_DRAFT_KEYBIND,
                   hidden: true,
                   onSelect: openNewTab,
                 },
