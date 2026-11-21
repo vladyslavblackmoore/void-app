@@ -39,6 +39,7 @@ export function voidAppEnv(root: string, user: UserXdg) {
     XDG_STATE_HOME: join(root, "state"),
     VOID_USER_ENV: JSON.stringify(Object.fromEntries(USER_XDG.map((key) => [key, user[key] || null]))),
     OPENCODE_DISABLE_CLAUDE_CODE: "true",
+    OPENCODE_DISABLE_EXTERNAL_SKILLS: "true",
   }
 }
 

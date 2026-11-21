@@ -32,7 +32,11 @@ const itWithoutExternalSkills = testEffect(
   ),
 )
 const voidEnvFlags = RuntimeFlags.Service.layer.pipe(
-  Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ OPENCODE_DISABLE_CLAUDE_CODE: "true" }))),
+  Layer.provide(
+    ConfigProvider.layer(
+      ConfigProvider.fromUnknown({ OPENCODE_DISABLE_CLAUDE_CODE: "true", OPENCODE_DISABLE_EXTERNAL_SKILLS: "true" }),
+    ),
+  ),
   Layer.orDie,
 )
 const voidEnvLayer = () =>
@@ -555,6 +559,11 @@ description: A skill in the .opencode/skill directory.
       writeSkill(
         path.join(project.path, ".claude", "skills", "foreign-project-skill", "SKILL.md"),
         "foreign-project-skill",
+      ),
+      writeSkill(path.join(home.path, ".agents", "skills", "shared-home-skill", "SKILL.md"), "shared-home-skill"),
+      writeSkill(
+        path.join(project.path, ".agents", "skills", "shared-project-skill", "SKILL.md"),
+        "shared-project-skill",
       ),
     ])
     const prev = process.env.OPENCODE_TEST_HOME

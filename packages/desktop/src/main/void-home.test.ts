@@ -83,6 +83,10 @@ describe("void home", () => {
     expect(voidAppEnv(VOID_HOME, {}).OPENCODE_DISABLE_CLAUDE_CODE).toBe("true")
   })
 
+  test("keeps the server off shared external skill dirs", () => {
+    expect(voidAppEnv(VOID_HOME, {}).OPENCODE_DISABLE_EXTERNAL_SKILLS).toBe("true")
+  })
+
   test("uses another root when given one", () => {
     expect(voidAppEnv("/tmp/x", {}).XDG_STATE_HOME).toBe(join("/tmp/x", "state"))
   })
