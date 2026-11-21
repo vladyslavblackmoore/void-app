@@ -1,0 +1,12 @@
+html[data-theme="void"] [data-component="void-logo"] {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  padding-right: 8px;
+  color: var(--void-text-1);
+  font-size: 15px;
+  font-weight: var(--void-weight-bold);
+  letter-spacing: var(--void-ls-logo);
+  user-select: none;
+}

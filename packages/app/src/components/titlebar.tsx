@@ -39,6 +39,9 @@ import { ServerConnection, useServer } from "@/context/server"
 import { isFixedTab, settingsTabs, tabKey, useTabs } from "@/context/tabs"
 import type { PromptSession } from "@/context/prompt"
 import "./titlebar.css"
+import "./void/void-titlebar.css"
+import { VoidLogo } from "./void/void-logo"
+import { useVoidTheme } from "./void/use-void-theme"
 import { normalizeSessionInfo } from "@/utils/session"
 
 const legacyTitlebarHeight = 40
@@ -74,6 +77,7 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
   const location = useLocation()
   const params = useParams()
   const useV2Titlebar = createMemo(() => settings.general.newLayoutDesigns())
+  const isVoid = useVoidTheme()
   const mobile = createMediaQuery("(max-width: 767px)")
   const bottom = createMemo(() => useV2Titlebar() && mobile() && settings.general.mobileTitlebarPosition() === "bottom")
 
@@ -383,6 +387,9 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
                 <ChannelIndicator debugTools={props.debugTools} />
                 <Show when={windows() || linux()}>
                   <WindowsAppMenu command={command} platform={platform} variant="v2" />
+                </Show>
+                <Show when={isVoid()}>
+                  <VoidLogo />
                 </Show>
                 <TooltipV2
                   placement="bottom"
