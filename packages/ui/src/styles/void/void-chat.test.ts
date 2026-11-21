@@ -144,3 +144,12 @@ describe("void chat messages", () => {
     expect(css).toContain("visibility: hidden")
   })
 })
+
+describe("void canvas glow in light", () => {
+  test("has no blue glow in light, where it bleeds along the sheet edge", () => {
+    const tokens = readFileSync(new URL("tokens.css", dir), "utf8")
+    const light = tokens.slice(tokens.indexOf('html[data-theme="void"][data-color-scheme="light"] {'))
+    expect(/--void-glow-blue: rgba\(\d+, \d+, \d+, 0\)/.test(light)).toBe(true)
+    expect(/--void-glow-blue: rgba\([^)]*0\.\d+\)/.test(tokens.slice(0, tokens.indexOf('data-color-scheme="light"] {')))).toBe(true)
+  })
+})
