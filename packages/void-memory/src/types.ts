@@ -102,3 +102,68 @@ export interface ForgetResult {
   readonly missing: readonly string[]
   readonly already: readonly string[]
 }
+
+export const taskStatuses = ["open", "claimed", "in_progress", "blocked", "done", "failed", "cancelled"] as const
+
+export type TaskStatus = (typeof taskStatuses)[number]
+
+export interface TaskCreateInput {
+  readonly id?: string
+  readonly title: string
+  readonly brief?: string
+  readonly project?: string
+  readonly deps?: readonly string[]
+}
+
+export interface TaskRecord {
+  readonly id: string
+  readonly title: string | null
+  readonly brief: string | null
+  readonly project: string | null
+  readonly status: string
+  readonly claimed_by: string | null
+  readonly created_by: string | null
+  readonly created_at: number
+  readonly updated_at: number
+  readonly deps: readonly string[]
+}
+
+export type ClaimResult =
+  | { readonly claimed: true; readonly task: TaskRecord }
+  | { readonly claimed: false; readonly reason: "not_found" | "not_open"; readonly status?: string; readonly claimed_by?: string | null }
+
+export interface TaskUpdateInput {
+  readonly id: string
+  readonly status?: TaskStatus
+  readonly note?: string
+}
+
+export interface TaskResultInput {
+  readonly id: string
+  readonly result: string
+  readonly outcome?: "done" | "failed"
+  readonly title?: string
+}
+
+export interface TaskListQuery {
+  readonly status?: TaskStatus
+  readonly project?: string
+  readonly claimed_by?: string
+  readonly ready?: boolean
+  readonly limit?: number
+}
+
+export interface TaskEvent {
+  readonly seq: number
+  readonly task_id: string
+  readonly actor: string | null
+  readonly from_status: string | null
+  readonly to_status: string | null
+  readonly note: string | null
+  readonly at: number
+}
+
+export interface BoardChanges {
+  readonly events: readonly TaskEvent[]
+  readonly cursor: number
+}

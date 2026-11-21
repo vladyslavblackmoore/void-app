@@ -261,3 +261,19 @@ test("a russian token of seven letters or more matches an inflected form", () =>
   t.store.remember({ nodes: [{ id: "q", kind: "fact", title: "Порядок", body: "обработка очереди сообщений" }] }, actor)
   expect(ids(t.store.recall({ query: "очередь", hops: 0 }))).toEqual(["q"])
 })
+
+test("the expansion row cap truncates the walk", () => {
+  const capped = tempStore({ expansionCap: 5 })
+  const nodes = [{ id: "hub", kind: "entity" as const, title: "hubword" }]
+  const edges = []
+  for (let i = 0; i < 40; i++) {
+    nodes.push({ id: `s${i}`, kind: "entity", title: `spoke ${i}` })
+    edges.push({ src: "hub", dst: `s${i}`, type: "relates_to" })
+  }
+  capped.store.remember({ nodes, edges }, actor)
+  const result = capped.store.recall({ query: "hubword", hops: 1, limit: 50 })
+  expect(result.nodes.length).toBe(5)
+  expect(result.nodes.some((n) => n.id === "hub")).toBe(true)
+  expect(t.store.recall({ query: "hubword", hops: 1, limit: 50 }).nodes).toEqual([])
+  capped.close()
+})

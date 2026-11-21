@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import type { Store } from "./store"
+import { taskStatuses } from "./types"
 
 export const instructions = [
   "Graph memory shared by the agents of one space. Nothing is extracted for you: you supply the structure.",
@@ -8,6 +9,7 @@ export const instructions = [
   "Node kinds: entity, fact, decision, result, project, agent, session, doc. Edge types: about, relates_to, part_of, decided_in, supersedes, depends_on, parent_of, assigned_to, produced, derived_from.",
   "Give every fact a short specific title and put the detail in the body. Reuse a title with the same kind to update a node instead of duplicating it.",
   "To replace a fact or decision write the new node with a supersedes edge to the old one. forget invalidates a node, nothing is deleted; recall with history=true shows invalidated nodes.",
+  "Task board: task_create (title, brief, project, deps), task_claim before starting work, task_update with notes, task_result when finished, task_list (ready=true for unblocked open tasks), board_changes with the last cursor to see what changed.",
   "Pass your agent name in agent so scope agent:<name> nodes stay yours; shared is the default scope.",
 ].join("\n")
 
@@ -137,6 +139,94 @@ export const createServer = (store: Store, options: ServerOptions = {}) => {
       inputSchema: { ids: z.array(z.string()).min(1), superseded_by: z.string().optional() },
     },
     guard((args) => store.forget(args)),
+  )
+
+  const actor = (agent: string | undefined, session?: string) => ({ agent: who(agent), session: session ?? options.session })
+  const status = z.enum(taskStatuses)
+
+  server.registerTool(
+    "task_create",
+    {
+      description: "Create an open task on the board. deps are task ids that must be done before it is ready.",
+      inputSchema: {
+        id: z.string().optional(),
+        title: z.string(),
+        brief: z.string().optional(),
+        project: z.string().optional(),
+        deps: z.array(z.string()).optional(),
+        agent: z.string().optional(),
+        session: z.string().optional(),
+      },
+    },
+    guard((args) => store.task.create(args, actor(args.agent, args.session))),
+  )
+
+  server.registerTool(
+    "task_claim",
+    {
+      description: "Claim an open task atomically. Returns claimed=false when another agent won or the task is not open.",
+      inputSchema: { id: z.string(), agent: z.string().optional(), session: z.string().optional() },
+    },
+    guard((args) => store.task.claim(args.id, actor(args.agent, args.session))),
+  )
+
+  server.registerTool(
+    "task_update",
+    {
+      description: "Change a task status and add a note. Finished tasks (done, cancelled) cannot be updated.",
+      inputSchema: {
+        id: z.string(),
+        status: status.optional(),
+        note: z.string().optional(),
+        agent: z.string().optional(),
+        session: z.string().optional(),
+      },
+    },
+    guard((args) => store.task.update(args, actor(args.agent, args.session))),
+  )
+
+  server.registerTool(
+    "task_result",
+    {
+      description: "Store the outcome as a result node linked to the task and close the task (done, or failed).",
+      inputSchema: {
+        id: z.string(),
+        result: z.string(),
+        outcome: z.enum(["done", "failed"]).optional(),
+        title: z.string().optional(),
+        agent: z.string().optional(),
+        session: z.string().optional(),
+      },
+    },
+    guard((args) => store.task.result(args, actor(args.agent, args.session))),
+  )
+
+  server.registerTool(
+    "task_list",
+    {
+      description: "List tasks. ready=true returns open tasks whose dependencies are all done.",
+      inputSchema: {
+        status: status.optional(),
+        project: z.string().optional(),
+        claimed_by: z.string().optional(),
+        ready: z.boolean().optional(),
+        limit: z.number().int().min(1).max(200).optional(),
+      },
+    },
+    guard((args) => store.task.list(args)),
+  )
+
+  server.registerTool(
+    "board_changes",
+    {
+      description: "Task events after a cursor (sequence number), oldest first. Pass the returned cursor next time.",
+      inputSchema: {
+        after: z.number().int().min(0).optional(),
+        limit: z.number().int().min(1).max(200).optional(),
+        project: z.string().optional(),
+      },
+    },
+    guard((args) => store.task.changes(args.after ?? 0, args.limit, args.project)),
   )
 
   return server
