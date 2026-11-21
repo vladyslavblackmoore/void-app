@@ -235,7 +235,7 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
             )
 
             const matchRoute = (route: LayoutRoute) => {
-              if (route.type === "home") return
+              if (route.type === "home" || route.type === "hub") return
               if (route.type === "settings") return settingsTabs.find((item) => item.page === route.page)
               if (route.type === "draft") {
                 return tabsStore.find((item) => item.type === "draft" && item.draftID === route.draftID)
@@ -341,6 +341,10 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
               if (!target) return
               if (target.type === "home") {
                 tabs.toggleHome({ home: false, current: currentTab() })
+                return
+              }
+              if (target.type === "hub") {
+                navigate("/hub")
                 return
               }
               if (target.type === "settings") {

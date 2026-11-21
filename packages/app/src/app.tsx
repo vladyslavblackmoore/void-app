@@ -47,7 +47,7 @@ import { GlobalProvider, useGlobal } from "@/context/global"
 import { HighlightsProvider } from "@/context/highlights"
 import { MajorUpdateProvider } from "@/context/major-update"
 import { LanguageProvider, type Locale, useLanguage } from "@/context/language"
-import { LayoutProvider } from "@/context/layout"
+import { LayoutProvider, useLayout } from "@/context/layout"
 import { ModelsProvider } from "@/context/models"
 import { NotificationProvider } from "@/context/notification"
 import { PermissionProvider } from "@/context/permission"
@@ -72,6 +72,7 @@ import { LegacyHome } from "@/pages/home/legacy-home"
 
 const NewSession = lazy(() => import("@/pages/new-session"))
 const SettingsTabPage = lazy(() => import("@/pages/settings-tab"))
+const HubPage = lazy(() => import("@/pages/hub"))
 
 const SessionRoute = () => {
   const settings = useSettings()
@@ -229,6 +230,43 @@ function ResolvedDraftRoute(props: { draft: DraftTab }) {
           </ModelsProvider>
         </ServerSyncProvider>
       </ServerSDKProvider>
+    </Show>
+  )
+}
+
+function HubRoute() {
+  const global = useGlobal()
+  const layout = useLayout()
+  const server = useServer()
+  const target = createMemo(() => {
+    const selection = layout.home.selection()
+    const list = global.servers.list()
+    const conn =
+      list.find((item) => ServerConnection.key(item) === selection.server) ??
+      list.find((item) => ServerConnection.key(item) === server.key)
+    if (!conn) return
+    const projects = global.ensureServerCtx(conn).projects.list()
+    const project = projects.find((item) => item.worktree === selection.directory) ?? projects[0]
+    if (!project) return
+    return { conn, directory: project.worktree, key: ServerConnection.key(conn) }
+  })
+
+  return (
+    <Show when={target() ? `${target()!.key}\0${target()!.directory}` : undefined} keyed fallback={<HubPage empty />}>
+      {(_key) => {
+        const scope = target()!
+        return (
+          <ServerSDKProvider server={() => scope.conn}>
+            <ServerSyncProvider server={() => scope.conn}>
+              <SDKProvider directory={() => scope.directory}>
+                <DirectoryDataProvider directory={() => scope.directory} server={() => scope.key}>
+                  <HubPage />
+                </DirectoryDataProvider>
+              </SDKProvider>
+            </ServerSyncProvider>
+          </ServerSDKProvider>
+        )
+      }}
     </Show>
   )
 }
@@ -642,6 +680,7 @@ function Routes(props: { serverScoped?: JSX.Element }) {
       <Show when={settings.general.newLayoutDesigns()}>
         <Route path="/" component={NewHome} />
         <Route path="/settings/:page" component={SettingsTabPage} />
+        <Route path="/hub" component={HubRoute} />
         <Route path="/:dir/session/:id" component={NewLayoutLegacySessionRedirect} />
         <Route path="/server/:serverKey/session/:id" component={TargetSessionRoute} />
       </Show>
