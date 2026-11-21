@@ -9,6 +9,7 @@ import {
   Show,
   Switch,
   untrack,
+  type JSX,
 } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useLocation, useNavigate, useParams } from "@solidjs/router"
@@ -40,10 +41,17 @@ import { ServerConnection, useServer } from "@/context/server"
 import { isFixedTab, settingsTabs, tabKey, useTabs } from "@/context/tabs"
 import type { PromptSession } from "@/context/prompt"
 import "./titlebar.css"
+import "./void/void-titlebar.css"
+import { VoidLogo } from "./void/void-logo"
+import { useVoidTheme } from "./void/use-void-theme"
+import { SectionTabs } from "./void/section-tabs"
+import { sectionAction, sectionForRoute, type VoidSection } from "./void/section-tabs-model"
+import { VoidTitlebarActions } from "./void/void-titlebar-actions"
 import { normalizeSessionInfo } from "@/utils/session"
 
 const legacyTitlebarHeight = 40
 const v2TitlebarHeight = 36
+const voidTitlebarHeight = 44
 const minTitlebarZoom = 0.25
 const windowsControlsBaseWidth = 138 // 3 native Windows caption buttons at 46px each.
 const macTrafficLightsBaseWidth = 84
@@ -75,6 +83,7 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
   const location = useLocation()
   const params = useParams()
   const useV2Titlebar = createMemo(() => settings.general.newLayoutDesigns())
+  const isVoid = useVoidTheme()
   const mobile = createMediaQuery("(max-width: 767px)")
   const bottom = createMemo(() => useV2Titlebar() && mobile() && settings.general.mobileTitlebarPosition() === "bottom")
 
@@ -87,7 +96,7 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
   const titlebarZoom = () => (windows() ? Math.max(zoom(), minTitlebarZoom) : zoom())
   const counterZoom = () => (windows() && titlebarZoom() < 1 ? 1 / titlebarZoom() : 1)
   const minHeight = () => {
-    const height = useV2Titlebar() ? v2TitlebarHeight : legacyTitlebarHeight
+    const height = useV2Titlebar() ? (isVoid() ? voidTitlebarHeight : v2TitlebarHeight) : legacyTitlebarHeight
     if (mac()) return `${height / zoom()}px`
     if (windows()) return `${height / Math.min(titlebarZoom(), 1)}px`
     return undefined
@@ -183,6 +192,7 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
   return (
     <header
       data-slot={useV2Titlebar() ? "titlebar-v2" : undefined}
+      data-void-shell={useV2Titlebar() && isVoid() ? "" : undefined}
       classList={{
         "shrink-0 relative flex flex-row": true,
         "h-9 bg-v2-background-bg-deep overflow-visible": useV2Titlebar(),
@@ -193,6 +203,7 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
         "min-height": minHeight(),
         // Keep native macOS traffic lights clear even when the desktop window is narrow.
         "padding-left": macTrafficLights() ? `${macTrafficLightsBaseWidth / zoom()}px` : 0,
+        "--void-inset": `${macTrafficLights() ? macTrafficLightsBaseWidth / zoom() + 8 : 16}px`,
         width: windows() ? `env(titlebar-area-width, calc(100vw - ${windowsControlsWidth()}))` : undefined,
         "max-width": windows() ? `env(titlebar-area-width, calc(100vw - ${windowsControlsWidth()}))` : undefined,
         // Native Windows caption controls remain on the physical right in both writing directions.
@@ -226,7 +237,7 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
             )
 
             const matchRoute = (route: LayoutRoute) => {
-              if (route.type === "home") return
+              if (route.type === "home" || route.type === "hub") return
               if (route.type === "settings") return settingsTabs.find((item) => item.page === route.page)
               if (route.type === "draft") {
                 return tabsStore.find((item) => item.type === "draft" && item.draftID === route.draftID)
@@ -325,6 +336,32 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
               tabs.newDraft({ server: fallback.server, directory: fallback.project.worktree }, "")
             }
             const toggleHome = () => tabs.toggleHome({ home: layout.route().type === "home", current: currentTab() })
+            const activeSection = () => sectionForRoute(layout.route())
+            const [lastChatKey, setLastChatKey] = createSignal<string>()
+            createEffect(() => {
+              const tab = currentTab()
+              if (tab && !isFixedTab(tab)) setLastChatKey(tabKey(tab))
+            })
+            const selectSection = (section: VoidSection) => {
+              const chatTabs = tabsStore.filter((item) => !isFixedTab(item))
+              const action = sectionAction({
+                section,
+                active: activeSection(),
+                lastChatKey: lastChatKey(),
+                chatKeys: chatTabs.map(tabKey),
+              })
+              if (action.type === "home") tabs.toggleHome({ home: false, current: currentTab() })
+              if (action.type === "settings") {
+                const tab = settingsTabs.find((item) => item.page === action.page)
+                if (tab) tabs.select(tab)
+              }
+              if (action.type === "chat-tab") {
+                const tab = chatTabs.find((item) => tabKey(item) === action.key)
+                if (tab) tabs.select(tab)
+              }
+              if (action.type === "hub") navigate("/hub")
+              if (action.type === "chat-new") openNewTab()
+            }
 
             command.register("titlebar-home", () => [
               {
@@ -374,6 +411,7 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
 
             return (
               <div
+                data-void-row={isVoid() ? "" : undefined}
                 class="h-full flex-1 overflow-hidden flex flex-row items-center gap-1.5 px-2 md:pr-3"
                 classList={{
                   "pt-2": !bottom(),
@@ -382,51 +420,76 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
                   "md:pl-4": !macTrafficLights(),
                 }}
               >
-                <ChannelIndicator debugTools={props.debugTools} />
-                <Show when={windows() || linux()}>
-                  <WindowsAppMenu command={command} platform={platform} variant="v2" />
-                </Show>
-                <TooltipV2
-                  placement="bottom"
-                  value={
+                <Show
+                  when={isVoid()}
+                  fallback={
                     <>
-                      {language.t("home.title")}
-                      <KeybindV2 keys={command.keybindParts("home.toggle")} variant="neutral" />
+                      <ChannelIndicator debugTools={props.debugTools} />
+                      <Show when={windows() || linux()}>
+                        <WindowsAppMenu command={command} platform={platform} variant="v2" />
+                      </Show>
+                      <TooltipV2
+                        placement="bottom"
+                        value={
+                          <>
+                            {language.t("home.title")}
+                            <KeybindV2 keys={command.keybindParts("home.toggle")} variant="neutral" />
+                          </>
+                        }
+                        class="shrink-0"
+                      >
+                        <IconButtonV2
+                          type="button"
+                          variant="ghost-muted"
+                          size="large"
+                          class="!w-9 shrink-0"
+                          icon={<IconV2 name="grid-plus" />}
+                          state={layout.route().type === "home" ? "pressed" : undefined}
+                          onClick={toggleHome}
+                          aria-label={language.t("home.title")}
+                          aria-pressed={layout.route().type === "home"}
+                        />
+                      </TooltipV2>
+
+                      <SpaceSwitcher />
+                      <TitlebarTabStrip
+                        tabs={tabsStore}
+                        currentTab={currentTab}
+                        forceTruncate={tabsAreOverflowing()}
+                        onOverflowChange={setTabsAreOverflowing}
+                        onNavigate={(tab, el) => {
+                          tabs.select(tab)
+                          el?.scrollIntoView({ behavior: "instant" })
+                        }}
+                        onClose={(tab) => {
+                          const index = tabsStore.findIndex((item) => tabKey(item) === tabKey(tab))
+                          if (index !== -1) tabsStoreActions.closeTab(index)
+                        }}
+                        onReorder={(keys) => tabsStoreActions.reorder(keys)}
+                      />
+                      <div class="flex-1" />
+                      <TitlebarV2Right state={v2RightState()} />
                     </>
                   }
-                  class="shrink-0"
                 >
-                  <IconButtonV2
-                    type="button"
-                    variant="ghost-muted"
-                    size="large"
-                    class="!w-9 shrink-0"
-                    icon={<IconV2 name="grid-plus" />}
-                    state={layout.route().type === "home" ? "pressed" : undefined}
-                    onClick={toggleHome}
-                    aria-label={language.t("home.title")}
-                    aria-pressed={layout.route().type === "home"}
-                  />
-                </TooltipV2>
-
-                <SpaceSwitcher />
-                <TitlebarTabStrip
-                  tabs={tabsStore}
-                  currentTab={currentTab}
-                  forceTruncate={tabsAreOverflowing()}
-                  onOverflowChange={setTabsAreOverflowing}
-                  onNavigate={(tab, el) => {
-                    tabs.select(tab)
-                    el?.scrollIntoView({ behavior: "instant" })
-                  }}
-                  onClose={(tab) => {
-                    const index = tabsStore.findIndex((item) => tabKey(item) === tabKey(tab))
-                    if (index !== -1) tabsStoreActions.closeTab(index)
-                  }}
-                  onReorder={(keys) => tabsStoreActions.reorder(keys)}
-                />
-                <div class="flex-1" />
-                <TitlebarV2Right state={v2RightState()} />
+                  <div data-component="void-titlebar-left">
+                    <ChannelIndicator debugTools={props.debugTools} />
+                    <Show when={windows() || linux()}>
+                      <WindowsAppMenu command={command} platform={platform} variant="v2" />
+                    </Show>
+                    <VoidLogo />
+                    <SectionTabs active={activeSection()} onSelect={selectSection} />
+                  </div>
+                  <div data-component="void-titlebar-center">
+                    <SpaceSwitcher />
+                  </div>
+                  <div data-component="void-titlebar-right">
+                    <TitlebarV2Right
+                      state={v2RightState()}
+                      trailing={<VoidTitlebarActions onSearch={command.show} onNewTask={openNewTab} />}
+                    />
+                  </div>
+                </Show>
               </div>
             )
           }}
@@ -601,13 +664,14 @@ type TitlebarV2RightState = {
   update: TitlebarUpdatePillState
 }
 
-function TitlebarV2Right(props: { state: TitlebarV2RightState }) {
+function TitlebarV2Right(props: { state: TitlebarV2RightState; trailing?: JSX.Element }) {
   return (
     <div class="relative z-20 flex shrink-0 items-center justify-end gap-0 overflow-visible">
       <Show when={props.state.update.visible}>
         <TitlebarUpdateIconButton state={props.state.update} />
       </Show>
       <div id="opencode-titlebar-right" class="flex shrink-0 items-center justify-end gap-0" />
+      {props.trailing}
     </div>
   )
 }

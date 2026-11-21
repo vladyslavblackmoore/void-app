@@ -135,3 +135,7 @@ export function buildAgentPatch(
 export function hasRunningSessions(statuses: Record<string, { type: string } | undefined>) {
   return Object.values(statuses).some((status) => !!status && status.type !== "idle")
 }
+
+export function effortControl(themeId: string | undefined): "segmented" | "chips" {
+  return themeId === "void" ? "segmented" : "chips"
+}

@@ -2,6 +2,15 @@
 @import "@opencode-ai/session-ui/styles";
 @import "@opencode-ai/ui/v2/styles/tailwind.css";
 @import "tw-animate-css";
+@import "@opencode-ai/ui/styles/void/tokens.css";
+@import "@opencode-ai/ui/styles/void/typography.css";
+@import "@opencode-ai/ui/styles/void/radii.css";
+@import "@opencode-ai/ui/styles/void/buttons.css";
+@import "@opencode-ai/ui/styles/void/segmented.css";
+@import "@opencode-ai/ui/styles/void/glass.css";
+@import "@opencode-ai/ui/styles/void/canvas.css";
+@import "@opencode-ai/ui/styles/void/dock.css";
+@import "@opencode-ai/ui/styles/void/chat.css";
 
 @font-face {
   font-family: "JetBrainsMono Nerd Font Mono";
@@ -13,6 +22,13 @@
 @font-face {
   font-family: "Inter";
   src: url("/assets/Inter.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Outfit";
+  src: url("/assets/Outfit.ttf") format("truetype");
   font-weight: 100 900;
   font-style: normal;
 }

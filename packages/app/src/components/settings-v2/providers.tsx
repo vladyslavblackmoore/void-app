@@ -11,13 +11,17 @@ import { useServerProtocol, useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
 import { DialogConnectProvider, useProviderConnectController } from "../dialog-connect-provider"
 import { DialogCustomProvider } from "../dialog-custom-provider"
+import { StatusDotV2 } from "@opencode-ai/ui/v2/status-dot-v2"
+import { useVoidTheme } from "../void/use-void-theme"
 import { SettingsListV2 } from "./parts/list"
+import { providerCards, providerSummary, visibleModelTags, type ProviderCard } from "./provider-cards-model"
 import "./settings-v2.css"
 
 type ProviderSource = "env" | "api" | "config" | "custom"
 type ProviderItem = ReturnType<ReturnType<typeof useProviders>["connected"]>[number]
 
 const PROVIDER_ICON_SIZE = 16
+const CARD_TAG_LIMIT = 2
 
 export const SettingsProvidersV2: Component<{
   directory: Accessor<string | undefined>
@@ -30,6 +34,7 @@ export const SettingsProvidersV2: Component<{
   const serverSync = useServerSync()
   const providers = useProviders(props.directory)
   const providerConnect = useProviderConnectController({ onBack: props.onBack })
+  const isVoid = useVoidTheme()
 
   const connect = (provider?: string) => {
     providerConnect.select(provider)
@@ -132,8 +137,128 @@ export const SettingsProvidersV2: Component<{
       })
   }
 
-  return (
+  const cards = createMemo(() =>
+    providerCards({
+      connected: connected().map((item) => ({
+        id: item.id,
+        name: item.name,
+        models: Object.values(item.models).map((model) => model.name),
+        source: source(item),
+      })),
+      available: popular().map((item) => ({
+        id: item.id,
+        name: item.name,
+        models: Object.values(item.models).map((model) => model.name),
+      })),
+    }),
+  )
+
+  const summary = createMemo(() => providerSummary(cards()))
+
+  const cardType = (card: ProviderCard) => {
+    const item = connected().find((entry) => entry.id === card.id)
+    return item ? type(item) : undefined
+  }
+
+  const CardButton = (cardProps: { card: ProviderCard }) => (
     <>
+      <Show when={cardProps.card.action === "connect"}>
+        <ButtonV2 size="normal" variant="neutral" onClick={() => connect(cardProps.card.id)}>
+          {language.t("common.connect")}
+        </ButtonV2>
+      </Show>
+      <Show when={cardProps.card.action === "disconnect"}>
+        <ButtonV2
+          size="normal"
+          variant="neutral"
+          onClick={() => void disconnect(cardProps.card.id, cardProps.card.name)}
+        >
+          {language.t("common.disconnect")}
+        </ButtonV2>
+      </Show>
+      <Show when={cardProps.card.action === "none"}>
+        <span class="void-provider-card-hint">{language.t("settings.providers.connected.environmentDescription")}</span>
+      </Show>
+    </>
+  )
+
+  const VoidProviders = () => (
+    <div class="void-provider-grid" data-component="void-provider-grid">
+      <p class="void-provider-summary">
+        {language.t("void.models.summary", { connected: summary().connected, total: summary().total })}
+      </p>
+      <For each={cards()}>
+        {(card) => {
+          const tags = () => visibleModelTags(card.models, CARD_TAG_LIMIT)
+          return (
+            <div class="void-provider-card" data-status={card.status} data-provider={card.id}>
+              <div class="void-provider-card-top">
+                <span class="void-provider-card-icon">
+                  <ProviderIcon id={card.id} width={20} height={20} />
+                </span>
+                <div class="void-provider-card-head">
+                  <span class="void-provider-card-name">{card.name}</span>
+                  <span class="void-provider-card-state">
+                    <StatusDotV2 tone={card.tone} />
+                    {language.t(
+                      card.status === "connected" ? "void.models.status.connected" : "void.models.status.disconnected",
+                    )}
+                  </span>
+                </div>
+              </div>
+              <p class="void-provider-card-line">
+                {card.modelCount > 0
+                  ? language.t("void.models.count", { count: card.modelCount })
+                  : language.t("void.models.noModels")}
+              </p>
+              <div class="void-provider-card-tags">
+                <For each={tags().tags}>{(tag) => <span class="void-provider-tag">{tag}</span>}</For>
+                <Show when={tags().more > 0}>
+                  <span class="void-provider-tag">{language.t("void.models.moreTags", { count: tags().more })}</span>
+                </Show>
+              </div>
+              <div class="void-provider-card-foot">
+                <span class="void-provider-card-id">{cardType(card) ?? card.id}</span>
+                <CardButton card={card} />
+              </div>
+            </div>
+          )
+        }}
+      </For>
+      <Show when={protocol() === "v1"}>
+        <div class="void-provider-card" data-status="disconnected" data-component="custom-provider-section">
+          <div class="void-provider-card-top">
+            <span class="void-provider-card-icon">
+              <ProviderIcon id="synthetic" width={20} height={20} />
+            </span>
+            <div class="void-provider-card-head">
+              <span class="void-provider-card-name">{language.t("provider.custom.title")}</span>
+              <span class="void-provider-card-state">{language.t("settings.providers.tag.custom")}</span>
+            </div>
+          </div>
+          <p class="void-provider-card-line">{language.t("settings.providers.custom.description")}</p>
+          <div class="void-provider-card-foot">
+            <span class="void-provider-card-id">custom</span>
+            <ButtonV2
+              size="normal"
+              variant="neutral"
+              onClick={() => {
+                dialog.show(() => <DialogCustomProvider onBack={dialog.close} />)
+              }}
+            >
+              {language.t("common.connect")}
+            </ButtonV2>
+          </div>
+        </div>
+      </Show>
+      <button type="button" class="settings-v2-providers-view-all" onClick={() => connect()}>
+        {language.t("dialog.provider.viewAll")}
+      </button>
+    </div>
+  )
+
+  return (
+    <Show when={!isVoid()} fallback={<VoidProviders />}>
       <div class="settings-v2-tab-header">
         <h2 class="settings-v2-tab-title">{language.t("settings.providers.title")}</h2>
       </div>
@@ -257,6 +382,6 @@ export const SettingsProvidersV2: Component<{
           </button>
         </div>
       </div>
-    </>
+    </Show>
   )
 }

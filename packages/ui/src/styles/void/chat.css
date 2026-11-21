@@ -1,0 +1,110 @@
+html[data-theme="void"] [data-component="user-message"] [data-slot="user-message-text"] {
+  padding: 10px 16px;
+  border-radius: var(--void-radius-bubble);
+  background: var(--void-pill);
+  color: var(--void-pill-text);
+  font-weight: var(--void-weight-regular);
+}
+
+html[data-theme="void"] [data-component="text-part"] [data-slot="text-part-body"] {
+  width: fit-content;
+  max-width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--void-border);
+  border-radius: var(--void-radius-bubble);
+  background: var(--void-inner);
+  color: var(--void-text-1);
+}
+
+html[data-theme="void"] [data-component="tool-part-wrapper"] {
+  padding: 8px 14px;
+  border: 1px solid var(--void-border);
+  border-radius: var(--void-radius-inner);
+  background: var(--void-card);
+}
+
+html[data-theme="void"] [data-component="tool-trigger"] [data-slot="basic-tool-tool-title"],
+html[data-theme="void"] [data-component="tool-trigger"] [data-slot="basic-tool-tool-subtitle"],
+html[data-theme="void"] [data-component="tool-trigger"] [data-slot="basic-tool-tool-arg"] {
+  font-family: var(--void-font-mono);
+  font-size: var(--void-fs-small);
+}
+
+html[data-theme="void"] [data-component="tool-output"],
+html[data-theme="void"] [data-component="bash-output"] {
+  border-radius: 10px;
+  background: var(--void-bg);
+  font-family: var(--void-font-mono);
+  font-size: var(--void-fs-small);
+}
+
+html[data-theme="void"] [data-component="dock-prompt"][data-kind="permission"] {
+  overflow: clip;
+  border: 1px solid var(--void-warn-border);
+  border-radius: var(--void-radius-card);
+  background: var(--void-card);
+  box-shadow: var(--void-shadow);
+}
+
+html[data-theme="void"] [data-component="dock-prompt"][data-kind="permission"] [data-dock-surface="shell"],
+html[data-theme="void"] [data-component="dock-prompt"][data-kind="permission"] [data-dock-surface="tray"] {
+  margin-top: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+html[data-theme="void"] [data-component="dock-prompt"][data-kind="permission"] [data-slot="permission-header-title"] {
+  font-size: var(--void-fs-card-title);
+  font-weight: var(--void-weight-medium);
+  color: var(--void-text-1);
+}
+
+html[data-theme="void"] [data-component="dock-prompt"][data-kind="permission"] [data-slot="permission-hint"] {
+  color: var(--void-text-2);
+}
+
+html[data-theme="void"] [data-component="dock-prompt"][data-kind="permission"] [data-slot="permission-patterns"] code {
+  display: block;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--void-bg);
+  color: var(--void-text-1);
+  font-family: var(--void-font-mono);
+  font-size: var(--void-fs-small);
+}
+
+html[data-theme="void"] [data-component="dock-prompt"][data-kind="permission"] [data-slot="permission-footer-actions"] {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+html[data-theme="void"] [data-component="dock-prompt"][data-kind="permission"] [data-component="button"] {
+  height: 40px;
+  padding: 0 18px;
+  border: 1px solid var(--void-border);
+  border-radius: var(--void-radius-control);
+  background: var(--void-inner);
+  color: var(--void-text-1);
+  box-shadow: none;
+}
+
+html[data-theme="void"]
+  [data-component="dock-prompt"][data-kind="permission"]
+  [data-component="button"][data-variant="primary"] {
+  border: 0;
+  background: var(--void-pill);
+  color: var(--void-pill-text);
+  font-weight: var(--void-weight-medium);
+}
+
+html[data-theme="void"]
+  [data-component="dock-prompt"][data-kind="permission"]
+  [data-component="button"][data-variant="ghost"] {
+  border-color: transparent;
+  background: transparent;
+  color: var(--void-text-2);
+}

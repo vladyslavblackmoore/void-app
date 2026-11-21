@@ -8,6 +8,7 @@ import {
   newLayoutDesignsDefault,
   nextSunsetCheckDelay,
   resolveNewLayoutDesigns,
+  sansFontVariable,
   shouldDisplayTabsToast,
   shouldEnableNewLayout,
 } from "./settings"
@@ -92,5 +93,18 @@ describe("layout transition", () => {
     expect(shouldEnableNewLayout("1.17.20", "1.17.21")).toBe(false)
     expect(shouldEnableNewLayout(undefined, "1.17.19")).toBe(false)
     expect(shouldEnableNewLayout("dev", "1.17.20")).toBe(false)
+  })
+})
+
+describe("sans font variable", () => {
+  test("leaves the variable to the stylesheet when no font is chosen", () => {
+    expect(sansFontVariable(undefined)).toBeUndefined()
+    expect(sansFontVariable("")).toBeUndefined()
+    expect(sansFontVariable("   ")).toBeUndefined()
+  })
+
+  test("writes the chosen font in front of the fallback stack", () => {
+    expect(sansFontVariable("Georgia")).toStartWith("Georgia, ")
+    expect(sansFontVariable("My Font")).toStartWith('"My Font", ')
   })
 })

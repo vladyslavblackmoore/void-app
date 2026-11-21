@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import {
   buildAgentPatch,
   canSave,
+  effortControl,
   fileFields,
   groupModels,
   hasRunningSessions,
@@ -185,6 +186,15 @@ describe("locked fields in the patch", () => {
     expect(canSave({ model: true, variant: false })).toBe(true)
     expect(canSave({ model: false, variant: false })).toBe(true)
     expect(canSave({ model: true, variant: true })).toBe(false)
+  })
+})
+
+describe("effortControl", () => {
+  test("uses the segmented control only under the void theme", () => {
+    expect(effortControl("void")).toBe("segmented")
+    expect(effortControl("oc-2")).toBe("chips")
+    expect(effortControl("")).toBe("chips")
+    expect(effortControl(undefined)).toBe("chips")
   })
 })
 

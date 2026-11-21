@@ -1,0 +1,9 @@
+html[data-theme="void"] {
+  --font-family-sans: var(--void-font);
+  --font-family-text: var(--void-font);
+  --v2-font-family-sans: var(--void-font);
+}
+
+html[data-theme="void"] body {
+  font-weight: var(--void-weight-thin);
+}

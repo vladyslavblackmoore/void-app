@@ -1,0 +1,39 @@
+[data-component="status-dot-v2"] {
+  --status-dot-color: var(--void-text-3, var(--v2-icon-icon-muted));
+  display: inline-block;
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--status-dot-color);
+  color: var(--status-dot-color);
+}
+
+[data-component="status-dot-v2"][data-size="large"] {
+  width: 10px;
+  height: 10px;
+}
+
+[data-component="status-dot-v2"][data-tone="green"] {
+  --status-dot-color: var(--void-green, var(--v2-state-fg-success));
+}
+
+[data-component="status-dot-v2"][data-tone="blue"] {
+  --status-dot-color: var(--void-blue, var(--v2-state-fg-info));
+}
+
+[data-component="status-dot-v2"][data-tone="yellow"] {
+  --status-dot-color: var(--void-yellow, var(--v2-state-fg-warning));
+}
+
+[data-component="status-dot-v2"][data-tone="red"] {
+  --status-dot-color: var(--void-red, var(--v2-state-fg-danger));
+}
+
+[data-component="status-dot-v2"][data-tone="grey"] {
+  --status-dot-color: var(--void-text-3, var(--v2-icon-icon-muted));
+}
+
+[data-component="status-dot-v2"][data-glow] {
+  box-shadow: 0 0 12px var(--status-dot-color);
+}

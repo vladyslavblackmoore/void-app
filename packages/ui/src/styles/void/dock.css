@@ -1,0 +1,88 @@
+html[data-theme="void"] [data-component="session-prompt-dock"] {
+  background: transparent;
+  padding-bottom: 26px;
+}
+
+html[data-theme="void"] [data-component="session-prompt-dock"] > div {
+  width: 100%;
+  max-width: 680px;
+}
+
+html[data-theme="void"] [data-component="prompt-input-v2"] {
+  min-height: 0;
+  border: 1px solid var(--void-border);
+  border-radius: var(--void-radius-dock);
+  background: var(--void-glass);
+  -webkit-backdrop-filter: blur(var(--void-blur));
+  backdrop-filter: blur(var(--void-blur));
+  box-shadow: var(--void-shadow);
+}
+
+html[data-theme="void"] [data-component="prompt-input-v2"]:focus-within {
+  border-color: var(--void-border-strong);
+}
+
+html[data-theme="void"] [data-component="prompt-input"] {
+  padding: 18px 20px 6px;
+  font-size: var(--void-fs-body);
+  font-weight: var(--void-weight-regular);
+  color: var(--void-text-1);
+}
+
+html[data-theme="void"] [data-component="prompt-input-v2"] > div:first-of-type > div:not([data-component]) {
+  padding: 18px 20px 0;
+  font-size: var(--void-fs-body);
+  font-weight: var(--void-weight-regular);
+  color: var(--void-text-3);
+}
+
+html[data-theme="void"] [data-component="prompt-input-v2"] > div:last-of-type {
+  height: auto;
+  padding: 8px 14px 14px;
+}
+
+html[data-theme="void"] [data-component="prompt-input-v2"] [data-component="button-v2"][data-size] {
+  height: 44px !important;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--void-border);
+  border-radius: var(--void-radius-control);
+  background: var(--void-inner);
+  color: var(--void-text-1);
+  box-shadow: none;
+}
+
+html[data-theme="void"] [data-component="prompt-input-v2"] [data-component="button-v2"][data-size]:hover {
+  background: var(--void-raised);
+}
+
+html[data-theme="void"] [data-component="prompt-input-v2"] [data-action="prompt-model"] {
+  font-family: var(--void-font-mono);
+  font-size: var(--void-fs-small);
+  text-transform: none;
+}
+
+html[data-theme="void"] [data-component="prompt-input-v2"] [data-action="prompt-attach"] {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--void-border);
+  border-radius: var(--void-radius-control);
+  background: var(--void-inner);
+  color: var(--void-text-2);
+}
+
+html[data-theme="void"] [data-component="prompt-input-v2"] [data-action="prompt-submit"] {
+  width: 44px;
+  height: 44px;
+  padding: 11px;
+  border: 0;
+  border-radius: var(--void-radius-control);
+  background-color: var(--void-pill);
+  background-image: none !important;
+  color: var(--void-pill-text);
+  box-shadow: none;
+}
+
+html[data-theme="void"] [data-component="prompt-input-v2"] [data-action="prompt-submit"]:disabled {
+  opacity: 0.45;
+}

@@ -5,9 +5,12 @@ import { createStore } from "solid-js/store"
 import { makeEventListener } from "@solid-primitives/event-listener"
 import { createSimpleContext } from "../context/helper"
 import oc2ThemeJson from "./themes/oc-2.json"
+import voidThemeJson from "./themes/void.json"
+import { resolveSystemMode, resolveThemeId } from "./default-theme"
 import { resolveThemeVariant, themeToCss } from "./resolve"
 import { resolveThemeVariantV2, themeV2ToCss } from "./v2/resolve"
 import type { DesktopTheme } from "./types"
+import { themeCanvas } from "./canvas"
 
 export type ColorScheme = "light" | "dark" | "system"
 
@@ -80,9 +83,11 @@ const names: Record<string, string> = {
   tokyonight: "Tokyonight",
   vercel: "Vercel",
   vesper: "Vesper",
+  void: "VOID",
   zenburn: "Zenburn",
 }
 const oc2Theme = oc2ThemeJson as DesktopTheme
+const voidTheme = voidThemeJson as DesktopTheme
 
 function normalize(id: string | null | undefined) {
   return id === "oc-1" ? "oc-2" : id
@@ -126,8 +131,11 @@ function ensureThemeStyleElement(): HTMLStyleElement {
 }
 
 function getSystemMode(): "light" | "dark" {
-  if (typeof window !== "object") return "light"
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+  if (typeof window !== "object") return "dark"
+  return resolveSystemMode({
+    dark: window.matchMedia("(prefers-color-scheme: dark)").matches,
+    light: window.matchMedia("(prefers-color-scheme: light)").matches,
+  })
 }
 
 function applyThemeCss(theme: DesktopTheme, themeId: string, mode: "light" | "dark") {
@@ -152,11 +160,11 @@ function applyThemeCss(theme: DesktopTheme, themeId: string, mode: "light" | "da
   ensureThemeStyleElement().textContent = fullCss
   document.documentElement.dataset.theme = themeId
   document.documentElement.dataset.colorScheme = mode
-  document.documentElement.style.backgroundColor = isDark ? "#080808" : "#fafafa"
+  document.documentElement.style.backgroundColor = themeCanvas(themeId, isDark)
 
   // Update theme-color meta tag to match light/dark mode
   const meta = document.querySelector('meta[name="theme-color"]')
-  if (meta) meta.setAttribute("content", isDark ? "#080808" : "#fafafa")
+  if (meta) meta.setAttribute("content", themeCanvas(themeId, isDark))
 }
 
 function cacheThemeVariants(theme: DesktopTheme, themeId: string) {
@@ -177,12 +185,13 @@ export const { use: useTheme, provider: ThemeProvider } = createSimpleContext({
     defaultTheme?: string
     onThemeApplied?: (theme: DesktopTheme, mode: "light" | "dark", scheme: ColorScheme) => void
   }) => {
-    const themeId = normalize(read(STORAGE_KEYS.THEME_ID) ?? props.defaultTheme) ?? "oc-2"
+    const themeId = resolveThemeId(read(STORAGE_KEYS.THEME_ID), props.defaultTheme)
     const colorScheme = (read(STORAGE_KEYS.COLOR_SCHEME) as ColorScheme | null) ?? "system"
     const mode = colorScheme === "system" ? getSystemMode() : colorScheme
     const [store, setStore] = createStore({
       themes: {
         "oc-2": oc2Theme,
+        void: voidTheme,
       } as Record<string, DesktopTheme>,
       themeId,
       colorScheme,
@@ -263,7 +272,7 @@ export const { use: useTheme, provider: ThemeProvider } = createSimpleContext({
       makeEventListener(mediaQuery, "change", onMedia)
 
       const rawTheme = read(STORAGE_KEYS.THEME_ID)
-      const savedTheme = normalize(rawTheme ?? props.defaultTheme) ?? "oc-2"
+      const savedTheme = resolveThemeId(rawTheme, props.defaultTheme)
       const savedScheme = (read(STORAGE_KEYS.COLOR_SCHEME) as ColorScheme | null) ?? "system"
       if (rawTheme && rawTheme !== savedTheme) {
         write(STORAGE_KEYS.THEME_ID, savedTheme)

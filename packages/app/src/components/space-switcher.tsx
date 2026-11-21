@@ -5,6 +5,8 @@ import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
 import { ServerConnection, useServer } from "@/context/server"
 import { applyCoreStatus, menuSpaces, switchToSpace, visibleCoreState } from "@/spaces/model"
+import { useVoidTheme } from "./void/use-void-theme"
+import { spaceChipColor, spaceCore } from "./void/space-chip-model"
 
 const itemClass =
   "h-7 gap-2 rounded-sm px-3 text-[13px] font-[440] leading-5 tracking-[-0.04px] text-v2-text-text-base [font-family:var(--v2-font-family-sans)] data-[highlighted]:!bg-v2-overlay-simple-overlay-hover"
@@ -24,6 +26,7 @@ export function SpaceSwitcher() {
   const platform = usePlatform()
   const server = useServer()
   const language = useLanguage()
+  const isVoid = useVoidTheme()
   const [open, setOpen] = createSignal(false)
   const [failed, setFailed] = createSignal(false)
   const viewed = () => ServerConnection.space(server.current)
@@ -37,6 +40,7 @@ export function SpaceSwitcher() {
   )
   const items = () => menuSpaces(spaces.latest ?? known.latest ?? [], viewed())
   const label = () => items().find((item) => item.viewed)
+  const core = () => spaceCore((spaces.latest ?? known.latest ?? []).find((item) => item.id === viewed()))
   const [coreStatus, setCoreStatus] = createSignal<{ space: string; state: "restarting" | "up" | "failed" }>()
   const coreState = () => visibleCoreState(coreStatus(), viewed())
   let clear: ReturnType<typeof setTimeout> | undefined
@@ -104,11 +108,44 @@ export function SpaceSwitcher() {
         <DropdownMenu gutter={4} modal={false} placement="bottom-start" onOpenChange={setOpen}>
           <DropdownMenu.Trigger
             data-component="space-switcher"
-            class="flex h-7 shrink-0 items-center gap-2 rounded-[6px] px-2 text-[13px] font-[440] text-v2-text-text-base hover:bg-v2-overlay-simple-overlay-hover"
+            data-void-chip={isVoid() ? "" : undefined}
+            data-core={isVoid() ? core() : undefined}
+            style={isVoid() ? { "--space": spaceChipColor(current().color) } : undefined}
+            title={isVoid() ? language.t(`void.space.core.${core()}`) : undefined}
+            class={
+              isVoid()
+                ? undefined
+                : "flex h-7 shrink-0 items-center gap-2 rounded-[6px] px-2 text-[13px] font-[440] text-v2-text-text-base hover:bg-v2-overlay-simple-overlay-hover"
+            }
             aria-label={language.t("space.switcher.ariaLabel")}
           >
-            <Dot color={current().color} />
-            <span class="max-w-[140px] truncate">{current().name}</span>
+            <Show
+              when={isVoid()}
+              fallback={
+                <>
+                  <Dot color={current().color} />
+                  <span class="max-w-[140px] truncate">{current().name}</span>
+                </>
+              }
+            >
+              <span data-slot="void-space-dot" aria-hidden="true" />
+              <span class="max-w-[140px] truncate">{current().name}</span>
+              <span data-slot="void-space-sep" aria-hidden="true" />
+              <span data-slot="void-space-core" aria-hidden="true" />
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M4 6l4 4 4-4" />
+              </svg>
+            </Show>
           </DropdownMenu.Trigger>
           <Show when={coreState()}>
             {(state) => (
