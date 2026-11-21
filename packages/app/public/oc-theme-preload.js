@@ -9,6 +9,15 @@
     localStorage.removeItem("opencode-theme-css-dark")
   }
 
+  var marker = "opencode-theme-void-migrated"
+  if (!localStorage.getItem(marker)) {
+    if (localStorage.getItem(key)) {
+      themeId = "void"
+      localStorage.setItem(key, themeId)
+    }
+    localStorage.setItem(marker, "1")
+  }
+
   var scheme = localStorage.getItem("opencode-color-scheme") || "system"
   var isDark =
     scheme === "dark" ||

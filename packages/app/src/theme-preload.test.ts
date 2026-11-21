@@ -23,6 +23,7 @@ describe("theme preload", () => {
   test("migrates legacy oc-1 to oc-2 before mount", () => {
     prefer("light")
     localStorage.setItem("opencode-theme-id", "oc-1")
+    localStorage.setItem("opencode-theme-void-migrated", "1")
     localStorage.setItem("opencode-theme-css-light", "--background-base:#fff;")
     localStorage.setItem("opencode-theme-css-dark", "--background-base:#000;")
 
@@ -80,6 +81,7 @@ describe("theme preload", () => {
   test("keeps an explicitly stored oc-2 without cached css", () => {
     prefer("light")
     localStorage.setItem("opencode-theme-id", "oc-2")
+    localStorage.setItem("opencode-theme-void-migrated", "1")
     localStorage.setItem("opencode-theme-css-light", "--background-base:#fff;")
 
     run()
@@ -91,6 +93,7 @@ describe("theme preload", () => {
   test("keeps cached css for non-default themes", () => {
     prefer("light")
     localStorage.setItem("opencode-theme-id", "nightowl")
+    localStorage.setItem("opencode-theme-void-migrated", "1")
     localStorage.setItem("opencode-theme-css-light", "--background-base:#fff;")
 
     run()
@@ -124,10 +127,39 @@ describe("theme preload", () => {
   test("keeps the shared dark canvas for other themes", () => {
     document.head.innerHTML = '<meta name="theme-color" content="#fafafa">'
     localStorage.setItem("opencode-theme-id", "nightowl")
+    localStorage.setItem("opencode-theme-void-migrated", "1")
     localStorage.setItem("opencode-color-scheme", "dark")
 
     run()
 
     expect(document.querySelector("meta[name='theme-color']")?.getAttribute("content")).toBe("#080808")
+  })
+
+  test("switches a stored legacy theme to void once and records the marker", () => {
+    localStorage.setItem("opencode-theme-id", "amoled")
+
+    run()
+
+    expect(document.documentElement.dataset.theme).toBe("void")
+    expect(localStorage.getItem("opencode-theme-id")).toBe("void")
+    expect(localStorage.getItem("opencode-theme-void-migrated")).toBe("1")
+  })
+
+  test("keeps a stored theme when the marker is present", () => {
+    localStorage.setItem("opencode-theme-id", "amoled")
+    localStorage.setItem("opencode-theme-void-migrated", "1")
+
+    run()
+
+    expect(document.documentElement.dataset.theme).toBe("amoled")
+    expect(localStorage.getItem("opencode-theme-id")).toBe("amoled")
+  })
+
+  test("leaves the default in place when no theme is stored", () => {
+    run()
+
+    expect(document.documentElement.dataset.theme).toBe("void")
+    expect(localStorage.getItem("opencode-theme-id")).toBeNull()
+    expect(localStorage.getItem("opencode-theme-void-migrated")).toBe("1")
   })
 })
