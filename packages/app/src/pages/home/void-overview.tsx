@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/solid-query"
 import { createMemo, createSignal, For, Show } from "solid-js"
 import { CardV2 } from "@opencode-ai/ui/v2/card-v2"
 import { ButtonV2 } from "@opencode-ai/ui/v2/button-v2"
@@ -13,6 +14,8 @@ import {
   type OverviewSession,
 } from "@/components/void/overview-model"
 import { createOverviewAgents, OverviewAgentMap } from "@/components/void/overview-agent-map"
+import { memoryCard } from "@/components/void/overview-memory-model"
+import { pathKey } from "@/utils/path-key"
 import { sessionTitle } from "@/utils/session-title"
 import type { HomeController } from "./home-controller"
 import type { HomeSessionRecord, HomeSessionsController } from "./home-sessions-controller"
@@ -57,6 +60,18 @@ export function VoidOverview(props: { home: HomeController; sessions: HomeSessio
     ),
   )
   const agents = createOverviewAgents()
+  const mcpDirectory = () => {
+    const worktree = props.home.project.newSession()?.worktree
+    return worktree ? pathKey(worktree) : undefined
+  }
+  const mcp = useQuery(() => {
+    const directory = mcpDirectory()
+    return {
+      ...props.home.server.focusedSync().queryOptions.mcp(directory ?? pathKey("")),
+      enabled: !!directory,
+    }
+  })
+  const memory = createMemo(() => memoryCard(mcp.data))
   const agentCount = () => 1 + agents().subagents.length
   const stats = createMemo(() => overviewStats(items()))
   const visible = createMemo(() => filterOverview(items(), filter()))
@@ -138,6 +153,21 @@ export function VoidOverview(props: { home: HomeController; sessions: HomeSessio
           </aside>
         </Show>
         <OverviewAgentMap agents={agents} />
+        <Show when={memory()}>
+          {(card) => (
+            <aside data-slot="void-overview-side">
+              <CardV2 data-slot="void-overview-memory">
+                <div data-slot="void-overview-card-head">
+                  <span data-slot="void-overview-card-title">{language.t("void.overview.memory.title")}</span>
+                  <span data-slot="void-overview-memory-state">
+                    <StatusDotV2 tone={card().tone} />
+                    {language.t(`hub.state.${card().state}`)}
+                  </span>
+                </div>
+              </CardV2>
+            </aside>
+          )}
+        </Show>
       </div>
     </div>
   )

@@ -1234,6 +1234,7 @@ export const dict: Record<string, string> = {
   "void.overview.filter.running": "Running",
   "void.overview.filter.done": "Done",
   "void.overview.agents.title": "Agents",
+  "void.overview.memory.title": "Graph memory",
   "void.overview.agents.count": "{{count}} agents",
   "void.overview.agents.empty": "No agents configured",
   "void.overview.state.waiting": "waiting for you",

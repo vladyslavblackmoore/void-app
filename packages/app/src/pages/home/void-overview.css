@@ -257,3 +257,20 @@ html[data-theme="void"] [data-slot="void-overview-empty-text"] {
   line-height: 1.5;
   color: var(--void-text-2);
 }
+
+html[data-theme="void"] [data-slot="void-overview-side"] {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: var(--void-gap);
+  width: var(--void-panel-w-sm);
+  min-width: 0;
+}
+
+html[data-theme="void"] [data-slot="void-overview-memory-state"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--void-fs-small);
+  color: var(--void-text-2);
+}
