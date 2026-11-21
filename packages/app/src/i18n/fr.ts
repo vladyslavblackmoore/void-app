@@ -1262,4 +1262,9 @@ export const dict = {
   "void.nav.models": "Models",
   "void.nav.hub": "Hub",
   "void.nav.settings": "Settings",
+  "void.titlebar.search": "Search",
+  "void.titlebar.notifications": "Notifications",
+  "void.titlebar.newTask": "New task",
+  "void.space.core.running": "Core running",
+  "void.space.core.stopped": "Core stopped",
 }
