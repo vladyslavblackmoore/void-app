@@ -1,0 +1,28 @@
+html[data-theme="void"] [data-component="void-canvas"] {
+  isolation: isolate;
+}
+
+html[data-theme="void"] [data-component="void-canvas"]::before,
+html[data-theme="void"] [data-component="void-canvas"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+html[data-theme="void"] [data-component="void-canvas"]::before {
+  background-image: radial-gradient(var(--void-dot) 1px, transparent 1px);
+  background-size: var(--void-dot-size) var(--void-dot-size);
+}
+
+html[data-theme="void"] [data-component="void-canvas"]::after {
+  background-image:
+    radial-gradient(ellipse 320px 240px at 59% 31%, var(--void-glow-violet), transparent 100%),
+    radial-gradient(ellipse 260px 200px at 80% 61%, var(--void-glow-blue), transparent 100%);
+}
+
+html[data-theme="void"] [data-component="void-canvas"] > [data-slot="titlebar-v2"],
+html[data-theme="void"] [data-component="void-canvas"] > main > .bg-v2-background-bg-base {
+  background-color: transparent;
+}

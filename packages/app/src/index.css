@@ -5,6 +5,7 @@
 @import "@opencode-ai/ui/styles/void/tokens.css";
 @import "@opencode-ai/ui/styles/void/typography.css";
 @import "@opencode-ai/ui/styles/void/radii.css";
+@import "@opencode-ai/ui/styles/void/canvas.css";
 
 @font-face {
   font-family: "JetBrainsMono Nerd Font Mono";

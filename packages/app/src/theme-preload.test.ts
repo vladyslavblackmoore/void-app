@@ -43,4 +43,36 @@ describe("theme preload", () => {
     expect(document.documentElement.dataset.theme).toBe("nightowl")
     expect(document.getElementById("oc-theme-preload")?.textContent).toContain("--background-base:#fff;")
   })
+
+  test("paints the void canvas on the root and the theme-color meta in dark mode", () => {
+    document.head.innerHTML = '<meta name="theme-color" content="#fafafa">'
+    localStorage.setItem("opencode-theme-id", "void")
+    localStorage.setItem("opencode-color-scheme", "dark")
+
+    run()
+
+    expect(document.documentElement.dataset.theme).toBe("void")
+    expect(document.documentElement.style.backgroundColor).toMatch(/^(#0c0d0f|rgb\(12, 13, 15\))$/)
+    expect(document.querySelector("meta[name='theme-color']")?.getAttribute("content")).toBe("#0c0d0f")
+  })
+
+  test("paints the void light canvas for the light scheme", () => {
+    document.head.innerHTML = '<meta name="theme-color" content="#fafafa">'
+    localStorage.setItem("opencode-theme-id", "void")
+    localStorage.setItem("opencode-color-scheme", "light")
+
+    run()
+
+    expect(document.querySelector("meta[name='theme-color']")?.getAttribute("content")).toBe("#eceef1")
+  })
+
+  test("keeps the shared dark canvas for other themes", () => {
+    document.head.innerHTML = '<meta name="theme-color" content="#fafafa">'
+    localStorage.setItem("opencode-theme-id", "nightowl")
+    localStorage.setItem("opencode-color-scheme", "dark")
+
+    run()
+
+    expect(document.querySelector("meta[name='theme-color']")?.getAttribute("content")).toBe("#080808")
+  })
 })
