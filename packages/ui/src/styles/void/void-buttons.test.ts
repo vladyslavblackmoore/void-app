@@ -47,6 +47,39 @@ describe("void buttons", () => {
     expect(css).toContain("var(--void-raised)")
   })
 
+  test("disabled buttons of every variant use the void disabled opacity", () => {
+    const body =
+      rules("buttons.css").find((rule) =>
+        rule.selectors.includes(`${prefix}[data-component="button-v2"]:is(:disabled, [data-state="disabled"])`),
+      )?.body ?? ""
+    expect(body).toContain("opacity: var(--void-disabled-opacity)")
+    expect(body).toContain("cursor: not-allowed")
+  })
+
+  test("the light secondary button has a visible edge", () => {
+    const neutral = `${prefix}[data-component="button-v2"][data-variant="neutral"]`
+    const bodies = rules("buttons.css").filter((rule) => rule.selectors.includes(neutral))
+    expect(bodies.some((rule) => rule.body.includes("box-shadow: var(--void-button-edge)"))).toBe(true)
+    const tokens = readFileSync(new URL("tokens.css", dir), "utf8")
+    expect(tokens).toContain("--void-button-edge: inset 0 0 0 1px var(--void-border-strong)")
+  })
+
+  test("the dark secondary button has a visible edge and a readable disabled state", () => {
+    const tokens = readFileSync(new URL("tokens.css", dir), "utf8")
+    const dark = tokens.slice(0, tokens.indexOf('html[data-theme="void"][data-color-scheme="light"]'))
+    expect(dark).toContain("--void-button-edge: inset 0 0 0 1px var(--void-border-strong)")
+    const opacity = Number(/--void-disabled-opacity: ([\d.]+)/.exec(dark)?.[1])
+    const under = 0x1c
+    const mix = (channel: number, base: number) => opacity * channel + (1 - opacity) * base
+    const lin = (value: number) => {
+      const c = value / 255
+      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+    }
+    const text = lin(mix(0xf2, under))
+    const background = lin(mix(0x26, under))
+    expect((text + 0.05) / (background + 0.05)).toBeGreaterThanOrEqual(4.5)
+  })
+
   test("is imported by the app stylesheet", () => {
     const index = readFileSync(new URL("../../../../app/src/index.css", import.meta.url), "utf8")
     expect(index).toContain("styles/void/buttons.css")

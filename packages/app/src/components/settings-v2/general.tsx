@@ -71,7 +71,7 @@ const soundSettings = {
   },
 } as const
 
-const PermissionScopeSetting: Component<{ controller: PermissionScopeController }> = (props) => {
+export const PermissionScopeSetting: Component<{ controller: PermissionScopeController }> = (props) => {
   const language = useLanguage()
   return (
     <SettingsRowV2
@@ -89,7 +89,7 @@ const PermissionScopeSetting: Component<{ controller: PermissionScopeController 
   )
 }
 
-const ShellSetting: Component<{ controller: ShellSettingsController }> = (props) => {
+export const ShellSetting: Component<{ controller: ShellSettingsController }> = (props) => {
   const language = useLanguage()
   const options = createMemo(() =>
     createShellOptions({
@@ -184,7 +184,7 @@ const AppearanceSection: Component<{ controller: AppearanceSettingsController }>
   )
 }
 
-const FontSetting: Component<{
+export const FontSetting: Component<{
   kind: "ui" | "code" | "terminal"
   fonts: AppearanceSettingsController["fonts"]
 }> = (props) => {
@@ -226,7 +226,7 @@ const SoundsSection: Component<{ controller: SoundSettingsController }> = (props
   )
 }
 
-const SoundSetting: Component<{
+export const SoundSetting: Component<{
   kind: "agent" | "permissions" | "errors"
   channel: SoundSettingsController["agent"]
 }> = (props) => {
@@ -250,7 +250,7 @@ const SoundSetting: Component<{
   )
 }
 
-const LanguageSetting = () => {
+export const LanguageSetting = () => {
   const language = useLanguage()
   const copy = useVoidCopy()
   const options = createMemo(() =>

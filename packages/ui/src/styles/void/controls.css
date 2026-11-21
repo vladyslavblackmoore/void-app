@@ -1,0 +1,19 @@
+html[data-theme="void"] [data-component="switch"][data-disabled] [data-slot="switch-control"] {
+  opacity: 1;
+  background: var(--void-raised);
+  box-shadow: inset 0 0 0 1px var(--void-border-strong);
+}
+
+html[data-theme="void"] [data-component="switch"][data-disabled] [data-slot="switch-thumb"] {
+  background: var(--void-text-2);
+}
+
+html[data-theme="void"] [data-component="switch"][data-disabled][data-checked] [data-slot="switch-control"] {
+  opacity: 0.75;
+  background: var(--void-green);
+  box-shadow: none;
+}
+
+html[data-theme="void"] [data-component="switch"][data-disabled][data-checked] [data-slot="switch-thumb"] {
+  background: var(--void-on-accent);
+}

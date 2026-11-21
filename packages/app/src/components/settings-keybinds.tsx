@@ -15,6 +15,8 @@ import { useLanguage } from "@/context/language"
 import { useSettings } from "@/context/settings"
 import { SettingsList } from "./settings-list"
 import { SettingsListV2 } from "./settings-v2/parts/list"
+import { resetButtonVariant } from "./settings-v2/settings-void-model"
+import { useVoidTheme } from "./void/use-void-theme"
 
 const IconV2 = lazy(() => import("@opencode-ai/ui/v2/icon").then((module) => ({ default: module.Icon })))
 
@@ -443,6 +445,7 @@ function SettingsKeybindsV2View(props: {
   onReset: () => void
 }) {
   const language = useLanguage()
+  const isVoid = useVoidTheme()
   const [store, setStore] = createStore({ filter: "" })
   const filtered = createMemo(() => props.filtered(store.filter))
   const hasResults = createMemo(() => props.groups.some((group) => (filtered().get(group)?.length ?? 0) > 0))
@@ -452,7 +455,7 @@ function SettingsKeybindsV2View(props: {
       <div class="settings-v2-tab-header settings-v2-tab-header--stacked">
         <div class="settings-v2-tab-header-row">
           <h2 class="settings-v2-tab-title">{language.t("settings.shortcuts.title")}</h2>
-          <ButtonV2 variant="ghost" onClick={props.onReset} disabled={!props.hasOverrides()}>
+          <ButtonV2 variant={resetButtonVariant(isVoid())} onClick={props.onReset} disabled={!props.hasOverrides()}>
             {language.t("settings.shortcuts.reset.button")}
           </ButtonV2>
         </div>

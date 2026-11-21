@@ -38,8 +38,17 @@ import { useSettings } from "@/context/settings"
 import { popularProviders, useProviders } from "@/hooks/use-providers"
 import { CustomProviderForm } from "./dialog-custom-provider"
 import { decode64 } from "@/utils/base64"
+import { connectCopyKey, providerLabel } from "./void/provider-branding"
+import { providerConnectStatus, providerConnectStep, providerConnectSteps } from "./void/provider-connect-steps"
+import { useVoidTheme } from "./void/use-void-theme"
 
 const CUSTOM_ID = "_custom"
+type ConnectCopyKey =
+  | "provider.connect.apiKey.description"
+  | "provider.connect.opencodeZen.line1"
+  | "provider.connect.opencodeZen.line2"
+  | "provider.connect.oauth.code.visit.suffix"
+  | "provider.connect.oauth.auto.visit.suffix"
 type ConnectMethod = Extract<IntegrationMethod, { type: "key" | "oauth" }>
 
 export function useProviderConnectController(options: { onBack?: () => void } = {}) {
@@ -62,6 +71,7 @@ export const DialogConnectProvider: Component<{
   const language = useLanguage()
   const settings = useSettings()
   const newLayout = settings.general.newLayoutDesigns
+  const isVoid = useVoidTheme()
   const reset = controller.back
   const back = { current: reset }
   let focusHost: HTMLDivElement | undefined
@@ -122,7 +132,7 @@ export const DialogConnectProvider: Component<{
       }
     >
       <DialogV2
-        containerClass="!h-[min(calc(100vh_-_16px),512px)] !w-[min(calc(100vw_-_16px),640px)]"
+        containerClass="void-connect-dialog !w-[min(calc(100vw_-_16px),640px)]"
         class="[font-family:var(--v2-font-family-sans)] [&_[data-slot=dialog-header]]:!px-5 [&_[data-slot=dialog-header-title]]:!text-[15px] [&_[data-slot=dialog-header-title]]:!tracking-[-0.13px]"
       >
         <DialogHeader closeLabel={language.t("common.close")}>
@@ -140,6 +150,34 @@ export const DialogConnectProvider: Component<{
             </button>
           </Show>
         </DialogHeader>
+        <Show when={isVoid()}>
+          <ol
+            class="void-connect-steps"
+            data-step={providerConnectStep(controller.selected())}
+            aria-label={language.t("hub.panel.steps.label")}
+          >
+            <For each={providerConnectSteps}>
+              {(item, index) => {
+                const status = () => providerConnectStatus(providerConnectStep(controller.selected()), item)
+                return (
+                  <>
+                    <Show when={index() > 0}>
+                      <li class="void-connect-step-line" aria-hidden="true" />
+                    </Show>
+                    <li
+                      class="void-connect-step"
+                      data-status={status()}
+                      aria-current={status() === "active" ? "step" : undefined}
+                    >
+                      <i>{status() === "done" ? "\u2713" : index() + 1}</i>
+                      {language.t(`void.models.connect.step.${item}`)}
+                    </li>
+                  </>
+                )
+              }}
+            </For>
+          </ol>
+        </Show>
         <DialogBody class="min-h-0 flex-1 overflow-hidden px-2 pb-2">
           <div ref={focusHost} tabIndex={-1} class="flex min-h-0 flex-1 flex-col outline-none">
             <Content />
@@ -232,6 +270,7 @@ function ProviderPickerV2(props: {
 }) {
   const providers = useProviders(() => props.directory?.())
   const language = useLanguage()
+  const isVoid = useVoidTheme()
   const [store, setStore] = createStore({
     filter: "",
     active: undefined as string | undefined,
@@ -333,7 +372,9 @@ function ProviderPickerV2(props: {
                         onClick={() => connect(provider.id)}
                       >
                         <ProviderIcon id={provider.id} class="size-4 shrink-0 text-v2-icon-icon-base" />
-                        <span class="min-w-0 truncate font-[530] text-v2-text-text-base">{provider.name}</span>
+                        <span class="min-w-0 truncate font-[530] text-v2-text-text-base">
+                          {providerLabel(isVoid(), provider.id, provider.name)}
+                        </span>
                         <Show when={provider.id === "opencode" || provider.id === "opencode-go"}>
                           <span class="min-w-0 truncate font-[440] text-v2-text-text-muted">
                             {language.t(
@@ -407,9 +448,13 @@ function ProviderConnection(props: {
     timer.current = undefined
   })
 
-  const provider = createMemo(
-    () => providers.all().get(props.provider) ?? serverSync().data.provider.all.get(props.provider)!,
-  )
+  const isVoid = useVoidTheme()
+  const provider = createMemo(() => {
+    const found = providers.all().get(props.provider) ?? serverSync().data.provider.all.get(props.provider)!
+    return isVoid() ? { ...found, name: providerLabel(true, found.id, found.name) } : found
+  })
+  const copy = (key: ConnectCopyKey, params?: Record<string, string>) =>
+    language.t(connectCopyKey(isVoid(), provider().id, key) as ConnectCopyKey, params)
   const fallback = createMemo<ConnectMethod[]>(() => [
     {
       type: "key" as const,
@@ -841,21 +886,23 @@ function ProviderConnection(props: {
         <div class="flex flex-col gap-5 px-3 text-[13px] font-[440] leading-5 tracking-[-0.04px] text-v2-text-text-muted">
           <Show
             when={provider().id === "opencode"}
-            fallback={language.t("provider.connect.apiKey.description", { provider: provider().name })}
+            fallback={copy("provider.connect.apiKey.description", { provider: provider().name })}
           >
             <div class="flex flex-col gap-5">
-              <div>{language.t("provider.connect.opencodeZen.line1")}</div>
-              <div>{language.t("provider.connect.opencodeZen.line2")}</div>
-              <div>
-                {language.t("provider.connect.opencodeZen.visit.prefix")}
-                <ExternalLink
-                  href="https://opencode.ai/zen"
-                  class="text-v2-text-text-base focus-visible:rounded-xs focus-visible:outline-2 focus-visible:outline-v2-border-border-focus"
-                >
-                  {language.t("provider.connect.opencodeZen.visit.link")}
-                </ExternalLink>
-                {language.t("provider.connect.opencodeZen.visit.suffix")}
-              </div>
+              <div>{copy("provider.connect.opencodeZen.line1")}</div>
+              <div>{copy("provider.connect.opencodeZen.line2")}</div>
+              <Show when={!isVoid()}>
+                <div>
+                  {language.t("provider.connect.opencodeZen.visit.prefix")}
+                  <ExternalLink
+                    href="https://opencode.ai/zen"
+                    class="text-v2-text-text-base focus-visible:rounded-xs focus-visible:outline-2 focus-visible:outline-v2-border-border-focus"
+                  >
+                    {language.t("provider.connect.opencodeZen.visit.link")}
+                  </ExternalLink>
+                  {language.t("provider.connect.opencodeZen.visit.suffix")}
+                </div>
+              </Show>
             </div>
           </Show>
           <form onSubmit={handleSubmit} class="flex flex-col items-start gap-5 self-stretch">
@@ -907,7 +954,7 @@ function ProviderConnection(props: {
           </Match>
           <Match when={true}>
             <div class="text-14-regular text-text-base">
-              {language.t("provider.connect.apiKey.description", { provider: provider().name })}
+              {copy("provider.connect.apiKey.description", { provider: provider().name })}
             </div>
           </Match>
         </Switch>
@@ -982,7 +1029,7 @@ function ProviderConnection(props: {
             <ExternalLink href={store.authorization!.url} class="text-v2-text-text-base">
               {language.t("provider.connect.oauth.code.visit.link")}
             </ExternalLink>
-            {language.t("provider.connect.oauth.code.visit.suffix", { provider: provider().name })}
+            {copy("provider.connect.oauth.code.visit.suffix", { provider: provider().name })}
           </div>
           <form onSubmit={handleSubmit} class="flex flex-col items-start gap-5 self-stretch">
             <label class="flex w-full flex-col gap-1 font-[530] leading-4 text-v2-text-text-base">
@@ -1021,7 +1068,7 @@ function ProviderConnection(props: {
           <ExternalLink href={store.authorization!.url}>
             {language.t("provider.connect.oauth.code.visit.link")}
           </ExternalLink>
-          {language.t("provider.connect.oauth.code.visit.suffix", { provider: provider().name })}
+          {copy("provider.connect.oauth.code.visit.suffix", { provider: provider().name })}
         </div>
         <form onSubmit={handleSubmit} class="flex flex-col items-start gap-4">
           <TextField
@@ -1094,7 +1141,7 @@ function ProviderConnection(props: {
           <ExternalLink href={store.authorization!.url}>
             {language.t("provider.connect.oauth.auto.visit.link")}
           </ExternalLink>
-          {language.t("provider.connect.oauth.auto.visit.suffix", { provider: provider().name })}
+          {copy("provider.connect.oauth.auto.visit.suffix", { provider: provider().name })}
         </div>
         <TextField
           label={language.t("provider.connect.oauth.auto.confirmationCode")}

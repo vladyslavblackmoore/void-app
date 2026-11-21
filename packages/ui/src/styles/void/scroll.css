@@ -1,0 +1,19 @@
+html[data-theme="void"] .void-settings-content {
+  box-sizing: border-box;
+  margin-inline: calc(var(--void-shadow-bleed) * -1);
+  padding: 24px var(--void-shadow-bleed) var(--void-shadow-tail);
+  pointer-events: none;
+}
+
+html[data-theme="void"] .void-settings-content > * {
+  pointer-events: auto;
+}
+
+html[data-theme="void"] [data-component="void-hub"] {
+  padding-bottom: var(--void-shadow-tail);
+}
+
+html[data-theme="void"] .void-settings-nav {
+  position: relative;
+  z-index: 1;
+}
