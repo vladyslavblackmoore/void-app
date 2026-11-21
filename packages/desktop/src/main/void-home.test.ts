@@ -79,6 +79,10 @@ describe("void home", () => {
     expect(userXdg(VOID_HOME, undefined, { XDG_DATA_HOME: root + "-x" }).XDG_DATA_HOME).toBe(root + "-x")
   })
 
+  test("keeps the server off foreign profile dirs for skills and instructions", () => {
+    expect(voidAppEnv(VOID_HOME, {}).OPENCODE_DISABLE_CLAUDE_CODE).toBe("true")
+  })
+
   test("uses another root when given one", () => {
     expect(voidAppEnv("/tmp/x", {}).XDG_STATE_HOME).toBe(join("/tmp/x", "state"))
   })

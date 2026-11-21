@@ -1,6 +1,6 @@
-import { describe, expect } from "bun:test"
+import { describe, expect, test } from "bun:test"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
-import { Effect, Layer } from "effect"
+import { ConfigProvider, Effect, Layer } from "effect"
 import { Skill } from "../../src/skill"
 import { Discovery } from "../../src/skill/discovery"
 import { RuntimeFlags } from "../../src/effect/runtime-flags"
@@ -31,6 +31,24 @@ const itWithoutExternalSkills = testEffect(
     testInstanceStoreLayer,
   ),
 )
+const voidEnvFlags = RuntimeFlags.Service.layer.pipe(
+  Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ OPENCODE_DISABLE_CLAUDE_CODE: "true" }))),
+  Layer.orDie,
+)
+const voidEnvLayer = () =>
+  Layer.mergeAll(LayerNode.compile(Skill.node, [[RuntimeFlags.node, voidEnvFlags]]), node, testInstanceStoreLayer)
+
+const writeSkill = (file: string, name: string) =>
+  Bun.write(
+    file,
+    `---
+name: ${name}
+description: The ${name} skill.
+---
+
+# ${name}
+`,
+  )
 
 async function createGlobalSkill(homeDir: string) {
   const skillDir = path.join(homeDir, ".claude", "skills", "global-test-skill")
@@ -526,6 +544,32 @@ description: A skill in the .opencode/skill directory.
       { git: true },
     ),
   )
+
+  test("loads config dir skills but no foreign profile skills under the void env", async () => {
+    await using home = await tmpdir()
+    await using project = await tmpdir({ git: true })
+    const configSkillDir = path.join(Global.Path.config, "skills", "void-config-skill")
+    await Promise.all([
+      writeSkill(path.join(configSkillDir, "SKILL.md"), "void-config-skill"),
+      writeSkill(path.join(home.path, ".claude", "skills", "foreign-home-skill", "SKILL.md"), "foreign-home-skill"),
+      writeSkill(
+        path.join(project.path, ".claude", "skills", "foreign-project-skill", "SKILL.md"),
+        "foreign-project-skill",
+      ),
+    ])
+    const prev = process.env.OPENCODE_TEST_HOME
+    process.env.OPENCODE_TEST_HOME = home.path
+    try {
+      const names = await Effect.gen(function* () {
+        const skill = yield* Skill.Service
+        return (yield* skill.all()).filter((s) => s.location !== "<built-in>").map((s) => s.name)
+      }).pipe(provideInstance(project.path), Effect.scoped, Effect.provide(voidEnvLayer()), Effect.runPromise)
+      expect(names).toEqual(["void-config-skill"])
+    } finally {
+      process.env.OPENCODE_TEST_HOME = prev
+      await fs.rm(configSkillDir, { recursive: true, force: true })
+    }
+  })
 
   it.live("properly resolves directories that skills live in", () =>
     provideTmpdirInstance(
