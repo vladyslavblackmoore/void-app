@@ -34,6 +34,48 @@ describe("theme preload", () => {
     expect(document.getElementById("oc-theme-preload")).toBeNull()
   })
 
+  test("defaults to void with the void canvas when nothing is stored", () => {
+    document.head.innerHTML = '<meta name="theme-color" content="#fafafa">'
+    Object.defineProperty(window, "matchMedia", {
+      value: () => ({ matches: true }) as MediaQueryList,
+      configurable: true,
+    })
+
+    run()
+
+    expect(document.documentElement.dataset.theme).toBe("void")
+    expect(document.documentElement.dataset.colorScheme).toBe("dark")
+    expect(document.querySelector("meta[name='theme-color']")?.getAttribute("content")).toBe("#0c0d0f")
+  })
+
+  test("defaults to the void light canvas when the system prefers light", () => {
+    document.head.innerHTML = '<meta name="theme-color" content="#fafafa">'
+
+    run()
+
+    expect(document.documentElement.dataset.theme).toBe("void")
+    expect(document.documentElement.dataset.colorScheme).toBe("light")
+    expect(document.querySelector("meta[name='theme-color']")?.getAttribute("content")).toBe("#eceef1")
+  })
+
+  test("applies cached void css when nothing is stored but the cache exists", () => {
+    localStorage.setItem("opencode-theme-css-light", "--background-base:#eceef1;")
+
+    run()
+
+    expect(document.getElementById("oc-theme-preload")?.textContent).toContain("--background-base:#eceef1;")
+  })
+
+  test("keeps an explicitly stored oc-2 without cached css", () => {
+    localStorage.setItem("opencode-theme-id", "oc-2")
+    localStorage.setItem("opencode-theme-css-light", "--background-base:#fff;")
+
+    run()
+
+    expect(document.documentElement.dataset.theme).toBe("oc-2")
+    expect(document.getElementById("oc-theme-preload")).toBeNull()
+  })
+
   test("keeps cached css for non-default themes", () => {
     localStorage.setItem("opencode-theme-id", "nightowl")
     localStorage.setItem("opencode-theme-css-light", "--background-base:#fff;")
