@@ -1,14 +1,24 @@
 import { readdir, readFile } from "node:fs/promises"
 import { join } from "node:path"
-import { seedAgents } from "./agents"
+import { seedAgents, seedTools } from "./agents"
+import { addDelegatePermissions, addDelegatePrompt, seedBrokerWorkers } from "./broker-seed"
 import { seedConfig } from "./config-seed"
 import { seedMemory, seedMemoryPermissions, seedMemoryPlugin, type MemoryRuntime } from "./memory-seed"
 import { cleanSubscriptionInSpaces } from "./subscription-cleanup"
-import { createSpace, ensureHomeSpace, isSpaceId, listSpaces, spaceDir, type Space } from "./spaces"
+import { createSpace, ensureHomeSpace, isSpaceId, listSpaces, readSpace, spaceDir, type Space } from "./spaces"
 
 export type SpaceTemplate = Pick<Space, "class" | "sessionMode" | "color">
 export type SpaceTemplates = { personal: SpaceTemplate; company: SpaceTemplate }
-export type SpaceSeed = { agents: Array<{ name: string; content: string; version?: number }>; wrapper: string; plugin?: string; config?: string; memory?: MemoryRuntime; memoryPlugin?: string }
+export type SpaceSeed = {
+  agents: Array<{ name: string; content: string; version?: number }>
+  wrapper: string
+  plugin?: string
+  config?: string
+  memory?: MemoryRuntime
+  memoryPlugin?: string
+  tools?: Array<{ name: string; content: string }>
+  workers?: string
+}
 
 const VOID_SPACE_ID = "void"
 const WORK_SPACE_ID = "work"
@@ -64,4 +74,17 @@ export async function seedSpace(root: string, id: string, seed: SpaceSeed) {
   await seedMemory(dir, configDir, seed.memory)
   await seedMemoryPlugin(dir, configDir, seed.memoryPlugin)
   await seedMemoryPermissions(configDir, stateDir)
+  await addDelegatePermissions(configDir, stateDir)
+  const main = seed.agents.find((agent) => agent.name === "main")
+  if (main) await addDelegatePrompt(configDir, stateDir, main.content)
+  if (seed.tools) await seedTools(configDir, stateDir, seed.tools)
+  if (seed.workers === undefined) return
+  const space = await readSpace(root, id)
+  await seedBrokerWorkers(
+    join(dir, "config", "broker", "workers.json"),
+    stateDir,
+    seed.workers,
+    space?.sessionMode === "isolated" ? join(dir, "cli") : undefined,
+  )
 }
+

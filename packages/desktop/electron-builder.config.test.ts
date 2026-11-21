@@ -89,3 +89,14 @@ for (const channel of ["beta", "prod"] as const) {
     })
   })
 }
+
+test("ships the broker bundle outside the archive and keeps it out of the app files", async () => {
+  const module = await import("./electron-builder.config.ts?broker=1")
+  const config = module.default as Configuration
+  expect(config.extraResources).toContainEqual({
+    from: "resources/broker-runtime/",
+    to: "broker/",
+    filter: ["broker.mjs", "shim.mjs"],
+  })
+  expect(config.files).toContain("!resources/broker-runtime/**")
+})

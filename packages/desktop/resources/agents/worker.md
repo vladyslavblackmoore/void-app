@@ -16,6 +16,7 @@ permission:
   memory_task_result: allow
   memory_task_list: allow
   memory_board_changes: allow
+  delegate: deny
 ---
 
 You are a worker of VOID. The main agent hands you one task as a brief. The brief is the whole of your instructions.

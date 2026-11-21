@@ -57,7 +57,7 @@ const getBase = (appId: string): Configuration => ({
   extraMetadata: {
     desktopName: `${appId}.desktop`,
   },
-  files: ["out/**/*", "resources/**/*", "!resources/opencode-cli*"],
+  files: ["out/**/*", "resources/**/*", "!resources/opencode-cli*", "!resources/broker-runtime/**"],
   extraResources: [
     ...(channel === "dev"
       ? [
@@ -72,6 +72,11 @@ const getBase = (appId: string): Configuration => ({
       from: "resources/memory-runtime/",
       to: "void-memory/",
       filter: ["*.mjs"],
+    },
+    {
+      from: "resources/broker-runtime/",
+      to: "broker/",
+      filter: ["broker.mjs", "shim.mjs"],
     },
     {
       from: "native/",

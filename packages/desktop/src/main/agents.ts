@@ -4,6 +4,7 @@ import { join } from "node:path"
 
 const STAMP = "agents-seeded"
 const STAMP_2 = "agents-seeded-2"
+const TOOLS_STAMP = "tools-seeded"
 
 export async function seedAgents(
   configDir: string,
@@ -30,6 +31,19 @@ export async function seedAgents(
   const stamped = new Date().toISOString()
   if (first) await create(join(userDataDir, STAMP), stamped)
   if (second) await create(join(userDataDir, STAMP_2), stamped)
+}
+
+export async function seedTools(
+  configDir: string,
+  userDataDir: string,
+  tools: Array<{ name: string; content: string }>,
+) {
+  const stamp = join(userDataDir, TOOLS_STAMP)
+  if (existsSync(stamp)) return
+  await mkdir(join(configDir, "tools"), { recursive: true })
+  await Promise.all(tools.map((tool) => create(join(configDir, "tools", `${tool.name}.ts`), tool.content)))
+  await mkdir(userDataDir, { recursive: true })
+  await create(stamp, new Date().toISOString())
 }
 
 function create(file: string, content: string) {

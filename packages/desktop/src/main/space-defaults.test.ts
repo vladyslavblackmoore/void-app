@@ -150,3 +150,115 @@ describe("memory permission seeding", () => {
     expect(await readFile(join(agents, "worker.md"), "utf8")).toContain("  memory_board_changes: allow\n---\nbody\n")
   })
 })
+
+describe("broker seeding", () => {
+  const bullet = "- Work for a CLI worker goes through the delegate tool."
+  const mainMd = `---\nmode: primary\npermission:\n  bash: allow\n  delegate: allow\n---\n## Delegation\n- first\n${bullet}\n\n## Hard rules\n- x\n`
+  const workerMd = "---\nmode: subagent\npermission:\n  bash: allow\n  delegate: deny\n---\nw\n"
+  const oldWorkerMd = "---\nmode: subagent\npermission:\n  bash: allow\n  task: deny\n---\nw\n"
+  const full = {
+    agents: [
+      { name: "main", content: mainMd },
+      { name: "worker", content: workerMd },
+    ],
+    wrapper: "w",
+    tools: [{ name: "delegate", content: "tool" }],
+    workers: JSON.stringify({ maxActive: 4, queueDepth: 4, workers: [{ id: "a", backend: "anthropic-cli" }, { id: "c", backend: "codex" }] }),
+  }
+  const files = (id: string) => {
+    const dir = spaceDir(root, id)
+    return {
+      workers: join(dir, "config", "broker", "workers.json"),
+      tool: join(dir, "config", "opencode", "tools", "delegate.ts"),
+      main: join(dir, "config", "opencode", "agents", "main.md"),
+      worker: join(dir, "config", "opencode", "agents", "worker.md"),
+    }
+  }
+  const snapshot = async (id: string) => {
+    const f = files(id)
+    return Promise.all([f.workers, f.tool, f.main, f.worker].map((file) => readFile(file, "utf8")))
+  }
+
+  test("a fresh space gets workers.json, the delegate tool and the permission lines", async () => {
+    await ensureDefaultSpaces(root, templates, legacy)
+    await seedSpace(root, "void", full)
+    const [workers, tool, main, worker] = await snapshot("void")
+    expect(tool).toBe("tool")
+    expect(main).toContain("delegate: allow")
+    expect(worker).toContain("delegate: deny")
+    expect(JSON.parse(workers).queueDepth).toBe(4)
+  })
+
+  test("an isolated space points the Anthropic workers at its own login directory", async () => {
+    await ensureDefaultSpaces(root, templates, legacy)
+    await seedSpace(root, "void", full)
+    const parsed = JSON.parse(await readFile(files("void").workers, "utf8"))
+    expect(parsed.workers[0].account).toBe(join(spaceDir(root, "void"), "cli"))
+    expect(parsed.workers[1].account).toBeUndefined()
+  })
+
+  test("a user space keeps the account unset", async () => {
+    await ensureDefaultSpaces(root, templates, legacy)
+    await seedSpace(root, "work", full)
+    expect(JSON.parse(await readFile(files("work").workers, "utf8")).workers[0].account).toBeUndefined()
+  })
+
+  test("a second seed changes none of the files and never overwrites edits", async () => {
+    await ensureDefaultSpaces(root, templates, legacy)
+    await seedSpace(root, "void", full)
+    const first = await snapshot("void")
+    await seedSpace(root, "void", { ...full, workers: "{}", tools: [{ name: "delegate", content: "other" }] })
+    expect(await snapshot("void")).toEqual(first)
+    await writeFile(files("void").workers, "edited")
+    await seedSpace(root, "void", full)
+    expect(await readFile(files("void").workers, "utf8")).toBe("edited")
+  })
+
+  const stampOld = async (main: string, worker: string) => {
+    const f = files("void")
+    await mkdir(join(spaceDir(root, "void"), "config", "opencode", "agents"), { recursive: true })
+    await mkdir(join(spaceDir(root, "void"), "state"), { recursive: true })
+    await writeFile(f.main, main)
+    await writeFile(f.worker, worker)
+    await writeFile(join(spaceDir(root, "void"), "state", "agents-seeded"), "x")
+  }
+
+  test("a profile stamped by the earlier version gets the missing delegate lines once", async () => {
+    await ensureDefaultSpaces(root, templates, legacy)
+    await stampOld("---\nmode: primary\npermission:\n  bash: allow\n---\nm\n", oldWorkerMd.replace("bash: allow", "bash: ask"))
+    await seedSpace(root, "void", full)
+    const worker = await readFile(files("void").worker, "utf8")
+    expect(worker).toBe(oldWorkerMd.replace("bash: allow", "bash: ask").replace("  task: deny\n", "  task: deny\n  delegate: deny\n"))
+    expect(await readFile(files("void").main, "utf8")).toContain("  bash: allow\n  delegate: allow\n")
+    await seedSpace(root, "void", full)
+    expect(await readFile(files("void").worker, "utf8")).toBe(worker)
+  })
+
+  test("a stamped profile that already has the lines is unchanged", async () => {
+    await ensureDefaultSpaces(root, templates, legacy)
+    await stampOld(mainMd, workerMd)
+    await seedSpace(root, "void", full)
+    expect(await readFile(files("void").worker, "utf8")).toBe(workerMd)
+    expect(await readFile(files("void").main, "utf8")).toBe(mainMd)
+  })
+
+  const promptOld = "---\nmode: primary\npermission:\n  bash: allow\n  delegate: allow\n---\n## Delegation\n- first\n- mine\n\n## Hard rules\n- x\n"
+
+  test("an old main agent file gets the delegate prompt line once and keeps user edits", async () => {
+    await ensureDefaultSpaces(root, templates, legacy)
+    await stampOld(promptOld, workerMd)
+    await seedSpace(root, "void", full)
+    const main = await readFile(files("void").main, "utf8")
+    expect(main).toBe(promptOld.replace("- mine\n", `- mine\n${bullet}\n`))
+    await writeFile(files("void").main, main.replace("- first", "- edited"))
+    await seedSpace(root, "void", full)
+    expect(await readFile(files("void").main, "utf8")).toBe(main.replace("- first", "- edited"))
+  })
+
+  test("a main agent file that already has the delegate prompt line is unchanged", async () => {
+    await ensureDefaultSpaces(root, templates, legacy)
+    await stampOld(mainMd, workerMd)
+    await seedSpace(root, "void", full)
+    expect(await readFile(files("void").main, "utf8")).toBe(mainMd)
+  })
+})

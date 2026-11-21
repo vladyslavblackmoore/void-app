@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import { mkdtemp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { seedAgents } from "./agents"
+import { seedAgents, seedTools } from "./agents"
 
 const agents = [
   { name: "main", content: "main prompt" },
@@ -156,6 +156,7 @@ describe("bundled agents", () => {
       bash: "allow",
       edit: "allow",
       question: "allow",
+      delegate: "allow",
       task: { "*": "allow" },
     })
   })
@@ -172,6 +173,35 @@ describe("bundled agents", () => {
   })
 
   test("worker runs commands and edits without asking and starts no tasks", async () => {
-    expect((await permission("worker")).permission).toMatchObject({ bash: "allow", edit: "allow", task: "deny" })
+    expect((await permission("worker")).permission).toMatchObject({ bash: "allow", edit: "allow", task: "deny", delegate: "deny" })
+  })
+})
+
+const tools = [{ name: "delegate", content: "tool source" }]
+
+describe("seedTools", () => {
+  test("writes tools/delegate.ts once and never overwrites it", async () => {
+    await seedTools(dir, data, tools)
+    expect(await readFile(join(dir, "tools", "delegate.ts"), "utf8")).toBe("tool source")
+
+    await writeFile(join(dir, "tools", "delegate.ts"), "edited")
+    await rm(join(data, "tools-seeded"))
+    await seedTools(dir, data, [{ name: "delegate", content: "newer source" }])
+    expect(await readFile(join(dir, "tools", "delegate.ts"), "utf8")).toBe("edited")
+  })
+
+  test("does nothing after the stamp exists", async () => {
+    await seedTools(dir, data, tools)
+    await rm(join(dir, "tools", "delegate.ts"))
+
+    await seedTools(dir, data, tools)
+
+    expect(await Bun.file(join(dir, "tools", "delegate.ts")).exists()).toBe(false)
+  })
+
+  test("seeds the tool in a config dir that already has agents", async () => {
+    await seedAgents(dir, data, agents)
+    await seedTools(dir, data, tools)
+    expect(await readdir(join(dir, "tools"))).toEqual(["delegate.ts"])
   })
 })
