@@ -203,7 +203,7 @@ html[data-theme="void"] .void-providers-layout .void-provider-tag {
 
 html[data-theme="void"] .void-settings-page[data-section="models"] .settings-v2-tab-body.settings-v2-models {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(380px, 640px));
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--void-gap, 14px);
   align-items: start;
   column-width: auto;

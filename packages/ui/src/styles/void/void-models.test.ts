@@ -68,7 +68,8 @@ describe("void models screens", () => {
   })
 
   test("the models list fills the canvas and uses a void search field", () => {
-    expect(body(".settings-v2-tab-body.settings-v2-models")).toContain("repeat(auto-fit, minmax(380px, 640px))")
+    expect(body(".settings-v2-tab-body.settings-v2-models")).toContain("grid-template-columns: minmax(0, 1fr)")
+    expect(body(".settings-v2-tab-body.settings-v2-models")).not.toContain("640px")
     expect(body('[data-component="text-input-v2"]')).toContain("var(--void-control-h")
   })
 
