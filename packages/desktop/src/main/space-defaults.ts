@@ -2,12 +2,12 @@ import { readdir, readFile } from "node:fs/promises"
 import { join } from "node:path"
 import { seedAgents } from "./agents"
 import { seedConfig } from "./config-seed"
-import { seedMemory, seedMemoryPlugin } from "./memory-seed"
+import { seedMemory, seedMemoryPlugin, type MemoryRuntime } from "./memory-seed"
 import { createSpace, ensureHomeSpace, isSpaceId, listSpaces, spaceDir, type Space } from "./spaces"
 
 export type SpaceTemplate = Pick<Space, "class" | "sessionMode" | "color">
 export type SpaceTemplates = { personal: SpaceTemplate; company: SpaceTemplate }
-export type SpaceSeed = { agents: Array<{ name: string; content: string }>; wrapper: string; plugin?: string; config?: string; memory?: string[]; memoryPlugin?: string }
+export type SpaceSeed = { agents: Array<{ name: string; content: string }>; wrapper: string; plugin?: string; config?: string; memory?: MemoryRuntime; memoryPlugin?: string }
 
 const VOID_SPACE_ID = "void"
 const WORK_SPACE_ID = "work"

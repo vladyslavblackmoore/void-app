@@ -31,6 +31,12 @@ test("the server lists its memory tools and instructions", async () => {
   expect(client.getInstructions()).toContain("supersedes")
 })
 
+test("the instructions define pinned as props.pinned = true on a live non-task node", () => {
+  const text = client.getInstructions() ?? ""
+  expect(text).toContain("props.pinned = true")
+  expect(text).toContain("live node that is not a task")
+})
+
 test("remember then recall through the mcp layer", async () => {
   const written = await call("remember", {
     nodes: [{ id: "d1", kind: "decision", title: "Использовать очередь A", body: "ёмкость выше" }],

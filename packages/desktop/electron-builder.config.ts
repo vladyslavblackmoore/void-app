@@ -69,6 +69,11 @@ const getBase = (appId: string): Configuration => ({
         ]
       : []),
     {
+      from: "resources/memory-runtime/",
+      to: "void-memory/",
+      filter: ["*.mjs"],
+    },
+    {
       from: "native/",
       to: "native/",
       filter: ["index.js", "index.d.ts", "build/Release/mac_window.node", "swift-build/**"],

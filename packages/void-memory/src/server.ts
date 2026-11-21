@@ -10,6 +10,7 @@ export const instructions = [
   "Give every fact a short specific title and put the detail in the body. Reuse a title with the same kind to update a node instead of duplicating it.",
   "To replace a fact or decision write the new node with a supersedes edge to the old one. forget invalidates a node, nothing is deleted; recall with history=true shows invalidated nodes.",
   "Task board: task_create (title, brief, project, deps), task_claim before starting work, task_update with notes, task_result when finished, task_list (ready=true for unblocked open tasks), board_changes with the last cursor to see what changed.",
+  "Pinned means props.pinned = true on a live node that is not a task; pinned nodes stay in the recall block at the start of every session.",
   "Pass your agent name in agent so scope agent:<name> nodes stay yours; shared is the default scope.",
 ].join("\n")
 

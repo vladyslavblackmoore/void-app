@@ -1,6 +1,6 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
-import { Database } from "bun:sqlite"
+import { Database } from "../src/sqlite"
 import { mkdirSync, rmSync, statSync, writeFileSync } from "node:fs"
 import { homedir } from "node:os"
 import { join } from "node:path"
@@ -14,7 +14,8 @@ const reportPath = process.env.BENCH_REPORT ?? join(outDir, "bench-server-report
 const fanouts = (process.env.BENCH_FANOUT ?? "").split(",").filter((v) => v !== "").map(Number)
 const withAnalyze = process.env.BENCH_ANALYZE !== "0"
 const variants = (process.env.BENCH_VARIANTS ?? "uniform,skewed").split(",")
-const mainPath = join(import.meta.dir, "../src/main.ts")
+const mainPath = process.env.BENCH_SERVER_ENTRY ?? join(import.meta.dir, "../src/main.ts")
+const serverCommand = process.env.BENCH_SERVER_CMD ?? process.execPath
 
 let seed = 12345
 const rnd = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296
@@ -123,7 +124,7 @@ const rss = (pid: number) => {
 
 const serverRun = async (path: string, skewed: boolean, fanout?: number) => {
   const transport = new StdioClientTransport({
-    command: process.execPath,
+    command: serverCommand,
     args: [mainPath],
     env: { PATH: process.env.PATH ?? "", VOID_MEMORY_DB: path, ...(fanout === undefined ? {} : { VOID_MEMORY_FANOUT: String(fanout) }) },
     stderr: "inherit",
@@ -231,7 +232,7 @@ emit("# Server benchmark gate: void-memory over stdio")
 emit()
 emit(`Date: ${new Date().toISOString().slice(0, 10)}. Command: \`bun run bench\` in packages/void-memory (script/bench.ts).`)
 emit(`- Machine: ${Bun.spawnSync(["sysctl", "-n", "machdep.cpu.brand_string"]).stdout.toString().trim()}`)
-emit(`- Bun: ${Bun.version}; sqlite_version(): ${version}`)
+emit(`- Bun: ${Bun.version}; sqlite_version(): ${version}; server command: ${serverCommand} ${mainPath}`)
 emit("- Preload: written directly through prepared SQL on the store's schema (not through the tools), then main.ts is started over stdio (SDK StdioClientTransport) and measured from the client side; each call includes JSON-RPC and process-pipe cost.")
 emit("- 200 runs after 10 warm-up runs per measure. Thresholds: remember p95 <= 20 ms, recall p95 <= 50 ms.")
 emit("- Recall queries are two random vocabulary words (AND, falling back to OR), limit 10 (default), caller agent bench.")

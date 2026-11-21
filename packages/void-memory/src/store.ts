@@ -1,4 +1,4 @@
-import type { Database } from "bun:sqlite"
+import type { Database } from "./sqlite"
 import { createBoard } from "./board"
 import { createMemory } from "./memory"
 

@@ -7,5 +7,6 @@ const channel = resolveChannel()
 await $`bun ./scripts/copy-icons.ts ${channel}`
 await $`bun ./scripts/copy-metainfo.ts ${channel}`
 
+await $`bun ./scripts/build-memory.ts`
 await $`cd ../opencode && bun script/build-node.ts`
 if (channel === "dev") await downloadCliToResources()

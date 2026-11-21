@@ -1,4 +1,4 @@
-import { Database } from "bun:sqlite"
+import { Database } from "./sqlite"
 import { migrations } from "./migrations"
 
 export interface OpenResult {
@@ -30,7 +30,7 @@ const migrate = (db: Database): number[] => {
 }
 
 export const openDatabase = (path: string): OpenResult => {
-  const db = new Database(path, { create: true })
+  const db = new Database(path, { timeout: 5000 })
   db.run("pragma busy_timeout = 5000")
   db.run("pragma journal_mode = WAL")
   db.run("pragma synchronous = NORMAL")

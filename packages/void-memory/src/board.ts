@@ -1,4 +1,4 @@
-import type { Database, SQLQueryBindings } from "bun:sqlite"
+import type { Database, SQLQueryBindings } from "./sqlite"
 import { newId } from "./memory"
 import { toNode, type NodeRow } from "./rows"
 import {

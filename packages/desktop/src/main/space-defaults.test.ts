@@ -121,7 +121,7 @@ describe("space seeder", () => {
 
   test("registers the memory server in the config of the space", async () => {
     await ensureDefaultSpaces(root, templates, legacy)
-    await seedSpace(root, "void", { ...seed, config: "{}", memory: ["bun", "/m/main.ts"] })
+    await seedSpace(root, "void", { ...seed, config: "{}", memory: { command: ["bun", "/m/main.ts"], environment: {} } })
     const dir = spaceDir(root, "void")
     const written = parse(await readFile(join(dir, "config", "opencode", "opencode.jsonc"), "utf8"))
     expect(written.mcp.memory.command).toEqual(["bun", "/m/main.ts"])
@@ -134,7 +134,7 @@ describe("space seeder", () => {
 describe("memory plugin seeding", () => {
   test("seedSpace puts the memory plugin shim into the plugins dir of the space", async () => {
     await ensureDefaultSpaces(root, templates, legacy)
-    await seedSpace(root, "void", { agents: [], wrapper: "w", memoryPlugin: "/src/void-memory" })
+    await seedSpace(root, "void", { agents: [], wrapper: "w", memoryPlugin: "/src/void-memory/src/plugin.ts" })
     const shim = join(spaceDir(root, "void"), "config", "opencode", "plugins", "void-memory.js")
     expect(await readFile(shim, "utf8")).toContain(join(spaceDir(root, "void"), "data", "memory", "graph.db"))
   })

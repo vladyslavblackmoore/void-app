@@ -1020,6 +1020,7 @@
         "zod": "4.4.3",
       },
       "devDependencies": {
+        "@opencode-ai/plugin": "workspace:*",
         "@tsconfig/node22": "catalog:",
         "@types/bun": "catalog:",
         "@types/node": "catalog:",

@@ -1,4 +1,4 @@
-import { Database } from "bun:sqlite"
+import { Database } from "./sqlite"
 import { existsSync } from "node:fs"
 import type { NodeRow } from "./rows"
 

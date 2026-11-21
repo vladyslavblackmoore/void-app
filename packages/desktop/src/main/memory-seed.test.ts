@@ -3,8 +3,9 @@ import { existsSync } from "node:fs"
 import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
+import { pathToFileURL } from "node:url"
 import { parse } from "jsonc-parser"
-import { memoryCommand, seedMemory, seedMemoryPlugin } from "./memory-seed"
+import { memoryCommand, memoryPluginFile, seedMemory, seedMemoryPlugin } from "./memory-seed"
 
 let space = ""
 let configDir = ""
@@ -25,7 +26,7 @@ const read = async () => parse(await readFile(file(), "utf8"))
 describe("seedMemory", () => {
   test("registers the memory server with the database path of the space", async () => {
     await writeFile(file(), '{ "provider": {} }')
-    await seedMemory(space, configDir, ["bun", "/x/main.ts"])
+    await seedMemory(space, configDir, { command: ["bun", "/x/main.ts"], environment: {} })
     const config = await read()
     expect(config.provider).toEqual({})
     expect(config.mcp.memory).toEqual({
@@ -41,7 +42,7 @@ describe("seedMemory", () => {
       file(),
       JSON.stringify({ mcp: { memory: { type: "local", command: ["old"], enabled: false, timeout: 9000, environment: { VOID_MEMORY_DB: "/old", KEEP: "1" } } } }),
     )
-    await seedMemory(space, configDir, ["bun", "/new.ts"])
+    await seedMemory(space, configDir, { command: ["bun", "/new.ts"], environment: {} })
     const config = await read()
     expect(config.mcp.memory.command).toEqual(["bun", "/new.ts"])
     expect(config.mcp.memory.enabled).toBe(false)
@@ -51,9 +52,9 @@ describe("seedMemory", () => {
 
   test("leaves other servers alone and is idempotent", async () => {
     await writeFile(file(), JSON.stringify({ mcp: { other: { type: "local", command: ["x"] } } }))
-    await seedMemory(space, configDir, ["bun", "/x.ts"])
+    await seedMemory(space, configDir, { command: ["bun", "/x.ts"], environment: {} })
     const once = await readFile(file(), "utf8")
-    await seedMemory(space, configDir, ["bun", "/x.ts"])
+    await seedMemory(space, configDir, { command: ["bun", "/x.ts"], environment: {} })
     expect(await readFile(file(), "utf8")).toBe(once)
     expect((await read()).mcp.other).toEqual({ type: "local", command: ["x"] })
   })
@@ -64,57 +65,71 @@ describe("seedMemory", () => {
     expect(await readFile(file(), "utf8")).toBe("{}")
     expect(existsSync(join(space, "data"))).toBe(false)
     await rm(file())
-    await seedMemory(space, configDir, ["bun", "/x.ts"])
+    await seedMemory(space, configDir, { command: ["bun", "/x.ts"], environment: {} })
     expect(existsSync(file())).toBe(false)
     await writeFile(file(), "{ broken")
-    await seedMemory(space, configDir, ["bun", "/x.ts"])
+    await seedMemory(space, configDir, { command: ["bun", "/x.ts"], environment: {} })
     expect(await readFile(file(), "utf8")).toBe("{ broken")
   })
 })
 
 describe("memoryCommand", () => {
   test("runs the source with bun in development", () => {
-    expect(memoryCommand({ packaged: false, sourceDir: "/repo/packages/void-memory", resourcesPath: "/r", exists: () => false })).toEqual([
-      "bun",
-      "/repo/packages/void-memory/src/main.ts",
-    ])
+    expect(memoryCommand({ packaged: false, sourceDir: "/repo/packages/void-memory", resourcesPath: "/r", execPath: "/app/VOID" })).toEqual({
+      command: ["bun", "/repo/packages/void-memory/src/main.ts"],
+      environment: {},
+    })
   })
 
-  test("uses the bundled binary when packaged and present", () => {
-    const exists = (path: string) => path === "/r/void-memory/void-memory"
-    expect(memoryCommand({ packaged: true, sourceDir: "/s", resourcesPath: "/r", exists })).toEqual(["/r/void-memory/void-memory"])
+  test("runs the bundled server on the app binary as node when packaged", () => {
+    expect(memoryCommand({ packaged: true, sourceDir: "/s", resourcesPath: "/r", execPath: "/app/VOID" })).toEqual({
+      command: ["/app/VOID", "/r/void-memory/main.mjs"],
+      environment: { ELECTRON_RUN_AS_NODE: "1" },
+    })
   })
 
-  test("returns nothing when packaged without the binary", () => {
-    expect(memoryCommand({ packaged: true, sourceDir: "/s", resourcesPath: "/r", exists: () => false })).toBeUndefined()
+  test("seeds the node flag next to the database path", async () => {
+    await writeFile(file(), "{}")
+    await seedMemory(space, configDir, memoryCommand({ packaged: true, sourceDir: "/s", resourcesPath: "/r", execPath: "/app/VOID" }))
+    expect((await read()).mcp.memory.environment).toEqual({
+      ELECTRON_RUN_AS_NODE: "1",
+      VOID_MEMORY_DB: join(space, "data", "memory", "graph.db"),
+    })
+  })
+})
+
+describe("memoryPluginFile", () => {
+  test("points at the source in development and at the bundle when packaged", () => {
+    expect(memoryPluginFile({ packaged: false, sourceDir: "/s", resourcesPath: "/r" })).toBe("/s/src/plugin.ts")
+    expect(memoryPluginFile({ packaged: true, sourceDir: "/s", resourcesPath: "/r" })).toBe("/r/void-memory/plugin.mjs")
   })
 })
 
 describe("seedMemoryPlugin", () => {
-  test("writes a shim that loads the plugin source with the database path of the space", async () => {
-    await seedMemoryPlugin(space, configDir, "/src/void-memory")
+  test("writes a shim that loads the plugin file by URL with the database path of the space", async () => {
+    await seedMemoryPlugin(space, configDir, "/src/void-memory/src/plugin.ts")
     const text = await readFile(join(configDir, "plugins", "void-memory.js"), "utf8")
-    expect(text).toContain(JSON.stringify("/src/void-memory/src/plugin.ts"))
+    expect(text).toContain(JSON.stringify(pathToFileURL("/src/void-memory/src/plugin.ts").href))
     expect(text).toContain(JSON.stringify(join(space, "data", "memory", "graph.db")))
     expect(text).toContain("export default memoryPlugin(")
   })
 
-  test("writes nothing without a source directory", async () => {
+  test("writes nothing without a plugin file", async () => {
     await seedMemoryPlugin(space, configDir, undefined)
     expect(existsSync(join(configDir, "plugins", "void-memory.js"))).toBe(false)
   })
 
   test("does not create the database or its directory", async () => {
-    await seedMemoryPlugin(space, configDir, "/src/void-memory")
+    await seedMemoryPlugin(space, configDir, "/src/void-memory/src/plugin.ts")
     expect(existsSync(join(space, "data"))).toBe(false)
   })
 
   test("is idempotent", async () => {
-    await seedMemoryPlugin(space, configDir, "/src/void-memory")
+    await seedMemoryPlugin(space, configDir, "/src/void-memory/src/plugin.ts")
     const target = join(configDir, "plugins", "void-memory.js")
     const first = (await stat(target)).mtimeMs
     await new Promise((resolve) => setTimeout(resolve, 20))
-    await seedMemoryPlugin(space, configDir, "/src/void-memory")
+    await seedMemoryPlugin(space, configDir, "/src/void-memory/src/plugin.ts")
     expect((await stat(target)).mtimeMs).toBe(first)
   })
 })

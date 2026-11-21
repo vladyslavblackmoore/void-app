@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, test } from "bun:test"
-import { Database } from "bun:sqlite"
+import { Database } from "../src/sqlite"
 import { existsSync, readdirSync, statSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { recallBlock, recallBlockFromFile } from "../src/recall"

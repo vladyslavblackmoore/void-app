@@ -18,7 +18,7 @@ import subscriptionPlugin from "../../resources/plugin/subscription-auth.js?raw"
 import spaceConfigTemplate from "../../resources/spaces/opencode.jsonc?raw"
 import type { ServerReadyData } from "../preload/types"
 import { seedAgents } from "./agents"
-import { memoryCommand } from "./memory-seed"
+import { memoryCommand, memoryPluginFile } from "./memory-seed"
 import { seedConfig } from "./config-seed"
 import { checkAppExists, resolveAppPath } from "./apps"
 import { CHANNEL } from "./constants"
@@ -399,8 +399,13 @@ const main = Effect.gen(function* () {
         packaged: app.isPackaged,
         sourceDir: memorySourceDir,
         resourcesPath: process.resourcesPath,
+        execPath: process.execPath,
       }),
-      memoryPlugin: app.isPackaged ? undefined : memorySourceDir,
+      memoryPlugin: memoryPluginFile({
+        packaged: app.isPackaged,
+        sourceDir: memorySourceDir,
+        resourcesPath: process.resourcesPath,
+      }),
     }
     yield* Effect.promise(() =>
       ensureDefaultSpaces(

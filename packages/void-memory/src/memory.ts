@@ -1,4 +1,4 @@
-import type { Database, SQLQueryBindings } from "bun:sqlite"
+import type { Database, SQLQueryBindings } from "./sqlite"
 import { buildMatch } from "./fts"
 import { toEdge, toNode, type EdgeRow, type NodeRow } from "./rows"
 import type {
