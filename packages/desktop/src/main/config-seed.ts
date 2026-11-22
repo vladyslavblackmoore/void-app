@@ -11,6 +11,8 @@ const defaults: Array<[string[], unknown]> = [
 ]
 
 const CONFIG_STAMP = "config-seeded-1"
+const MEMORY_STAMP = "config-seeded-2"
+const MEMORY_FILES = ["MEMORY.md", "tasks.md", "RULES.md"]
 
 const efforts = ["low", "medium", "high", "xhigh", "max"]
 
@@ -22,7 +24,66 @@ async function writeIfChanged(target: string, content: string) {
 
 export type ConfigTemplates = { plugin?: string; config?: string }
 
-export async function seedConfig(configDir: string, userDataDir: string, wrapper: string, templates: ConfigTemplates = {}) {
+const format = { formattingOptions: { insertSpaces: true, tabSize: 2 } }
+
+function appendMissing(text: string, path: string[], values: string[]) {
+  const tree = parseTree(text)
+  const node = tree && findNodeAtLocation(tree, path)
+  if (node && node.type !== "array") return text
+  const present = (node?.children ?? []).map((child) => child.value)
+  return values
+    .filter((value) => !present.includes(value))
+    .reduce(
+      (result, value) =>
+        applyEdits(result, modify(result, [...path, -1], value, { ...format, isArrayInsertion: true })),
+      text,
+    )
+}
+
+function allowDirectory(text: string, pattern: string) {
+  const tree = parseTree(text)
+  if (!tree) return text
+  const parents = [["permission"], ["permission", "external_directory"]].map((path) => findNodeAtLocation(tree, path))
+  if (parents.some((node) => node && node.type !== "object")) return text
+  if (findNodeAtLocation(tree, ["permission", "external_directory", pattern])) return text
+  return applyEdits(text, modify(text, ["permission", "external_directory", pattern], "allow", format))
+}
+
+function withMemory(text: string, memoryDir: string) {
+  const withInstructions = appendMissing(
+    text,
+    ["instructions"],
+    MEMORY_FILES.map((name) => join(memoryDir, name)),
+  )
+  const withSettings = appendMissing(withInstructions, [...settings, "additionalDirectories"], [memoryDir])
+  return allowDirectory(withSettings, join(memoryDir, "*"))
+}
+
+async function seedMemoryKeys(configDir: string, userDataDir: string, memoryDir: string) {
+  if (existsSync(join(userDataDir, MEMORY_STAMP))) return
+  const file = join(configDir, "opencode.jsonc")
+  const text = await readFile(file, "utf8").catch(() => undefined)
+  if (text === undefined) return
+  const tree = parseTree(text)
+  if (!tree || !findNodeAtLocation(tree, ["provider", "subscription"])) return
+  const next = withMemory(text, memoryDir)
+  if (next !== text) await writeFile(file, next)
+  await mkdir(userDataDir, { recursive: true })
+  await writeFile(join(userDataDir, MEMORY_STAMP), new Date().toISOString())
+}
+
+export async function seedConfig(
+  configDir: string,
+  userDataDir: string,
+  wrapper: string,
+  templates: ConfigTemplates = {},
+  memoryDir?: string,
+) {
+  await seedMainConfig(configDir, userDataDir, wrapper, templates)
+  if (memoryDir !== undefined) await seedMemoryKeys(configDir, userDataDir, memoryDir)
+}
+
+async function seedMainConfig(configDir: string, userDataDir: string, wrapper: string, templates: ConfigTemplates) {
   await writeIfChanged(join(configDir, "provider", "subscription.mjs"), wrapper)
   if (templates.plugin !== undefined) await writeIfChanged(join(configDir, "plugins", "subscription-auth.js"), templates.plugin)
   if (templates.config !== undefined && !existsSync(join(configDir, "opencode.jsonc"))) {

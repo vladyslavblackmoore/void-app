@@ -12,10 +12,14 @@ import { Deferred, Effect, Fiber } from "effect"
 import contextMenu from "electron-context-menu"
 
 import configTemplate from "../../resources/config/opencode.jsonc?raw"
+import memoryIndexTemplate from "../../resources/memory/MEMORY.md?raw"
+import memoryRulesTemplate from "../../resources/memory/RULES.md?raw"
+import memoryTasksTemplate from "../../resources/memory/tasks.md?raw"
 import subscriptionPlugin from "../../resources/plugin/subscription-auth.js?raw"
 import subscriptionWrapper from "../../resources/provider/subscription.mjs?raw"
 import type { ServerReadyData } from "../preload/types"
 import { seedConfig } from "./config-seed"
+import { memoryDir, seedMemory } from "./memory-seed"
 import { checkAppExists, resolveAppPath } from "./apps"
 import { CHANNEL } from "./constants"
 import { registerIpcHandlers, sendDeepLinks, sendMenuCommand } from "./ipc"
@@ -359,10 +363,23 @@ const main = Effect.gen(function* () {
 
     const configDir = join(process.env.XDG_CONFIG_HOME ?? voidAppEnv(VOID_HOME, {}).XDG_CONFIG_HOME, "opencode")
     yield* Effect.promise(() =>
-      seedConfig(configDir, app.getPath("userData"), subscriptionWrapper, {
-        plugin: subscriptionPlugin,
-        config: configTemplate,
-      }).catch((error) => logger.warn("failed to seed config", error)),
+      seedMemory(VOID_HOME, {
+        index: memoryIndexTemplate,
+        tasks: memoryTasksTemplate,
+        rules: memoryRulesTemplate,
+      }).catch((error) => logger.warn("failed to seed memory", error)),
+    )
+    yield* Effect.promise(() =>
+      seedConfig(
+        configDir,
+        app.getPath("userData"),
+        subscriptionWrapper,
+        {
+          plugin: subscriptionPlugin,
+          config: configTemplate,
+        },
+        memoryDir(VOID_HOME),
+      ).catch((error) => logger.warn("failed to seed config", error)),
     )
 
     ensureLoopbackNoProxy()

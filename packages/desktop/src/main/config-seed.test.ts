@@ -177,3 +177,69 @@ describe("seedConfig templates", () => {
     expect(await read()).toBe('{ "shell": "zsh" }')
   })
 })
+
+describe("seedConfig memory", () => {
+  const memory = "/home/u/void/memory"
+  const files = ["MEMORY.md", "tasks.md", "RULES.md"].map((name) => `${memory}/${name}`)
+  const parsed = async () => parse(await read())
+
+  test("adds the memory instructions, permission and directory to an already stamped config", async () => {
+    await writeFile(join(dir, "opencode.jsonc"), config)
+    await seedConfig(dir, data, wrapper)
+    await rm(join(data, "config-seeded-2"), { force: true })
+
+    await seedConfig(dir, data, wrapper, {}, memory)
+
+    const result = await parsed()
+    expect(result.instructions).toEqual(files)
+    expect(result.permission.external_directory).toEqual({ [`${memory}/*`]: "allow" })
+    expect(result.provider.subscription.options.defaultSettings.additionalDirectories).toEqual([memory])
+    expect(result.mcp).toEqual({ hub: { type: "local", command: ["hub"] } })
+    expect(await read()).toContain("// providers the app shows")
+  })
+
+  test("merges into existing instructions and permission without duplicates", async () => {
+    await writeFile(
+      join(dir, "opencode.jsonc"),
+      config.replace(
+        '"mcp"',
+        `"instructions": ["docs/RULES.md", "${files[0]}"], "permission": { "external_directory": { "/tmp/*": "allow" }, "bash": "ask" }, "mcp"`,
+      ),
+    )
+
+    await seedConfig(dir, data, wrapper, {}, memory)
+
+    const result = await parsed()
+    expect(result.instructions).toEqual(["docs/RULES.md", ...files])
+    expect(result.permission).toEqual({ external_directory: { "/tmp/*": "allow", [`${memory}/*`]: "allow" }, bash: "ask" })
+  })
+
+  test("is idempotent and does not restore keys the owner removed", async () => {
+    await writeFile(join(dir, "opencode.jsonc"), config)
+    await seedConfig(dir, data, wrapper, {}, memory)
+    const seeded = await read()
+    await seedConfig(dir, data, wrapper, {}, memory)
+    expect(await read()).toBe(seeded)
+
+    await writeFile(join(dir, "opencode.jsonc"), config)
+    await seedConfig(dir, data, wrapper, {}, memory)
+    expect(await read()).toBe(config)
+  })
+
+  test("keeps a permission the owner set for the memory directory", async () => {
+    await writeFile(
+      join(dir, "opencode.jsonc"),
+      config.replace('"mcp"', `"permission": { "external_directory": { "${memory}/*": "ask" } }, "mcp"`),
+    )
+
+    await seedConfig(dir, data, wrapper, {}, memory)
+
+    expect((await parsed()).permission.external_directory[`${memory}/*`]).toBe("ask")
+  })
+
+  test("a fresh install gets the memory keys from the template", async () => {
+    await seedConfig(dir, data, wrapper, { config }, memory)
+
+    expect((await parsed()).instructions).toEqual(files)
+  })
+})
