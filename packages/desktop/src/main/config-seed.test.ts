@@ -307,4 +307,43 @@ describe("seedConfig haiku model", () => {
     expect(await readFile(join(dir, "delegate", "core.mjs"), "utf8")).toBe("c")
     expect(await readFile(join(dir, "delegate", "mcp.mjs"), "utf8")).toBe("m")
   })
+
+  describe("manager rules", () => {
+    const delegate = { plugin: "p", core: "c", mcp: "m", manager: "rules" }
+    const file = () => join(dir, "delegate", "manager.md")
+
+    test("writes the rules file and adds it to the instructions of an existing config", async () => {
+      await writeFile(join(dir, "opencode.jsonc"), config.replace('"mcp"', '"instructions": ["docs/RULES.md"], "mcp"'))
+
+      await seedConfig(dir, data, wrapper, { delegate })
+
+      expect(await readFile(file(), "utf8")).toBe("rules")
+      expect(parse(await read()).instructions).toEqual(["docs/RULES.md", file()])
+    })
+
+    test("a fresh install gets the instructions entry from the template config", async () => {
+      await seedConfig(dir, data, wrapper, { config, delegate })
+
+      expect(parse(await read()).instructions).toEqual([file()])
+    })
+
+    test("refreshes a changed rules file and does not restore an entry the owner removed", async () => {
+      await writeFile(join(dir, "opencode.jsonc"), config)
+      await seedConfig(dir, data, wrapper, { delegate })
+      await writeFile(join(dir, "opencode.jsonc"), config)
+
+      await seedConfig(dir, data, wrapper, { delegate: { ...delegate, manager: "new rules" } })
+
+      expect(await readFile(file(), "utf8")).toBe("new rules")
+      expect(await read()).toBe(config)
+    })
+
+    test("leaves the config alone when no rules template is given", async () => {
+      await writeFile(join(dir, "opencode.jsonc"), config)
+
+      await seedConfig(dir, data, wrapper, { delegate: { plugin: "p", core: "c", mcp: "m" } })
+
+      expect(parse(await read()).instructions).toBeUndefined()
+    })
+  })
 })

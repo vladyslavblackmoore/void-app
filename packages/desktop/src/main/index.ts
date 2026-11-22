@@ -16,6 +16,7 @@ import memoryIndexTemplate from "../../resources/memory/MEMORY.md?raw"
 import memoryRulesTemplate from "../../resources/memory/RULES.md?raw"
 import memoryTasksTemplate from "../../resources/memory/tasks.md?raw"
 import delegateCore from "../../resources/delegate/core.mjs?raw"
+import delegateManager from "../../resources/delegate/manager.md?raw"
 import delegateMcp from "../../resources/delegate/mcp.mjs?raw"
 import delegatePlugin from "../../resources/plugin/delegate.js?raw"
 import subscriptionPlugin from "../../resources/plugin/subscription-auth.js?raw"
@@ -152,10 +153,7 @@ const main = Effect.gen(function* () {
   })()
   app.setName(app.isPackaged ? APP_NAMES[CHANNEL] : "VOID")
   app.setAppUserModelId(appId)
-  app.setPath(
-    "userData",
-    onboardingTestRoot ? join(onboardingTestRoot, "desktop") : voidUserData(app.isPackaged),
-  )
+  app.setPath("userData", onboardingTestRoot ? join(onboardingTestRoot, "desktop") : voidUserData(app.isPackaged))
   if (onboardingTestRoot) app.setPath("sessionData", join(onboardingTestRoot, "session"))
   initializeOldLayoutEligibility(app.getPath("userData"))
   if (!onboardingTestRoot) {
@@ -408,7 +406,7 @@ const main = Effect.gen(function* () {
         {
           plugin: subscriptionPlugin,
           config: configTemplate,
-          delegate: { plugin: delegatePlugin, core: delegateCore, mcp: delegateMcp },
+          delegate: { plugin: delegatePlugin, core: delegateCore, mcp: delegateMcp, manager: delegateManager },
         },
         memoryDir(VOID_HOME),
       ).catch((error) => logger.warn("failed to seed config", error)),

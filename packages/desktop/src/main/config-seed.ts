@@ -13,6 +13,7 @@ const defaults: Array<[string[], unknown]> = [
 const CONFIG_STAMP = "config-seeded-1"
 const MEMORY_STAMP = "config-seeded-2"
 const HAIKU_STAMP = "config-seeded-3"
+const MANAGER_STAMP = "config-seeded-4"
 const MEMORY_FILES = ["MEMORY.md", "tasks.md", "RULES.md"]
 
 const efforts = ["low", "medium", "high", "xhigh", "max"]
@@ -23,7 +24,7 @@ async function writeIfChanged(target: string, content: string) {
   await writeFile(target, content)
 }
 
-export type DelegateTemplates = { plugin: string; core: string; mcp: string }
+export type DelegateTemplates = { plugin: string; core: string; mcp: string; manager?: string }
 
 export type ConfigTemplates = { plugin?: string; config?: string; delegate?: DelegateTemplates }
 
@@ -85,6 +86,24 @@ export async function seedConfig(
   await seedMainConfig(configDir, userDataDir, wrapper, templates)
   await seedHaiku(configDir, userDataDir)
   if (memoryDir !== undefined) await seedMemoryKeys(configDir, userDataDir, memoryDir)
+  if (templates.delegate?.manager !== undefined) await seedManager(configDir, userDataDir)
+}
+
+function managerFile(configDir: string) {
+  return join(configDir, "delegate", "manager.md")
+}
+
+async function seedManager(configDir: string, userDataDir: string) {
+  if (existsSync(join(userDataDir, MANAGER_STAMP))) return
+  const file = join(configDir, "opencode.jsonc")
+  const text = await readFile(file, "utf8").catch(() => undefined)
+  if (text === undefined) return
+  const tree = parseTree(text)
+  if (!tree || !findNodeAtLocation(tree, ["provider", "subscription"])) return
+  const next = appendMissing(text, ["instructions"], [managerFile(configDir)])
+  if (next !== text) await writeFile(file, next)
+  await mkdir(userDataDir, { recursive: true })
+  await writeFile(join(userDataDir, MANAGER_STAMP), new Date().toISOString())
 }
 
 async function seedHaiku(configDir: string, userDataDir: string) {
@@ -117,6 +136,8 @@ async function seedMainConfig(configDir: string, userDataDir: string, wrapper: s
     await writeIfChanged(join(configDir, "plugins", "delegate.js"), templates.delegate.plugin)
     await writeIfChanged(join(configDir, "delegate", "core.mjs"), templates.delegate.core)
     await writeIfChanged(join(configDir, "delegate", "mcp.mjs"), templates.delegate.mcp)
+    if (templates.delegate.manager !== undefined)
+      await writeIfChanged(managerFile(configDir), templates.delegate.manager)
   }
   if (templates.config !== undefined && !existsSync(join(configDir, "opencode.jsonc"))) {
     await mkdir(configDir, { recursive: true })
