@@ -18,7 +18,7 @@ let exitHooked = false
 function cliSettings(options) {
   return {
     binary: options?.binary ?? join(homedir(), ".local", "bin", "claude"),
-    configDir: options?.configDir ?? join(homedir(), "void", "claude"),
+    configDir: options?.configDir ?? join(homedir(), "void", "spaces", "home", "cli"),
   }
 }
 
