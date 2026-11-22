@@ -1182,4 +1182,12 @@ export const dict = {
   "help.tabs.persistence": "Kun avaat sovelluksen uudelleen, välilehtesi ovat yhä avoinna.",
   "help.tabs.worktrees":
     "Uusi ulkoasu ei vielä tue Git-työpuita, mutta tuki on tulossa pian. Jos haluat jatkaa aiemman ulkoasun käyttöä, voit vaihtaa ulkoasua asetuksissa. Huomaa kuitenkin, että uudesta ulkoasusta tulee pysyvä muutaman viikon kuluttua.",
+  "session.tab.agents": "Agents",
+  "session.agents.empty": "No delegated agents yet.",
+  "session.agents.back": "Back to agents",
+  "session.agents.abort": "Abort agent",
+  "session.agents.status.running": "Running",
+  "session.agents.status.idle": "Done",
+  "session.agents.status.error": "Error",
+  "session.agents.noMessages": "No messages yet.",
 }

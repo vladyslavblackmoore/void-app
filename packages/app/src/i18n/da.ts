@@ -1263,4 +1263,12 @@ export const dict = {
   "help.tabs.persistence": "Dine faner er stadig åbne, når du åbner appen igen.",
   "help.tabs.worktrees":
     "Det nye design understøtter endnu ikke Git Worktrees, men understøttelsen kommer snart. Hvis du foretrækker at fortsætte med det tidligere layout, kan du skifte mellem layoutene under Indstillinger. Bemærk, at det nye layout bliver permanent om nogle få uger.",
+  "session.tab.agents": "Agents",
+  "session.agents.empty": "No delegated agents yet.",
+  "session.agents.back": "Back to agents",
+  "session.agents.abort": "Abort agent",
+  "session.agents.status.running": "Running",
+  "session.agents.status.idle": "Done",
+  "session.agents.status.error": "Error",
+  "session.agents.noMessages": "No messages yet.",
 }

@@ -1179,4 +1179,12 @@ export const dict = {
   "dialog.update.major.action.quit": "Թարմացնել դուրս գալիս",
   "dialog.update.major.action.restart": "Վերագործարկել՝ թարմացնելու համար",
   "dialog.update.major.action.restartNow": "Վերագործարկել հիմա",
+  "session.tab.agents": "Agents",
+  "session.agents.empty": "No delegated agents yet.",
+  "session.agents.back": "Back to agents",
+  "session.agents.abort": "Abort agent",
+  "session.agents.status.running": "Running",
+  "session.agents.status.idle": "Done",
+  "session.agents.status.error": "Error",
+  "session.agents.noMessages": "No messages yet.",
 }

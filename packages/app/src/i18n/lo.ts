@@ -1162,4 +1162,12 @@ export const dict = {
   "dialog.update.major.action.quit": "ອັບເດດເມື່ອອອກ",
   "dialog.update.major.action.restart": "ຣີສະຕາດເພື່ອອັບເດດ",
   "dialog.update.major.action.restartNow": "ຣີສະຕາດດຽວນີ້",
+  "session.tab.agents": "Agents",
+  "session.agents.empty": "No delegated agents yet.",
+  "session.agents.back": "Back to agents",
+  "session.agents.abort": "Abort agent",
+  "session.agents.status.running": "Running",
+  "session.agents.status.idle": "Done",
+  "session.agents.status.error": "Error",
+  "session.agents.noMessages": "No messages yet.",
 }

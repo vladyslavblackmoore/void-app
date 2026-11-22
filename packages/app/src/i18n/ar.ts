@@ -1186,4 +1186,12 @@ export const dict = {
   "error.childStore.persistedProjectIconCreateFailed": "فشل إنشاء أيقونة المشروع الدائمة",
   "error.childStore.storeCreateFailed": "فشل إنشاء المخزن",
   "terminal.connectionLost.abnormalClose": "تم إغلاق WebSocket بشكل غير طبيعي: {{code}}",
+  "session.tab.agents": "Agents",
+  "session.agents.empty": "No delegated agents yet.",
+  "session.agents.back": "Back to agents",
+  "session.agents.abort": "Abort agent",
+  "session.agents.status.running": "Running",
+  "session.agents.status.idle": "Done",
+  "session.agents.status.error": "Error",
+  "session.agents.noMessages": "No messages yet.",
 }

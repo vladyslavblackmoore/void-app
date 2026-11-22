@@ -1197,4 +1197,12 @@ export const dict: Record<string, string> = {
   "dialog.update.major.action.quit": "ཕྱིར་འཐོན་འབདཝ་ད་དུས་མཐུན་བཟོ",
   "dialog.update.major.action.restart": "དུས་མཐུན་བཟོ་ནིའི་དོན་ལུ་ལོག་འགོ་བཙུགས",
   "dialog.update.major.action.restartNow": "ད་ལྟོ་ལོག་འགོ་བཙུགས",
+  "session.tab.agents": "Agents",
+  "session.agents.empty": "No delegated agents yet.",
+  "session.agents.back": "Back to agents",
+  "session.agents.abort": "Abort agent",
+  "session.agents.status.running": "Running",
+  "session.agents.status.idle": "Done",
+  "session.agents.status.error": "Error",
+  "session.agents.noMessages": "No messages yet.",
 }

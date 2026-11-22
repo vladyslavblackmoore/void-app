@@ -1178,4 +1178,12 @@ export const dict = {
   "workspace.reset.archived.one": "1 سیشن آرکائیو کیا جائے گا۔",
   "workspace.reset.archived.many": "{{count}} سیشنز آرکائیو کیے جائیں گے۔",
   "workspace.reset.note": "یہ ڈیفالٹ برانچ سے ملنے کے لیے ورک اسپیس کو دوبارہ ترتیب دے گا۔",
+  "session.tab.agents": "Agents",
+  "session.agents.empty": "No delegated agents yet.",
+  "session.agents.back": "Back to agents",
+  "session.agents.abort": "Abort agent",
+  "session.agents.status.running": "Running",
+  "session.agents.status.idle": "Done",
+  "session.agents.status.error": "Error",
+  "session.agents.noMessages": "No messages yet.",
 }

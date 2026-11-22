@@ -1,6 +1,8 @@
-import { Show, createMemo } from "solid-js"
+import { Show, createMemo, createSignal } from "solid-js"
 import { createMediaQuery } from "@solid-primitives/media"
+import { Tabs } from "@opencode-ai/ui/tabs"
 import { SessionContextTab } from "@/components/session"
+import { SessionAgentsTab } from "@/components/session/session-agents-tab"
 import { useLanguage } from "@/context/language"
 import { useSettings } from "@/context/settings"
 import { type Sizing } from "@/pages/session/helpers"
@@ -12,6 +14,7 @@ export function SessionSidePanel(props: { reviewSnap: boolean; size: Sizing; sta
   const { view, params } = useSessionLayout()
 
   const isDesktop = createMediaQuery("(min-width: 768px)")
+  const [tab, setTab] = createSignal("context")
   const open = createMemo(() => isDesktop() && view().reviewPanel.opened())
 
   return (
@@ -50,11 +53,32 @@ export function SessionSidePanel(props: { reviewSnap: boolean; size: Sizing; sta
                 "bg-background-base": !settings.general.newLayoutDesigns(),
               }}
             >
-              <div data-component="session-context-view" class="flex flex-col h-full overflow-hidden contain-strict">
-                <div class="relative pt-2 flex-1 min-h-0 overflow-hidden">
-                  <SessionContextTab />
+              <Tabs value={tab()} onChange={setTab}>
+                <div class="sticky top-0 shrink-0 flex">
+                  <Tabs.List>
+                    <Tabs.Trigger value="context" data-tab="context">
+                      {language.t("session.tab.context")}
+                    </Tabs.Trigger>
+                    <Tabs.Trigger value="agents" data-tab="agents">
+                      {language.t("session.tab.agents")}
+                    </Tabs.Trigger>
+                  </Tabs.List>
                 </div>
-              </div>
+                <Show when={tab() === "context"}>
+                  <Tabs.Content value="context" class="flex flex-col h-full overflow-hidden contain-strict">
+                    <div class="relative pt-2 flex-1 min-h-0 overflow-hidden">
+                      <SessionContextTab />
+                    </div>
+                  </Tabs.Content>
+                </Show>
+                <Show when={tab() === "agents"}>
+                  <Tabs.Content value="agents" class="flex flex-col h-full overflow-hidden contain-strict">
+                    <div class="relative flex-1 min-h-0 overflow-hidden">
+                      <SessionAgentsTab />
+                    </div>
+                  </Tabs.Content>
+                </Show>
+              </Tabs>
             </div>
           </div>
         </Show>

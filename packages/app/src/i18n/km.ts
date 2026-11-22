@@ -1165,4 +1165,12 @@ export const dict = {
   "dialog.update.major.action.quit": "ដំឡើងកំណែពេលចេញ",
   "dialog.update.major.action.restart": "ចាប់ផ្តើមឡើងវិញដើម្បីដំឡើងកំណែ",
   "dialog.update.major.action.restartNow": "ចាប់ផ្តើមឡើងវិញឥឡូវនេះ",
+  "session.tab.agents": "Agents",
+  "session.agents.empty": "No delegated agents yet.",
+  "session.agents.back": "Back to agents",
+  "session.agents.abort": "Abort agent",
+  "session.agents.status.running": "Running",
+  "session.agents.status.idle": "Done",
+  "session.agents.status.error": "Error",
+  "session.agents.noMessages": "No messages yet.",
 }

@@ -1192,4 +1192,12 @@ export const dict = {
   "dialog.update.major.action.quit": "ބަންދުކުރާއިރު އަޕްގްރޭޑް ކުރުން",
   "dialog.update.major.action.restart": "އަޕްގްރޭޑް ކުރުމަށް ރީސްޓާޓް ކުރުން",
   "dialog.update.major.action.restartNow": "މިހާރު ރީސްޓާޓް ކުރުން",
+  "session.tab.agents": "Agents",
+  "session.agents.empty": "No delegated agents yet.",
+  "session.agents.back": "Back to agents",
+  "session.agents.abort": "Abort agent",
+  "session.agents.status.running": "Running",
+  "session.agents.status.idle": "Done",
+  "session.agents.status.error": "Error",
+  "session.agents.noMessages": "No messages yet.",
 }

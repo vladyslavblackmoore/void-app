@@ -1171,4 +1171,12 @@ export const dict = {
   "dialog.update.major.action.quit": "Uppfæra þegar hætt er",
   "dialog.update.major.action.restart": "Endurræsa til að uppfæra",
   "dialog.update.major.action.restartNow": "Endurræsa núna",
+  "session.tab.agents": "Agents",
+  "session.agents.empty": "No delegated agents yet.",
+  "session.agents.back": "Back to agents",
+  "session.agents.abort": "Abort agent",
+  "session.agents.status.running": "Running",
+  "session.agents.status.idle": "Done",
+  "session.agents.status.error": "Error",
+  "session.agents.noMessages": "No messages yet.",
 }

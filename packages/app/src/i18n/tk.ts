@@ -1173,4 +1173,12 @@ export const dict = {
   "dialog.update.major.action.quit": "Çykanda täzeläň",
   "dialog.update.major.action.restart": "Täzelemek üçin täzeden açyň",
   "dialog.update.major.action.restartNow": "Häzir täzeden açyň",
+  "session.tab.agents": "Agents",
+  "session.agents.empty": "No delegated agents yet.",
+  "session.agents.back": "Back to agents",
+  "session.agents.abort": "Abort agent",
+  "session.agents.status.running": "Running",
+  "session.agents.status.idle": "Done",
+  "session.agents.status.error": "Error",
+  "session.agents.noMessages": "No messages yet.",
 }

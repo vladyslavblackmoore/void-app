@@ -1171,4 +1171,12 @@ export const dict: Record<string, string> = {
   "dialog.update.major.action.quit": "बाहिर निस्कँदा अपग्रेड गर्नुहोस्",
   "dialog.update.major.action.restart": "अपग्रेड गर्न पुन: सुरु गर्नुहोस्",
   "dialog.update.major.action.restartNow": "अहिले पुन: सुरु गर्नुहोस्",
+  "session.tab.agents": "Agents",
+  "session.agents.empty": "No delegated agents yet.",
+  "session.agents.back": "Back to agents",
+  "session.agents.abort": "Abort agent",
+  "session.agents.status.running": "Running",
+  "session.agents.status.idle": "Done",
+  "session.agents.status.error": "Error",
+  "session.agents.noMessages": "No messages yet.",
 }

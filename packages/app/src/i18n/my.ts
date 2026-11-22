@@ -1191,4 +1191,12 @@ export const dict = {
   "dialog.update.major.action.quit": "ထွက်သည့်အခါ အဆင့်မြှင့်ပါ",
   "dialog.update.major.action.restart": "အဆင့်မြှင့်ရန် ပြန်လည်စတင်ပါ",
   "dialog.update.major.action.restartNow": "ယခု ပြန်လည်စတင်ပါ",
+  "session.tab.agents": "Agents",
+  "session.agents.empty": "No delegated agents yet.",
+  "session.agents.back": "Back to agents",
+  "session.agents.abort": "Abort agent",
+  "session.agents.status.running": "Running",
+  "session.agents.status.idle": "Done",
+  "session.agents.status.error": "Error",
+  "session.agents.noMessages": "No messages yet.",
 }

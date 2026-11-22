@@ -1178,4 +1178,12 @@ export const dict = {
   "dialog.update.major.action.quit": "Nadgradite ob izhodu",
   "dialog.update.major.action.restart": "Znova zaženite za nadgradnjo",
   "dialog.update.major.action.restartNow": "Znova zaženite zdaj",
+  "session.tab.agents": "Agents",
+  "session.agents.empty": "No delegated agents yet.",
+  "session.agents.back": "Back to agents",
+  "session.agents.abort": "Abort agent",
+  "session.agents.status.running": "Running",
+  "session.agents.status.idle": "Done",
+  "session.agents.status.error": "Error",
+  "session.agents.noMessages": "No messages yet.",
 }

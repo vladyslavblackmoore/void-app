@@ -1176,4 +1176,12 @@ export const dict = {
   "dialog.update.major.action.quit": "Надогради при изласку",
   "dialog.update.major.action.restart": "Поново покрени и надогради",
   "dialog.update.major.action.restartNow": "Поново покрени сада",
+  "session.tab.agents": "Agents",
+  "session.agents.empty": "No delegated agents yet.",
+  "session.agents.back": "Back to agents",
+  "session.agents.abort": "Abort agent",
+  "session.agents.status.running": "Running",
+  "session.agents.status.idle": "Done",
+  "session.agents.status.error": "Error",
+  "session.agents.noMessages": "No messages yet.",
 }

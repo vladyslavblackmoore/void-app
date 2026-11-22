@@ -1180,4 +1180,12 @@ export const dict = {
   "dialog.update.major.action.quit": "Надгради при излез",
   "dialog.update.major.action.restart": "Рестартирај и надгради",
   "dialog.update.major.action.restartNow": "Рестартирај сега",
+  "session.tab.agents": "Agents",
+  "session.agents.empty": "No delegated agents yet.",
+  "session.agents.back": "Back to agents",
+  "session.agents.abort": "Abort agent",
+  "session.agents.status.running": "Running",
+  "session.agents.status.idle": "Done",
+  "session.agents.status.error": "Error",
+  "session.agents.noMessages": "No messages yet.",
 }

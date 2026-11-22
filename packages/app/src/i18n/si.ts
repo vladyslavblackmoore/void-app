@@ -1167,4 +1167,12 @@ export const dict: Record<string, string> = {
   "dialog.update.major.action.quit": "ඉවත් වන විට උත්ශ්‍රේණි කරන්න",
   "dialog.update.major.action.restart": "උත්ශ්‍රේණි කිරීමට යළි අරඹන්න",
   "dialog.update.major.action.restartNow": "දැන් යළි අරඹන්න",
+  "session.tab.agents": "Agents",
+  "session.agents.empty": "No delegated agents yet.",
+  "session.agents.back": "Back to agents",
+  "session.agents.abort": "Abort agent",
+  "session.agents.status.running": "Running",
+  "session.agents.status.idle": "Done",
+  "session.agents.status.error": "Error",
+  "session.agents.noMessages": "No messages yet.",
 }
