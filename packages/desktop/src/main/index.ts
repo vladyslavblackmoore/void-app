@@ -55,7 +55,8 @@ import { registerWslIpcHandlers } from "./wsl/ipc"
 import { spawnWslSidecar } from "./wsl/sidecar"
 import { cleanupStoreFiles } from "./store-cleanup"
 import { startBackgroundCli } from "./background-cli"
-import { VOID_HOME, voidAppEnv, voidUserData } from "./void-home"
+import { VOID_HOME, voidAppEnv, voidHomeDir, voidUserData } from "./void-home"
+import { ensureHomeDir, legacyHomeDirs, migrateHomeProjectState, migrateHomeSessions } from "./home-dir"
 import { setNativeTranslations } from "./native-translations"
 
 const APP_NAMES: Record<string, string> = {
@@ -154,6 +155,15 @@ const main = Effect.gen(function* () {
   )
   if (onboardingTestRoot) app.setPath("sessionData", join(onboardingTestRoot, "session"))
   initializeOldLayoutEligibility(app.getPath("userData"))
+  if (!onboardingTestRoot) {
+    try {
+      migrateHomeProjectState(
+        join(app.getPath("userData"), "opencode.global.dat"),
+        voidHomeDir(VOID_HOME),
+        legacyHomeDirs(homedir(), app.getPath("documents")),
+      )
+    } catch {}
+  }
   logger = initLogging()
   initCrashReporter()
 
@@ -360,6 +370,24 @@ const main = Effect.gen(function* () {
 
   const loadingTask = yield* Effect.gen(function* () {
     logger.log("sidecar connection started", { version: SIDECAR_VERSION })
+
+    const homeDir = voidHomeDir(onboardingTestRoot ?? VOID_HOME)
+    yield* Effect.promise(async () => {
+      try {
+        await ensureHomeDir(homeDir)
+        process.chdir(homeDir)
+        if (onboardingTestRoot) return
+        const dataHome = process.env.XDG_DATA_HOME ?? voidAppEnv(VOID_HOME, {}).XDG_DATA_HOME
+        const result = migrateHomeSessions({
+          dbDir: join(dataHome, "opencode"),
+          target: homeDir,
+          legacy: legacyHomeDirs(homedir(), app.getPath("documents")),
+        })
+        if (result.moved > 0) logger.log("moved sessions to the home dir", { ...result, homeDir })
+      } catch (error) {
+        logger.warn("failed to prepare the home dir", error)
+      }
+    })
 
     const configDir = join(process.env.XDG_CONFIG_HOME ?? voidAppEnv(VOID_HOME, {}).XDG_CONFIG_HOME, "opencode")
     yield* Effect.promise(() =>

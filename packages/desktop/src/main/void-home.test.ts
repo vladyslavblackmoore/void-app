@@ -18,6 +18,10 @@ describe("void home", () => {
     expect(env.XDG_STATE_HOME).toBe(join(root, "spaces", "home", "state"))
   })
 
+  test("keeps the user's other tool instruction files out of every agent", () => {
+    expect(voidAppEnv(VOID_HOME, {}).OPENCODE_DISABLE_CLAUDE_CODE_PROMPT).toBe("true")
+  })
+
   test("ignores the user's own xdg dirs for void but records them for agent shells", () => {
     const env = voidAppEnv(VOID_HOME, {
       XDG_DATA_HOME: "/u/data",

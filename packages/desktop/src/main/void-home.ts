@@ -47,10 +47,15 @@ export function voidAppEnv(root: string, user: UserXdg) {
     XDG_CACHE_HOME: join(root, "cache"),
     XDG_STATE_HOME: join(profile, "state"),
     VOID_CLI_DIR: voidCliDir(root),
+    OPENCODE_DISABLE_CLAUDE_CODE_PROMPT: "true",
     VOID_USER_ENV: JSON.stringify(Object.fromEntries(USER_XDG.map((key) => [key, user[key] || null]))),
   }
 }
 
 export function voidUserData(packaged: boolean, root = VOID_HOME) {
   return join(root, packaged ? "app" : "app-dev")
+}
+
+export function voidHomeDir(root = VOID_HOME) {
+  return join(root, "home")
 }
