@@ -856,6 +856,8 @@ export const dict = {
   "terminal.connectTicket.csrfError": "PTY 連線票證因來源或 CSRF 檢查而遭拒。請檢查伺服器 CORS 設定。",
   "terminal.connectTicket.statusError": "PTY 連線票證失敗，狀態為 {{status}}",
 
+  "titlebar.tab.main": "Main",
+
   "titlebar.update": "更新",
   "titlebar.updateVersion": "更新 {{version}}",
   "common.closeTab": "關閉分頁",

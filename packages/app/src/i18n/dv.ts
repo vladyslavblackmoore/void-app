@@ -840,6 +840,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "PTY ކަނެކްޓް ޓިކެޓް ރިޖެކްޓް ކޮށްފައިވަނީ އޮރިޖިން ނުވަތަ CSRF ޗެކްތަކުންނެވެ. ސަރވަރ CORS ކޮންފިގް ޗެކްކުރުން.",
   "terminal.connectTicket.statusError": "PTY ކަނެކްޓް ޓިކެޓް {{status}} އާއެކު ފެއިލްވެއްޖެއެވެ",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "އަޕްޑޭޓް",
   "titlebar.updateVersion": "{{version}} އަޕްޑޭޓް ކުރާށެވެ",
   "common.closeTab": "ޓެބް ބަންދުކުރުން",

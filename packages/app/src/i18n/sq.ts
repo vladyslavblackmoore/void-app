@@ -830,6 +830,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "Bileta lidhëse PTY e refuzuar nga origjina ose çeqet CSRF. Kontrolloni konfigurimin e serverit CORS.",
   "terminal.connectTicket.statusError": "Bileta e lidhjes PTY dështoi me {{status}}",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "Përditëso",
   "titlebar.updateVersion": "Përditëso {{version}}",
   "common.closeTab": "Mbyll skedën",

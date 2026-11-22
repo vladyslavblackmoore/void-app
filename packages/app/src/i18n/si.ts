@@ -824,6 +824,7 @@ export const dict: Record<string, string> = {
   "terminal.connectTicket.csrfError":
     "PTY සම්බන්ධක ටිකට් පත සම්භවය හෝ CSRF චෙක්පත් මගින් ප්‍රතික්ෂේප විය. සේවාදායකය CORS වින්‍යාසය පරීක්ෂා කරන්න.",
   "terminal.connectTicket.statusError": "{{status}} සමඟ PTY සම්බන්ධක ප්‍රවේශපත්‍රය අසාර්ථක විය",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "යාවත්කාලීන කරන්න",
   "titlebar.updateVersion": "{{version}} යාවත්කාලීන කරන්න",
   "common.closeTab": "ටැබ් එක වසන්න",

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { adjacentTabKey, mergeVisibleTabOrder } from "./titlebar-tab-order"
+import { adjacentTabKey, mainTabKey, mergeVisibleTabOrder } from "./titlebar-tab-order"
 
 describe("adjacentTabKey", () => {
   test("follows the visible left-to-right order", () => {
@@ -20,4 +20,19 @@ test("merges reordered visible tabs around hidden tabs", () => {
     "a",
     "b",
   ])
+})
+
+describe("mainTabKey", () => {
+  test("prefers the current tab", () => {
+    expect(mainTabKey(["a", "b", "c"], "b")).toBe("b")
+  })
+
+  test("falls back to the first tab", () => {
+    expect(mainTabKey(["a", "b"], "x")).toBe("a")
+    expect(mainTabKey(["a", "b"], undefined)).toBe("a")
+  })
+
+  test("returns nothing without tabs", () => {
+    expect(mainTabKey([], "a")).toBeUndefined()
+  })
 })

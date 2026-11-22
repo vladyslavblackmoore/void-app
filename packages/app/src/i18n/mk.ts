@@ -831,6 +831,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "PTY билет за поврзување одбиен по потекло или CSRF проверки. Проверете ја конфигурацијата на серверот CORS.",
   "terminal.connectTicket.statusError": "PTY билетот за поврзување не успеа со {{status}}",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "Ажурирање",
   "titlebar.updateVersion": "Ажурирај {{version}}",
   "common.closeTab": "Затвори ја картичката",

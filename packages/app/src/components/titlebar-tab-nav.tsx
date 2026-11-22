@@ -25,6 +25,7 @@ export function TabNavItem(props: {
   server: ServerConnection.Key
   session: () => Session | undefined
   fallbackTitle?: string
+  label?: string
   onRename: (title: string) => Promise<void>
   onClose: () => void
   onNavigate: () => void
@@ -47,6 +48,7 @@ export function TabNavItem(props: {
   const closeTab = (event: MouseEvent) => {
     event.preventDefault()
     event.stopPropagation()
+    if (props.label) return
     props.onClose()
   }
   const global = useGlobal()
@@ -59,7 +61,7 @@ export function TabNavItem(props: {
     if (!session) return
     return projectForSession(session, serverCtx()?.projects.list() ?? [])
   })
-  const title = createMemo(() => props.session()?.title ?? props.fallbackTitle)
+  const title = createMemo(() => props.label ?? props.session()?.title ?? props.fallbackTitle)
 
   const projectName = createMemo(() => {
     const session = props.session()
@@ -145,6 +147,7 @@ export function TabNavItem(props: {
   const openRename = (event?: MouseEvent) => {
     event?.preventDefault()
     event?.stopPropagation()
+    if (props.label) return
     if (!canOpenTabRename(props.dragging, editing(), rename.isPending)) return
     const session = props.session()
     if (!session) return
@@ -286,20 +289,22 @@ export function TabNavItem(props: {
         />
       </MenuV2.Context.Trigger>
 
-      <div data-slot="tab-close">
-        <IconButtonV2
-          size="small"
-          variant="ghost-muted"
-          class="hover-reveal relative z-10 group-hover:opacity-100 group-data-[active=true]:opacity-100 group-data-[editing=true]:opacity-100"
-          onPointerDown={(event) => {
-            event.preventDefault()
-            event.stopPropagation()
-          }}
-          onClick={closeTab}
-          icon={<IconV2 name="xmark-small" />}
-          aria-label={language.t("common.closeTab")}
-        />
-      </div>
+<Show when={!props.label}>
+        <div data-slot="tab-close">
+          <IconButtonV2
+            size="small"
+            variant="ghost-muted"
+            class="hover-reveal relative z-10 group-hover:opacity-100 group-data-[active=true]:opacity-100 group-data-[editing=true]:opacity-100"
+            onPointerDown={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+            }}
+            onClick={closeTab}
+            icon={<IconV2 name="xmark-small" />}
+            aria-label={language.t("common.closeTab")}
+          />
+        </div>
+      </Show>
     </div>
   )
 
@@ -333,10 +338,15 @@ export function TabNavItem(props: {
             openRename()
           }}
         >
-          <MenuV2.Item disabled={!props.session() || rename.isPending} onSelect={() => setMenu("rename", true)}>
+          <MenuV2.Item
+            disabled={!!props.label || !props.session() || rename.isPending}
+            onSelect={() => setMenu("rename", true)}
+          >
             {language.t("common.rename")}
           </MenuV2.Item>
-          <MenuV2.Item onSelect={props.onClose}>{language.t("common.closeTab")}</MenuV2.Item>
+          <Show when={!props.label}>
+            <MenuV2.Item onSelect={props.onClose}>{language.t("common.closeTab")}</MenuV2.Item>
+          </Show>
         </MenuV2.Context.Content>
       </MenuV2.Context.Portal>
     </MenuV2.Context>

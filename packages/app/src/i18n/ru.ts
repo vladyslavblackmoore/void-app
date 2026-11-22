@@ -878,6 +878,8 @@ export const dict = {
     "Билет подключения PTY отклонён при проверке источника или CSRF. Проверьте конфигурацию CORS сервера.",
   "terminal.connectTicket.statusError": "Не удалось получить билет подключения PTY, статус: {{status}}",
 
+  "titlebar.tab.main": "Main",
+
   "titlebar.update": "Обновить",
   "titlebar.updateVersion": "Обновить {{version}}",
 

@@ -36,9 +36,7 @@ import { readSessionTabsRemovedDetail, SESSION_TABS_REMOVED_EVENT } from "@/comp
 import { useGlobal } from "@/context/global"
 import { ServerConnection, useServer } from "@/context/server"
 import { tabKey, useTabs } from "@/context/tabs"
-import type { PromptSession } from "@/context/prompt"
 import "./titlebar.css"
-import { newTabTooltipKeybind } from "./command-tooltip-keybind"
 import { normalizeSessionInfo } from "@/utils/session"
 
 const legacyTitlebarHeight = 40
@@ -272,56 +270,6 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
               tabsStoreActions.removeSessions(detail)
             })
 
-            const openNewTab = () => {
-              const route = layout.route()
-              const activeSession = session()
-              if (route.type === "session" && activeSession) {
-                const sessionTab = {
-                  type: "session" as const,
-                  server: route.server ?? server.key,
-                  sessionId: activeSession.id,
-                }
-                const model = tabs.stateValue<PromptSession>(sessionTab, "prompt")?.model.current()
-                tabs.newDraft({ server: sessionTab.server, directory: activeSession.directory }, "", model)
-                return
-              }
-
-              const activeTab = currentTab()
-              if (activeTab?.type === "draft") {
-                const model = tabs.stateValue<PromptSession>(activeTab, "prompt")?.model.current()
-                tabs.newDraft({ server: activeTab.server, directory: activeTab.directory }, "", model)
-                return
-              }
-
-              if (route.type === "home") {
-                const selection = layout.home.selection()
-                const conn = global.servers.list().find((item) => ServerConnection.key(item) === selection.server)
-                const project = conn
-                  ? global
-                      .ensureServerCtx(conn)
-                      .projects.list()
-                      .find((item) => item.worktree === selection.directory)
-                  : undefined
-                if (conn && project) {
-                  tabs.newDraft({ server: ServerConnection.key(conn), directory: project.worktree }, "")
-                  return
-                }
-              }
-
-              const current = layout.projects.list()[0]
-              if (current) {
-                tabs.newDraft({ server: server.key, directory: current.worktree }, "")
-                return
-              }
-
-              const fallback = global.servers.list().flatMap((conn) => {
-                const project = global.ensureServerCtx(conn).projects.list()[0]
-                return project ? [{ server: ServerConnection.key(conn), project }] : []
-              })[0]
-              if (!fallback) return
-
-              tabs.newDraft({ server: fallback.server, directory: fallback.project.worktree }, "")
-            }
             const toggleHome = () => tabs.toggleHome({ home: layout.route().type === "home", current: currentTab() })
 
             command.register("titlebar-home", () => [
@@ -336,27 +284,7 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
             ])
 
             command.register("tabs", () => {
-              const current = currentTab()
-
               return [
-                {
-                  id: "tab.new",
-                  category: "tab",
-                  title: language.t("command.session.new"),
-                  keybind: "mod+t,mod+n",
-                  hidden: true,
-                  onSelect: openNewTab,
-                },
-                current && {
-                  id: "tab.close",
-                  category: "tab",
-                  title: language.t("command.tab.close"),
-                  keybind: "mod+w",
-                  hidden: true,
-                  onSelect: () => {
-                    tabsStoreActions.closeTab(tabsStore.findIndex((tab) => current === tab))
-                  },
-                },
                 {
                   id: "tab.reopenClosed",
                   category: language.t("command.category.file"),
@@ -421,25 +349,6 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
                   }}
                   onReorder={(keys) => tabsStoreActions.reorder(keys)}
                 />
-                <TooltipV2
-                  placement="bottom"
-                  value={
-                    <>
-                      {language.t("command.session.new")}
-                      <KeybindV2 keys={newTabTooltipKeybind(command)} variant="neutral" />
-                    </>
-                  }
-                >
-                  <IconButtonV2
-                    type="button"
-                    variant="ghost-muted"
-                    size="large"
-                    class="shrink-0"
-                    icon={<IconV2 name="plus" />}
-                    onClick={openNewTab}
-                    aria-label={language.t("command.session.new")}
-                  />
-                </TooltipV2>
                 <div class="flex-1" />
                 <TitlebarV2Right state={v2RightState()} />
               </div>

@@ -741,6 +741,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "PTY-yhteyslippu hylättiin alkuperä- tai CSRF-tarkistuksessa. Tarkista palvelimen CORS-määritys.",
   "terminal.connectTicket.statusError": "PTY-yhteyslippu epäonnistui tilakoodilla {{status}}",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "Päivitä",
   "titlebar.updateVersion": "Päivitä {{version}}",
   "common.closeTab": "Sulje välilehti",

@@ -811,6 +811,7 @@ export const dict = {
   "terminal.connectionLost.description": "የተርሚናል ግንኙነቱ ተቋርጧል። ይህ አገልጋዩ እንደገና ሲጀምር ሊከሰት ይችላል።",
   "terminal.connectTicket.csrfError": "PTY ትኬት ማገናኘት በመነሻ ወይም በCSRF ቼኮች ውድቅ ተደርጓል። አገልጋዩን ይመልከቱ CORS ውቅር",
   "terminal.connectTicket.statusError": "PTY የግንኙነት ቲኬት ከ{{status}}] ጋር አልተሳካም",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "አዘምን",
   "titlebar.updateVersion": "አዘምን {{version}}",
   "common.closeTab": "ትርፉን ዝጋ",

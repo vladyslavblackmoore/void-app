@@ -828,6 +828,7 @@ export const dict: Record<string, string> = {
   "terminal.connectTicket.csrfError":
     "PTY जडान टिकट उत्पत्ति वा CSRF चेक द्वारा अस्वीकार गरियो। सर्भर CORS कन्फिगरेसन जाँच गर्नुहोस्।",
   "terminal.connectTicket.statusError": "PTY जडान टिकट {{status}} सँग असफल भयो",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "अपडेट गर्नुहोस्",
   "titlebar.updateVersion": "अपडेट गर्नुहोस् {{version}}",
   "common.closeTab": "ट्याब बन्द गर्नुहोस्",

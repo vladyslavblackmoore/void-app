@@ -862,6 +862,8 @@ export const dict = {
     "ตั๋วเชื่อมต่อ PTY ถูกปฏิเสธโดยการตรวจสอบต้นทางหรือ CSRF โปรดตรวจสอบการกำหนดค่า CORS ของเซิร์ฟเวอร์",
   "terminal.connectTicket.statusError": "ตั๋วเชื่อมต่อ PTY ล้มเหลวโดยมีสถานะ {{status}}",
 
+  "titlebar.tab.main": "Main",
+
   "titlebar.update": "อัปเดต",
   "titlebar.updateVersion": "อัปเดต {{version}}",
 

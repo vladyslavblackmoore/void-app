@@ -752,6 +752,8 @@ export const dict = {
     "PTY-forbindelsesticket blev afvist ved kontrollen af oprindelse eller CSRF. Kontrollér serverens CORS-konfiguration.",
   "terminal.connectTicket.statusError": "PTY-forbindelsesticket mislykkedes med {{status}}",
 
+  "titlebar.tab.main": "Main",
+
   "titlebar.update": "Opdater",
   "titlebar.updateVersion": "Opdater {{version}}",
 

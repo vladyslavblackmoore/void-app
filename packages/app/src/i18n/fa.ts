@@ -826,6 +826,7 @@ export const dict = {
     "اتصال ترمینال قطع شد. این ممکن است زمانی اتفاق بیفتد که سرور راه اندازی مجدد شود.",
   "terminal.connectTicket.csrfError": "بلیط اتصال PTY رد شده توسط مبدا یا چک CSRF. پیکربندی سرور CORS را بررسی کنید.",
   "terminal.connectTicket.statusError": "بلیت اتصال PTY با {{status}} ناموفق بود",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "به روز رسانی",
   "titlebar.updateVersion": "{{version}} را به روز کنید",
   "common.closeTab": "بستن برگه",

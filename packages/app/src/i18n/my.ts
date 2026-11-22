@@ -836,6 +836,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "PTY ချိတ်ဆက်မှုလက်မှတ်ကို မူရင်း သို့မဟုတ် CSRF စစ်ဆေးမှုများဖြင့် ပယ်ချထားသည်။ ဆာဗာ CORS config ကိုစစ်ဆေးပါ။",
   "terminal.connectTicket.statusError": "PTY ချိတ်ဆက်မှုလက်မှတ် {{status}} ဖြင့် မအောင်မြင်ပါ။",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "အပ်ဒိတ်",
   "titlebar.updateVersion": "{{version}} ကို အပ်ဒိတ်လုပ်ပါ။",
   "common.closeTab": "တဘ်ကို ပိတ်ပါ။",

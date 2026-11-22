@@ -858,6 +858,8 @@ export const dict = {
   "terminal.connectTicket.csrfError": "PTY 连接票证因来源或 CSRF 检查被拒绝。请检查服务器 CORS 配置。",
   "terminal.connectTicket.statusError": "PTY 连接票证失败，状态为 {{status}}",
 
+  "titlebar.tab.main": "Main",
+
   "titlebar.update": "更新",
   "titlebar.updateVersion": "更新 {{version}}",
 

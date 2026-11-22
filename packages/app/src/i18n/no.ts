@@ -740,6 +740,8 @@ export const dict = {
     "Tilkoblingsbilletten for PTY ble avvist av opprinnelses- eller CSRF-kontroller. Kontroller serverens CORS-konfigurasjon.",
   "terminal.connectTicket.statusError": "Tilkoblingsbilletten for PTY mislyktes med {{status}}",
 
+  "titlebar.tab.main": "Main",
+
   "titlebar.update": "Oppdater",
   "titlebar.updateVersion": "Oppdater {{version}}",
 

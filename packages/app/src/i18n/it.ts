@@ -763,6 +763,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "Il ticket di connessione PTY è stato rifiutato dai controlli sull'origine o CSRF. Verifica la configurazione CORS del server.",
   "terminal.connectTicket.statusError": "Il ticket di connessione PTY non è riuscito con lo stato {{status}}",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "Aggiorna",
   "titlebar.updateVersion": "Aggiorna {{version}}",
   "common.closeTab": "Chiudi scheda",

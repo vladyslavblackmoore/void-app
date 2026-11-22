@@ -1211,6 +1211,8 @@ export const dict = {
     "Le ticket de connexion PTY a été rejeté par les contrôles d'origine ou CSRF. Vérifiez la configuration CORS du serveur.",
   "terminal.connectTicket.statusError": "Le ticket de connexion PTY a échoué avec le statut {{status}}",
 
+  "titlebar.tab.main": "Main",
+
   "titlebar.update": "Mettre à jour",
   "titlebar.updateVersion": "Mettre à jour {{version}}",
 }

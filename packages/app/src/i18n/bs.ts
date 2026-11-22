@@ -875,6 +875,8 @@ export const dict = {
     "PTY tiket za povezivanje odbijen je zbog provjera porijekla ili CSRF-a. Provjeri CORS konfiguraciju servera.",
   "terminal.connectTicket.statusError": "PTY tiket za povezivanje nije uspio sa statusom {{status}}",
 
+  "titlebar.tab.main": "Main",
+
   "titlebar.update": "Ažuriraj",
   "titlebar.updateVersion": "Ažuriraj {{version}}",
 

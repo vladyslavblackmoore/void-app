@@ -824,6 +824,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "សំបុត្រភ្ជាប់ PTY ត្រូវបានបដិសេធដោយប្រភពដើម ឬការត្រួតពិនិត្យ CSRF ។ ពិនិត្យការកំណត់រចនាសម្ព័ន្ធ CORS ម៉ាស៊ីនមេ។",
   "terminal.connectTicket.statusError": "សំបុត្រភ្ជាប់ PTY បានបរាជ័យជាមួយ {{status}}",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "អាប់ដេត",
   "titlebar.updateVersion": "ធ្វើបច្ចុប្បន្នភាព {{version}}",
   "common.closeTab": "បិទផ្ទាំង",

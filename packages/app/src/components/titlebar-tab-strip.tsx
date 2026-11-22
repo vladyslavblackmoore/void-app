@@ -9,7 +9,7 @@ import { RestrictToElement } from "@dnd-kit/dom/modifiers"
 import { arrayMove } from "@dnd-kit/helpers"
 import { tabHref, tabKey, type SessionTab, type Tab } from "@/context/tabs"
 import { ServerConnection } from "@/context/server"
-import { DraftTabItem, TabNavItem } from "@/components/titlebar-tab-nav"
+import { TabNavItem } from "@/components/titlebar-tab-nav"
 import { useGlobal, type ServerCtx } from "@/context/global"
 import { useLanguage } from "@/context/language"
 import { useCommand } from "@/context/command"
@@ -18,7 +18,7 @@ import { createTabPromptState } from "@/context/prompt"
 import { base64Encode } from "@opencode-ai/core/util/encode"
 import { showToast } from "@/utils/toast"
 import { canStartTabDrag, isTabCloseTarget } from "./titlebar-tab-gesture"
-import { adjacentTabKey, mergeVisibleTabOrder } from "./titlebar-tab-order"
+import { adjacentTabKey, mainTabKey, mergeVisibleTabOrder } from "./titlebar-tab-order"
 import type { Session } from "@opencode-ai/sdk/v2"
 
 function SessionTabSlot(props: {
@@ -29,6 +29,7 @@ function SessionTabSlot(props: {
   forceTruncate: boolean
   session: () => Session | undefined
   fallbackTitle?: string
+  label?: string
   onRename: (title: string) => Promise<void>
   onNavigate: (element: HTMLDivElement) => void
   onClose: () => void
@@ -59,6 +60,7 @@ function SessionTabSlot(props: {
         server={props.tab.server}
         session={props.session}
         fallbackTitle={props.fallbackTitle}
+        label={props.label}
         onRename={props.onRename}
         onNavigate={() => props.onNavigate(ref)}
         onClose={props.onClose}
@@ -159,53 +161,12 @@ function SessionTabEntry(props: {
         forceTruncate={props.forceTruncate}
         session={session}
         fallbackTitle={persisted()?.title ?? (missingSession() ? language.t("session.tab.unknown") : undefined)}
+        label={language.t("titlebar.tab.main")}
         onRename={rename}
         onNavigate={props.onNavigate}
         onClose={props.onClose}
       />
     </Show>
-  )
-}
-
-function DraftTabSlot(props: {
-  tab: Extract<Tab, { type: "draft" }>
-  id: string
-  index: () => number
-  active: () => boolean
-  title: string
-  onNavigate: (element: HTMLDivElement) => void
-  onClose: () => void
-}) {
-  const sortable = useSortable({
-    get id() {
-      return props.id
-    },
-    get index() {
-      return props.index()
-    },
-  })
-  let ref!: HTMLDivElement
-
-  return (
-    <div
-      ref={sortable.ref}
-      data-titlebar-tab-slot
-      data-tab-key={props.id}
-      data-active={props.active()}
-      class="relative flex w-56 min-w-7 max-w-56 flex-shrink"
-    >
-      <DraftTabItem
-        ref={(el) => {
-          ref = el
-        }}
-        href={tabHref(props.tab)}
-        title={props.title}
-        onNavigate={() => props.onNavigate(ref)}
-        onClose={props.onClose}
-        active={props.active()}
-        dragging={sortable.isDragSource()}
-      />
-    </div>
   )
 }
 
@@ -219,13 +180,20 @@ export function TitlebarTabStrip(props: {
   onOverflowChange: (overflowing: boolean) => void
 }) {
   const global = useGlobal()
-  const language = useLanguage()
   const command = useCommand()
   let scrollRef!: HTMLDivElement
   let listRef!: HTMLDivElement
   let resizeFrame: number | undefined
   const [visibility, setVisibility] = createStore<Record<string, boolean>>({})
-  const visibleTabs = createMemo(() => props.tabs.filter((tab) => tab.type === "draft" || visibility[tabKey(tab)]))
+  const shownTabs = createMemo(() => {
+    const current = props.currentTab()
+    const key = mainTabKey(
+      props.tabs.filter((tab) => tab.type === "session").map(tabKey),
+      current ? tabKey(current) : undefined,
+    )
+    return props.tabs.filter((tab) => tabKey(tab) === key)
+  })
+  const visibleTabs = createMemo(() => shownTabs().filter((tab) => visibility[tabKey(tab)]))
   const visibleTabIds = () => visibleTabs().map(tabKey)
 
   command.register("titlebar-tab-cycle", () => [
@@ -333,7 +301,7 @@ export function TitlebarTabStrip(props: {
           }}
         >
           <div data-titlebar-tab-list class="flex w-full min-w-0 flex-row items-center" ref={listRef}>
-            <For each={props.tabs}>
+            <For each={shownTabs()}>
               {(tab) => {
                 const id = tabKey(tab)
                 let ref!: HTMLDivElement
@@ -363,21 +331,6 @@ export function TitlebarTabStrip(props: {
                     />
                   )
                 }
-
-                return (
-                  <DraftTabSlot
-                    tab={tab}
-                    id={id}
-                    index={visibleIndex}
-                    active={() => props.currentTab() === tab}
-                    title={language.t("command.session.new")}
-                    onNavigate={(element) => {
-                      ref = element
-                      props.onNavigate(tab, element)
-                    }}
-                    onClose={() => props.onClose(tab)}
-                  />
-                )
               }}
             </For>
           </div>

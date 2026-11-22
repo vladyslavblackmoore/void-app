@@ -832,6 +832,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "PTY savienojuma biļeti noraidīja izcelsmes vai CSRF pārbaudes. Pārbaudiet servera CORS konfigurāciju.",
   "terminal.connectTicket.statusError": "PTY savienojuma biļete neizdevās ar statusu {{status}}",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "Atjaunināt",
   "titlebar.updateVersion": "Atjaunināt uz {{version}}",
   "common.closeTab": "Aizvērt cilni",

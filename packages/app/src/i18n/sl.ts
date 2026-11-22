@@ -832,6 +832,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "PTY povezovalna vozovnica zavrnjena s preverjanjem izvora ali CSRF. Preverite konfiguracijo strežnika CORS.",
   "terminal.connectTicket.statusError": "PTY povezovalna karta ni uspela z {{status}}",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "posodobitev",
   "titlebar.updateVersion": "Posodobite {{version}}",
   "common.closeTab": "Zapri zavihek",

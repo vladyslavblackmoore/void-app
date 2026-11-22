@@ -880,6 +880,8 @@ export const dict = {
     "PTY bağlantı bileti, kaynak veya CSRF denetimleri tarafından reddedildi. Sunucunun CORS yapılandırmasını kontrol edin.",
   "terminal.connectTicket.statusError": "PTY bağlantı bileti {{status}} durumuyla başarısız oldu",
 
+  "titlebar.tab.main": "Main",
+
   "titlebar.update": "Güncelle",
   "titlebar.updateVersion": "Güncelle {{version}}",
 

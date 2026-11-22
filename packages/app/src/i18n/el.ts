@@ -836,6 +836,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "PTY εισιτήριο σύνδεσης απορρίφθηκε από την προέλευση ή CSRF επιταγές. Ελέγξτε τη διαμόρφωση του διακομιστή CORS.",
   "terminal.connectTicket.statusError": "PTY η σύνδεση εισιτηρίου απέτυχε με {{status}}",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "Ενημέρωση",
   "titlebar.updateVersion": "Ενημέρωση {{version}}",
   "common.closeTab": "Κλείσιμο καρτέλας",

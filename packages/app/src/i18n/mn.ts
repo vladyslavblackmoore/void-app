@@ -834,6 +834,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "PTY холболтын тасалбарыг гарал үүсэл эсвэл CSRF шалгалтаар татгалзсан. Серверийн CORS тохиргоог шалгана уу.",
   "terminal.connectTicket.statusError": "{{status}}-тэй PTY холбогдох тасалбар амжилтгүй боллоо",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "Шинэчлэх",
   "titlebar.updateVersion": "Шинэчлэх {{version}}",
   "common.closeTab": "Табыг хаах",

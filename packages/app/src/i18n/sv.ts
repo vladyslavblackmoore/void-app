@@ -847,6 +847,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "PTY-anslutningsbiljetten avvisades vid ursprungs- eller CSRF-kontrollen. Kontrollera serverns CORS-konfiguration.",
   "terminal.connectTicket.statusError": "PTY-anslutningsbiljetten misslyckades med status {{status}}",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "Uppdatera",
   "titlebar.updateVersion": "Uppdatera {{version}}",
   "common.closeTab": "Stäng fliken",

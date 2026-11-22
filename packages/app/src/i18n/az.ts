@@ -851,6 +851,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "PTY bağlantı bileti mənşə və ya CSRF yoxlaması zamanı rədd edildi. Serverin CORS konfiqurasiyasını yoxlayın.",
   "terminal.connectTicket.statusError": "PTY bağlantı bileti {{status}} statusu ilə uğursuz oldu",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "Yenilə",
   "titlebar.updateVersion": "Yenilə {{version}}",
   "common.closeTab": "Tabı bağla",

@@ -852,6 +852,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "ओरिजिन या CSRF जाँच के कारण PTY कनेक्ट टिकट अस्वीकार कर दिया गया। सर्वर का CORS कॉन्फ़िगरेशन जाँचें।",
   "terminal.connectTicket.statusError": "PTY कनेक्ट टिकट विफल रहा (स्थिति: {{status}})",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "अपडेट करें",
   "titlebar.updateVersion": "अपडेट करें {{version}}",
   "common.closeTab": "टैब बंद करें",

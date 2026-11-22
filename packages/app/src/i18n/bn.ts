@@ -826,6 +826,7 @@ export const dict: Record<string, string> = {
   "terminal.connectTicket.csrfError":
     "PTY সংযোগ টিকিট মূল বা CSRF চেক দ্বারা প্রত্যাখ্যাত। সার্ভার CORS কনফিগারেশন চেক করুন।",
   "terminal.connectTicket.statusError": "{{status}}-এর সাথে PTY সংযোগ টিকিট ব্যর্থ হয়েছে",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "আপডেট",
   "titlebar.updateVersion": "{{version}} আপডেট করুন",
   "common.closeTab": "ট্যাব বন্ধ করুন",

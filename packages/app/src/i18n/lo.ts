@@ -822,6 +822,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "ປີ້ເຊື່ອມຕໍ່ PTY ຖືກປະຕິເສດໂດຍການກວດສອບຕົ້ນທາງ ຫຼື CSRF. ກວດເບິ່ງເຊີບເວີ CORS config.",
   "terminal.connectTicket.statusError": "ປີ້ເຊື່ອມຕໍ່ PTY ລົ້ມເຫລວກັບ {{status}}",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "ອັບເດດ",
   "titlebar.updateVersion": "ອັບເດດ {{version}}",
   "common.closeTab": "ປິດແຖບ",

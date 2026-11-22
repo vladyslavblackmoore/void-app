@@ -840,6 +840,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "PTY prijungimo bilietas atmestas dėl kilmės arba CSRF patikrinimų. Patikrinkite serverio CORS konfigūraciją.",
   "terminal.connectTicket.statusError": "PTY prisijungimo bilietas nepavyko naudojant {{status}}",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "Atnaujinti",
   "titlebar.updateVersion": "Atnaujinkite {{version}}",
   "common.closeTab": "Uždaryti skirtuką",

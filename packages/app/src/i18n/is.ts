@@ -830,6 +830,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "PTY tengimiði hafnað af uppruna eða CSRF ávísun. Athugaðu þjóninn CORS stillingar.",
   "terminal.connectTicket.statusError": "PTY tengimiði mistókst með {{status}}",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "Uppfærsla",
   "titlebar.updateVersion": "Uppfærðu {{version}}",
   "common.closeTab": "Loka flipa",

@@ -928,6 +928,8 @@ export const dict = {
     "Квиток підключення PTY відхилено через перевірку джерела або CSRF. Перевірте конфігурацію CORS сервера.",
   "terminal.connectTicket.statusError": "Помилка квитка підключення PTY зі статусом {{status}}",
 
+  "titlebar.tab.main": "Main",
+
   "titlebar.update": "Оновити",
   "titlebar.updateVersion": "Оновити {{version}}",
 

@@ -830,6 +830,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "PTY пайвастшавӣ чиптаи аз рӯи пайдоиш рад ё CSRF чек. Танзимоти сервер CORS-ро санҷед.",
   "terminal.connectTicket.statusError": "PTY чиптаи пайвастшавӣ бо {{status}} ноком шуд",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "Навсозӣ",
   "titlebar.updateVersion": "Навсозӣ {{version}}",
   "common.closeTab": "Варақаро пӯшед",

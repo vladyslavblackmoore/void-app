@@ -812,6 +812,8 @@ export const dict = {
   "terminal.connectTicket.csrfError": "رُفضت تذكرة اتصال PTY بسبب فحوصات الأصل أو CSRF. تحقق من إعداد CORS للخادم.",
   "terminal.connectTicket.statusError": "فشلت تذكرة اتصال PTY بالحالة {{status}}",
 
+  "titlebar.tab.main": "Main",
+
   "titlebar.update": "تحديث",
   "titlebar.updateVersion": "تحديث {{version}}",
 

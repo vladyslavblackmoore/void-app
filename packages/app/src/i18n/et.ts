@@ -823,6 +823,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "PTY ühenduse pilet lükati tagasi päritolu või CSRF kontrolli tõttu. Kontrollige serveri CORS konfiguratsiooni.",
   "terminal.connectTicket.statusError": "PTY ühenduspilet ebaõnnestus kasutajaga {{status}}",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "Värskenda",
   "titlebar.updateVersion": "Värskenda {{version}}",
   "common.closeTab": "Sule vahekaart",

@@ -836,6 +836,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "PTY karta za spajanje odbijena provjerama porijekla ili CSRF. Provjerite konfiguraciju poslužitelja CORS.",
   "terminal.connectTicket.statusError": "PTY povezivanje karte nije uspjelo sa {{status}}",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "Ažurirati",
   "titlebar.updateVersion": "Ažurirajte {{version}}",
   "common.closeTab": "Zatvori karticu",

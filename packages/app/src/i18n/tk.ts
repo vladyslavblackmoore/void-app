@@ -827,6 +827,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "PTY baglanyşyk bileti gelip çykyşy ýa-da CSRF barlaglary bilen ret edilýär. CORS serwerini barlaň.",
   "terminal.connectTicket.statusError": "PTY birikme bileti {{status}} bilen şowsuz boldy",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "Täzelen",
   "titlebar.updateVersion": "{{version}} täzeläň",
   "common.closeTab": "Salgy ýapyň",

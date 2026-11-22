@@ -850,6 +850,7 @@ export const dict = {
     "ٹرمینل کنکشن وچ رکاوٹ پے گئی۔ ایہ اودوں ہو سکدا اے جدوں سرور دوبارہ شروع ہوندا اے۔",
   "terminal.connectTicket.csrfError": "PTY کنکشن ٹکٹ نوں ماخذ یا CSRF جانچاں نے رد کر دتا۔ سرور دی CORS کنفگ چیک کرو۔",
   "terminal.connectTicket.statusError": "PTY کنکشن ٹکٹ {{status}} سٹیٹس نال ناکام ہو گیا",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "اپ ڈیٹ کرو",
   "titlebar.updateVersion": "اپ ڈیٹ کرو {{version}}",
   "common.closeTab": "ٹیب بند کرو",

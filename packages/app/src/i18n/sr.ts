@@ -830,6 +830,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "PTY улазница за повезивање одбијена од стране порекла или CSRF провера. Проверите конфигурацију сервера CORS.",
   "terminal.connectTicket.statusError": "PTY улазница за повезивање није успела са {{status}}",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "ажурирање",
   "titlebar.updateVersion": "ажурирање {{version}}",
   "common.closeTab": "Затвори картицу",

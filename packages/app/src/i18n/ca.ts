@@ -837,6 +837,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "PTY bitllet de connexió rebutjat per origen o CSRF xecs. Comproveu la configuració del servidor CORS.",
   "terminal.connectTicket.statusError": "PTY el bitllet de connexió ha fallat amb {{status}}",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "Actualització",
   "titlebar.updateVersion": "Actualització {{version}}",
   "common.closeTab": "Tanca la pestanya",

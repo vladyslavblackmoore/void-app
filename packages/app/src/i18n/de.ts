@@ -706,6 +706,8 @@ export const dict = {
     "Das PTY-Verbindungsticket wurde bei der Ursprungs- oder CSRF-Prüfung abgelehnt. Überprüfen Sie die CORS-Konfiguration des Servers.",
   "terminal.connectTicket.statusError": "Das PTY-Verbindungsticket ist mit {{status}} fehlgeschlagen",
 
+  "titlebar.tab.main": "Main",
+
   "titlebar.update": "Aktualisieren",
   "titlebar.updateVersion": "Aktualisieren {{version}}",
 

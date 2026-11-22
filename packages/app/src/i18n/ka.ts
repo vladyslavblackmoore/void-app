@@ -826,6 +826,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "PTY დამაკავშირებელი ბილეთი უარყოფილია წარმოშობის ან CSRF ჩეკებით. შეამოწმეთ სერვერის CORS კონფიგურაცია.",
   "terminal.connectTicket.statusError": "PTY დაკავშირების ბილეთი ვერ მოხერხდა {{status}}",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "განახლება",
   "titlebar.updateVersion": "განახლება {{version}}",
   "common.closeTab": "ჩანართის დახურვა",

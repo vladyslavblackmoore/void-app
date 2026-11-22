@@ -815,6 +815,8 @@ export const dict = {
     "O tíquete de conexão PTY foi rejeitado pelas verificações de origem ou CSRF. Verifique a configuração de CORS do servidor.",
   "terminal.connectTicket.statusError": "O tíquete de conexão PTY falhou com o status {{status}}",
 
+  "titlebar.tab.main": "Main",
+
   "titlebar.update": "Atualizar",
   "titlebar.updateVersion": "Atualizar {{version}}",
 

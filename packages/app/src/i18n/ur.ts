@@ -853,6 +853,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "PTY کنکشن ٹکٹ کو ماخذ یا CSRF جانچ نے مسترد کر دیا۔ سرور کی CORS تشکیل چیک کریں۔",
   "terminal.connectTicket.statusError": "PTY کنکشن ٹکٹ {{status}} اسٹیٹس کے ساتھ ناکام ہو گیا۔",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "اپ ڈیٹ کریں",
   "titlebar.updateVersion": "اپ ڈیٹ کریں {{version}}",
   "common.closeTab": "ٹیب بند کریں۔",

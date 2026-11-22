@@ -833,6 +833,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "PTY билет за свързване е отхвърлен от произход или CSRF проверки. Проверете конфигурацията на сървъра CORS.",
   "terminal.connectTicket.statusError": "PTY неуспешно свързване на билет с {{status}}",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "Актуализация",
   "titlebar.updateVersion": "Актуализация {{version}}",
   "common.closeTab": "Затваряне на раздела",

@@ -818,6 +818,8 @@ export const dict = {
     "Bilet połączenia PTY został odrzucony podczas kontroli źródła lub CSRF. Sprawdź konfigurację CORS serwera.",
   "terminal.connectTicket.statusError": "Bilet połączenia PTY zakończył się niepowodzeniem ze statusem {{status}}",
 
+  "titlebar.tab.main": "Main",
+
   "titlebar.update": "Aktualizuj",
   "titlebar.updateVersion": "Aktualizuj {{version}}",
   "common.closeTab": "Zamknij kartę",

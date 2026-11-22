@@ -1180,6 +1180,8 @@ export const dict = {
     "PTY接続チケットは、オリジンまたはCSRFチェックによって拒否されました。サーバーのCORS設定を確認してください。",
   "terminal.connectTicket.statusError": "PTY接続チケットがステータス {{status}} で失敗しました",
 
+  "titlebar.tab.main": "Main",
+
   "titlebar.update": "アップデート",
   "titlebar.updateVersion": "アップデート {{version}}",
 }

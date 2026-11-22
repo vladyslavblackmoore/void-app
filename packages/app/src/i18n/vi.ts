@@ -853,6 +853,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "Vé kết nối PTY bị từ chối do kiểm tra nguồn gốc hoặc CSRF. Hãy kiểm tra cấu hình CORS của máy chủ.",
   "terminal.connectTicket.statusError": "Vé kết nối PTY thất bại với trạng thái {{status}}",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "Cập nhật",
   "titlebar.updateVersion": "Cập nhật {{version}}",
   "common.closeTab": "Đóng tab",

@@ -833,6 +833,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "PTY ulanish chiptasi kelib chiqishi yoki CSRF tekshiruvlari tomonidan rad etilgan. CORS server konfiguratsiyasini tekshiring.",
   "terminal.connectTicket.statusError": "PTY ulanish chiptasi {{status}} bilan amalga oshmadi",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "Yangilash",
   "titlebar.updateVersion": "{{version}}-ni yangilang",
   "common.closeTab": "Tabni yoping",

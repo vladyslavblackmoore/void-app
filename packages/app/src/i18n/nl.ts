@@ -851,6 +851,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "PTY-verbindingsticket geweigerd door oorsprongs- of CSRF-controles. Controleer de CORS-configuratie van de server.",
   "terminal.connectTicket.statusError": "PTY-verbindingsticket mislukt met status {{status}}",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "Bijwerken",
   "titlebar.updateVersion": "Bijwerken {{version}}",
   "common.closeTab": "Tabblad sluiten",

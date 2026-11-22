@@ -832,6 +832,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "PTY lístek připojení zamítnut původem nebo CSRF kontrolami. Zkontrolujte konfiguraci serveru CORS.",
   "terminal.connectTicket.statusError": "PTY lístek připojení se nezdařil s {{status}}",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "Aktualizovat",
   "titlebar.updateVersion": "Aktualizovat {{version}}",
   "common.closeTab": "Zavřít kartu",

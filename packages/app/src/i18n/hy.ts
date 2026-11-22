@@ -833,6 +833,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "PTY կապի տոմսը մերժված է ծագման կամ CSRF չեկերի կողմից։ Ստուգեք սերվերի CORS կազմաձևը:",
   "terminal.connectTicket.statusError": "PTY միացման տոմսը ձախողվեց {{status}}",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "Թարմացնել",
   "titlebar.updateVersion": "Թարմացնել {{version}}",
   "common.closeTab": "Փակել ներդիրը",

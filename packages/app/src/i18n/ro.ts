@@ -832,6 +832,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "Biletul de conectare PTY a fost respins din cauza originii sau a verificărilor CSRF. Verifică configurația CORS a serverului.",
   "terminal.connectTicket.statusError": "Biletul de conectare PTY a eșuat cu {{status}}",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "Actualizează",
   "titlebar.updateVersion": "Actualizează la {{version}}",
   "common.closeTab": "Închide fila",

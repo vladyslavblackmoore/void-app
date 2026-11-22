@@ -915,6 +915,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "Tiket koneksi PTY ditolak oleh pemeriksaan asal atau CSRF. Periksa konfigurasi CORS server.",
   "terminal.connectTicket.statusError": "Tiket koneksi PTY gagal dengan status {{status}}",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "Perbarui",
   "titlebar.updateVersion": "Perbarui {{version}}",
 

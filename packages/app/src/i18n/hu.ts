@@ -834,6 +834,7 @@ export const dict = {
   "terminal.connectTicket.csrfError":
     "A PTY csatlakozási jegyet az eredet vagy a CSRF ellenőrzések elutasították. Ellenőrizze a szerver CORS konfigurációját.",
   "terminal.connectTicket.statusError": "A PTY csatlakozási jegy sikertelen a {{status}}-vel",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "Frissítés",
   "titlebar.updateVersion": "Frissítse a {{version}}-t",
   "common.closeTab": "Lap bezárása",

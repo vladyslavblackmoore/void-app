@@ -842,6 +842,7 @@ export const dict: Record<string, string> = {
   "terminal.connectTicket.csrfError":
     "PTY མཐུད་ལམ་ཤོག་བྱང་འདི་ འབྱུང་ཁུངས་དང་ ཡང་ན་ CSRF ཞིབ་དཔྱད་ཚུ་གིས་ ངོས་ལེན་མ་འབད་བས། སར་བར་ CORS རིམ་སྒྲིག་ཞིབ་དཔྱད་འབད།",
   "terminal.connectTicket.statusError": "PTY མཐུད་ལམ་ཤོག་བྱང་འདི་ {{status}}དང་གཅིག་ཁར་འཐུས་ཤོར་འབྱུང་ཡོདཔ།",
+  "titlebar.tab.main": "Main",
   "titlebar.update": "དུས༌མཐུན༌བཟོ༌ནི",
   "titlebar.updateVersion": "{{version}} དུས་མཐུན་བཟོ།",
   "common.closeTab": "མཆོང་ལྡེ་ཁ་བསྡམས།",

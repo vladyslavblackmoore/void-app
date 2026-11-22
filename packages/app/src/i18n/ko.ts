@@ -904,6 +904,8 @@ export const dict = {
     "PTY 연결 티켓이 오리진 또는 CSRF 검사에서 거부되었습니다. 서버의 CORS 구성을 확인하세요.",
   "terminal.connectTicket.statusError": "PTY 연결 티켓 실패(상태: {{status}})",
 
+  "titlebar.tab.main": "Main",
+
   "titlebar.update": "업데이트",
   "titlebar.updateVersion": "업데이트 {{version}}",
 

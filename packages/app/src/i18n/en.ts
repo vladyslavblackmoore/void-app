@@ -817,6 +817,7 @@ export const dict = {
     "PTY connect ticket rejected by origin or CSRF checks. Check the server CORS config.",
   "terminal.connectTicket.statusError": "PTY connect ticket failed with {{status}}",
 
+  "titlebar.tab.main": "Main",
   "titlebar.update": "Update",
   "titlebar.updateVersion": "Update {{version}}",
 
