@@ -31,12 +31,21 @@ export function userXdg(root: string, recorded: string | undefined, ...sources: 
   ) as Record<(typeof USER_XDG)[number], string | undefined>
 }
 
+export function voidProfileDir(root = VOID_HOME) {
+  return join(root, "spaces", "home")
+}
+
+export function voidCliDir(root = VOID_HOME) {
+  return join(voidProfileDir(root), "cli")
+}
+
 export function voidAppEnv(root: string, user: UserXdg) {
+  const profile = voidProfileDir(root)
   return {
-    XDG_DATA_HOME: join(root, "data"),
-    XDG_CONFIG_HOME: join(root, "config"),
+    XDG_DATA_HOME: join(profile, "data"),
+    XDG_CONFIG_HOME: join(profile, "config"),
     XDG_CACHE_HOME: join(root, "cache"),
-    XDG_STATE_HOME: join(root, "state"),
+    XDG_STATE_HOME: join(profile, "state"),
     VOID_USER_ENV: JSON.stringify(Object.fromEntries(USER_XDG.map((key) => [key, user[key] || null]))),
   }
 }
