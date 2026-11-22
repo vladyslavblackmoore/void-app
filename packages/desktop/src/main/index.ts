@@ -11,7 +11,9 @@ import { app, BrowserWindow } from "electron"
 import { Deferred, Effect, Fiber } from "effect"
 import contextMenu from "electron-context-menu"
 
+import subscriptionWrapper from "../../resources/provider/subscription.mjs?raw"
 import type { ServerReadyData } from "../preload/types"
+import { seedConfig } from "./config-seed"
 import { checkAppExists, resolveAppPath } from "./apps"
 import { CHANNEL } from "./constants"
 import { registerIpcHandlers, sendDeepLinks, sendMenuCommand } from "./ipc"
@@ -352,6 +354,11 @@ const main = Effect.gen(function* () {
 
   const loadingTask = yield* Effect.gen(function* () {
     logger.log("sidecar connection started", { version: SIDECAR_VERSION })
+
+    const configDir = join(process.env.XDG_CONFIG_HOME ?? voidAppEnv(VOID_HOME, {}).XDG_CONFIG_HOME, "opencode")
+    yield* Effect.promise(() =>
+      seedConfig(configDir, subscriptionWrapper).catch((error) => logger.warn("failed to seed config", error)),
+    )
 
     ensureLoopbackNoProxy()
     useEnvProxy()
