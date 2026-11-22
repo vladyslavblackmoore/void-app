@@ -35,6 +35,18 @@ describe("changedFilePaths", () => {
     expect(changedFilePaths(parts)).toEqual(["/p/a.ts", "/p/c.ts"])
   })
 
+  test("collects provider-executed file tools by their CLI names and input keys", () => {
+    const parts = [
+      tool("Write", "completed", { file_path: "/p/a.txt", content: "x" }),
+      tool("Edit", "completed", { file_path: "/p/b.ts" }),
+      tool("MultiEdit", "completed", { file_path: "/p/c.ts" }),
+      tool("NotebookEdit", "completed", { notebook_path: "/p/d.ipynb" }),
+      tool("Read", "completed", { file_path: "/p/e.ts" }),
+      tool("Write", "error", { file_path: "/p/f.ts" }),
+    ]
+    expect(changedFilePaths(parts)).toEqual(["/p/a.txt", "/p/b.ts", "/p/c.ts", "/p/d.ipynb"])
+  })
+
   test("ignores read tools, unfinished calls and other part types", () => {
     const parts = [
       tool("read", "completed", { filePath: "/p/a.ts" }),

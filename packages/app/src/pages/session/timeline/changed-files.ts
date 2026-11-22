@@ -1,6 +1,7 @@
 import type { Part } from "@opencode-ai/sdk/v2"
 
 const FILE_TOOLS = new Set(["edit", "write", "multiedit"])
+const PROVIDER_FILE_TOOLS = new Set(["Write", "Edit", "MultiEdit", "NotebookEdit"])
 
 const text = (value: unknown) => (typeof value === "string" && value.length > 0 ? value : undefined)
 
@@ -17,8 +18,9 @@ export function changedFilePaths(parts: Part[]) {
   const paths = parts.flatMap((part) => {
     if (part.type !== "tool" || part.state.status !== "completed") return []
     if (part.tool === "apply_patch") return patchFiles(part.state.metadata)
-    if (!FILE_TOOLS.has(part.tool)) return []
-    const path = text(part.state.input.filePath)
+    if (!FILE_TOOLS.has(part.tool) && !PROVIDER_FILE_TOOLS.has(part.tool)) return []
+    const input = part.state.input
+    const path = text(input.filePath) ?? text(input.file_path) ?? text(input.notebook_path)
     return path ? [path] : []
   })
   return [...new Set(paths)]
