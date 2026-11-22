@@ -727,3 +727,26 @@
   line-height: 1;
   color: var(--v2-state-fg-danger);
 }
+
+[data-component="settings-agents-confirm"] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding-block: 16px;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--v2-text-text-base);
+}
+
+[data-component="settings-agents-confirm"] > span {
+  flex: 1;
+  min-width: 200px;
+}
+
+[data-component="settings-agents-empty"] {
+  padding-block: 16px;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--v2-text-text-muted);
+}

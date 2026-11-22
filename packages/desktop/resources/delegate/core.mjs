@@ -9,12 +9,12 @@ export const allowAll = [{ permission: "*", pattern: "*", action: "allow" }]
 export const description =
   "Run a task in a separate child session on any connected provider and model, and return the child's final answer with its session id. " +
   "The child has its own context and full tool access, so describe the task completely. " +
-  "model is provider/model such as openai/gpt-5 or subscription/sonnet; pass an empty string to use the current model. " +
+  "model is provider/model such as openai/gpt-5 or subscription/sonnet; pass an empty string to use the default model for children from the app settings, or the current model when none is set. " +
   "agent is the name of an agent to run the task with; pass an empty string for the default agent."
 
 export const toolArgs = {
   task: { type: "string", description: "The complete task for the child session" },
-  model: { type: "string", description: "provider/model, or an empty string for the current model" },
+  model: { type: "string", description: "provider/model, or an empty string for the children default" },
   agent: { type: "string", description: "Agent name, or an empty string for the default agent" },
 }
 
@@ -22,13 +22,14 @@ export const inputSchema = {
   type: "object",
   properties: {
     task: toolArgs.task,
-    model: { type: "string", description: "provider/model; omit to use the current model" },
+    model: { type: "string", description: "provider/model; omit to use the children default" },
     agent: { type: "string", description: "Agent name; omit for the default agent" },
   },
   required: ["task"],
 }
 
 export const maxDepth = 2
+export const childAgent = "worker"
 const pollAbortMs = 1000
 const historyLimit = 20
 
@@ -75,6 +76,7 @@ export function createApi(base) {
     createSession: (body) => send(base, "POST", "/session", { body }),
     prompt: (id, body) => send(base, "POST", `/session/${id}/message`, { body }),
     session: (id) => send(base, "GET", `/session/${id}`),
+    config: () => send(base, "GET", "/config"),
     abort: (id) => send(base, "POST", `/session/${id}/abort`),
     messages: (id) => send(base, "GET", `/session/${id}/message?limit=${historyLimit}`),
   }
@@ -86,6 +88,18 @@ export function parseModel(value) {
   const cut = text.indexOf("/")
   if (cut <= 0 || cut === text.length - 1) throw new Error(`model must be provider/model, got "${text}"`)
   return { providerID: text.slice(0, cut), modelID: text.slice(cut + 1) }
+}
+
+export function childDefault(config, agent) {
+  const entry = config?.agent?.[agent || childAgent]
+  try {
+    const model = parseModel(entry?.model)
+    if (!model) return undefined
+    const variant = typeof entry.variant === "string" ? entry.variant.trim() : ""
+    return variant ? { model, variant } : { model }
+  } catch {
+    return undefined
+  }
 }
 
 function newest(items) {
@@ -151,8 +165,9 @@ export async function runDelegate(api, input, signal) {
       `delegate depth limit reached: this session is already ${depth} levels below the main session; do the task yourself`,
     )
   }
-  const model = requested ?? (await parentModel(api, input.parentID))
   const agent = typeof input.agent === "string" && input.agent.trim() ? input.agent.trim() : undefined
+  const configured = requested ? undefined : childDefault(await api.config().catch(() => undefined), agent)
+  const model = requested ?? configured?.model ?? (await parentModel(api, input.parentID))
   if (signal?.aborted) return { id: undefined, text: "", error: "aborted" }
   const session = await api.createSession({ parentID: input.parentID, title: title(task), permission: allowAll })
   const id = session.id
@@ -170,6 +185,7 @@ export async function runDelegate(api, input, signal) {
   try {
     const result = await api.prompt(id, {
       model,
+      ...(configured?.variant ? { variant: configured.variant } : {}),
       ...(agent ? { agent } : {}),
       parts: [{ type: "text", text: workerNote(depth + 1) + task }],
     })

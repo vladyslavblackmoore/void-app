@@ -30,6 +30,7 @@ let seen: Seen[] = []
 let server: ReturnType<typeof Bun.serve>
 let release: (() => void) | undefined
 let hold = false
+let config: unknown = {}
 
 const parents: Record<string, string | undefined> = {
   ses_parent: undefined,
@@ -49,6 +50,7 @@ const parentMessages = [
 beforeEach(() => {
   seen = []
   hold = false
+  config = {}
   release = undefined
   process.env.OPENCODE_SERVER_PASSWORD = "secret"
   delete process.env.OPENCODE_SERVER_USERNAME
@@ -68,6 +70,7 @@ beforeEach(() => {
       if (request.method === "GET" && known && known in parents)
         return Response.json({ id: known, parentID: parents[known] })
       if (request.method === "POST" && url.pathname === "/session") return Response.json({ id: "ses_child" })
+      if (request.method === "GET" && url.pathname === "/config") return Response.json(config)
       if (url.pathname.endsWith("/abort")) {
         release?.()
         return Response.json(true)
@@ -130,6 +133,65 @@ describe("delegate core", () => {
       model: { providerID: "openai", modelID: "gpt-5" },
       parts: [{ type: "text", text: core.workerNote(1) + "t" }],
     })
+  })
+
+  test("uses the worker default from the config when no model is passed", async () => {
+    config = { agent: { worker: { model: "subscription/sonnet", variant: "high" } } }
+    await core.runDelegate(core.createApi(base()), { task: "t", model: "", agent: "", parentID: "ses_parent" })
+
+    expect(bodyOf("POST", "/session/ses_child/message")).toEqual({
+      model: { providerID: "subscription", modelID: "sonnet" },
+      variant: "high",
+      parts: [{ type: "text", text: core.workerNote(1) + "t" }],
+    })
+  })
+
+  test("uses the config model of the requested agent before the worker default", async () => {
+    config = { agent: { worker: { model: "subscription/sonnet" }, explore: { model: "openai/gpt-5.6-sol" } } }
+    await core.runDelegate(core.createApi(base()), { task: "t", model: "", agent: "explore", parentID: "ses_parent" })
+
+    expect(bodyOf("POST", "/session/ses_child/message")).toEqual({
+      model: { providerID: "openai", modelID: "gpt-5.6-sol" },
+      agent: "explore",
+      parts: [{ type: "text", text: core.workerNote(1) + "t" }],
+    })
+  })
+
+  test("lets an explicit model win over the config default and drops its variant", async () => {
+    config = { agent: { worker: { model: "subscription/sonnet", variant: "high" } } }
+    await core.runDelegate(core.createApi(base()), {
+      task: "t",
+      model: "openai/gpt-5-mini",
+      agent: "",
+      parentID: "ses_parent",
+    })
+
+    expect(bodyOf("POST", "/session/ses_child/message")).toEqual({
+      model: { providerID: "openai", modelID: "gpt-5-mini" },
+      parts: [{ type: "text", text: core.workerNote(1) + "t" }],
+    })
+  })
+
+  test("falls back to the parent model when the config has no usable default", async () => {
+    config = { agent: { worker: { model: "broken", variant: "" } } }
+    await core.runDelegate(core.createApi(base()), { task: "t", model: "", agent: "", parentID: "ses_parent" })
+
+    expect(bodyOf("POST", "/session/ses_child/message")).toEqual({
+      model: { providerID: "openai", modelID: "gpt-5" },
+      parts: [{ type: "text", text: core.workerNote(1) + "t" }],
+    })
+  })
+
+  test("resolves the child default from a config object", () => {
+    expect(core.childDefault({ agent: { worker: { model: "a/b", variant: "low" } } }, undefined)).toEqual({
+      model: { providerID: "a", modelID: "b" },
+      variant: "low",
+    })
+    expect(core.childDefault({ agent: { worker: { model: "a/b", variant: "" } } }, undefined)).toEqual({
+      model: { providerID: "a", modelID: "b" },
+    })
+    expect(core.childDefault({ agent: {} }, undefined)).toBeUndefined()
+    expect(core.childDefault(undefined, "x")).toBeUndefined()
   })
 
   test("tells a child at the depth limit not to delegate and a shallower child that it may", () => {
