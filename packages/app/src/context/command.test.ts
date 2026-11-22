@@ -10,7 +10,6 @@ import {
 const paletteOptions: CommandOption[] = [
   { id: "settings.open", title: "Open settings" },
   { id: "session.undo", title: "Undo" },
-  { id: "file.open", title: "Open file" },
   { id: "hidden", title: "Hidden", hidden: true },
   { id: "disabled", title: "Disabled", disabled: true },
 ]

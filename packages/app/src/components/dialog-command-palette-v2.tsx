@@ -1,5 +1,3 @@
-import { getDirectory, getFilename } from "@opencode-ai/core/util/path"
-import { FileIcon } from "@opencode-ai/ui/file-icon"
 import { ScrollView } from "@opencode-ai/ui/scroll-view"
 import { Dialog, DialogBody } from "@opencode-ai/ui/v2/dialog-v2"
 import { Icon } from "@opencode-ai/ui/v2/icon"
@@ -13,7 +11,6 @@ import { SessionTabAvatar } from "@/pages/layout/session-tab-avatar"
 import { getRelativeTime } from "@/utils/time"
 import {
   createCommandPaletteCommandEntry,
-  createCommandPaletteFileEntry,
   createCommandPaletteModel,
   uniqueCommandPaletteEntries,
   type CommandPaletteEntry,
@@ -31,19 +28,14 @@ function matchesEntry(entry: CommandPaletteEntry, query: string) {
   return [entry.title, entry.description, entry.category].some((text) => text?.toLowerCase().includes(value))
 }
 
-export function DialogCommandPaletteV2(props: { onOpenFile?: (path: string) => void }) {
-  const palette = createCommandPaletteModel(props)
+export function DialogCommandPaletteV2() {
+  const palette = createCommandPaletteModel()
   const loadItems = async (text: string) => {
     const q = text.trim()
-    if (!q) return [...palette.preferredCommandEntries(), ...palette.recentFileEntries()]
+    if (!q) return palette.preferredCommandEntries()
 
-    const [files, nextSessions] = await Promise.all([palette.file.searchFiles(q), Promise.resolve(palette.sessions(q))])
-    const category = palette.language.t("palette.group.files")
-    return [
-      ...palette.commandEntries().filter((entry) => matchesEntry(entry, q)),
-      ...nextSessions,
-      ...files.map((path) => createCommandPaletteFileEntry(path, category)),
-    ]
+    const nextSessions = await palette.sessions(q)
+    return [...palette.commandEntries().filter((entry) => matchesEntry(entry, q)), ...nextSessions]
   }
 
   return (
@@ -208,17 +200,7 @@ function PaletteRow(props: {
       onMouseDown={(event) => event.preventDefault()}
       onClick={props.onSelect}
     >
-      <Switch
-        fallback={
-          <div class="command-palette-v2-row-main">
-            <FileIcon node={{ path: props.item.path ?? "", type: "file" }} class="command-palette-v2-row-icon size-4" />
-            <div class="command-palette-v2-file-path">
-              <span class="command-palette-v2-file-dir">{getDirectory(props.item.path ?? "")}</span>
-              <span class="command-palette-v2-file-name">{getFilename(props.item.path ?? "")}</span>
-            </div>
-          </div>
-        }
-      >
+      <Switch>
         <Match when={props.item.type === "command"}>
           <div class="command-palette-v2-row-main">
             <div class="command-palette-v2-row-text">

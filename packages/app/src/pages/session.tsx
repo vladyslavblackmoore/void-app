@@ -831,7 +831,10 @@ export default function Page() {
       id: "command.palette",
       title: language.t("command.palette"),
       hidden: true,
-      onSelect: () => command.trigger("file.open", "palette"),
+      onSelect: async () => {
+        const { DialogSelectFile } = await import("@/components/dialog-select-file")
+        void dialog.show(() => <DialogSelectFile />)
+      },
     },
   ])
 

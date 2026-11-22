@@ -130,11 +130,6 @@
   gap: 8px;
 }
 
-.command-palette-v2-row-icon {
-  flex-shrink: 0;
-  color: var(--v2-icon-icon-muted);
-}
-
 .command-palette-v2-row-text {
   display: flex;
   min-width: 0;
@@ -169,31 +164,6 @@
 
 .command-palette-v2-meta {
   flex-shrink: 0;
-}
-
-.command-palette-v2-file-path {
-  display: flex;
-  min-width: 0;
-  align-items: baseline;
-  font-size: 13px;
-  line-height: 16px;
-  letter-spacing: -0.04px;
-}
-
-.command-palette-v2-file-dir {
-  min-width: 0;
-  overflow: hidden;
-  color: var(--v2-text-text-muted);
-  font-weight: 440;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.command-palette-v2-file-name {
-  flex-shrink: 0;
-  color: var(--v2-text-text-base);
-  font-weight: 530;
-  white-space: nowrap;
 }
 
 .command-palette-v2-state {
