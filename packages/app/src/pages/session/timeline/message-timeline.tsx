@@ -1,6 +1,7 @@
 import {
   createEffect,
   createMemo,
+  createResource,
   createSignal,
   For,
   Index,
@@ -75,6 +76,8 @@ import { sessionTitle } from "@/utils/session-title"
 import { scheduleConnectedMeasure } from "./measure"
 import { observeElementOffsetReconnectAware } from "./observe-element-offset"
 import { createTimelineProjection } from "./projection"
+import { OpenInAppV2 } from "@/components/session/open-in-app-v2"
+import { openInDirectory } from "./changed-files"
 import { MessageComment, SummaryDiff, TimelineRow, TimelineRowMap } from "./rows"
 import { filterVirtualIndexes } from "./virtual-items"
 
@@ -138,6 +141,26 @@ function TimelineThinkingRow(props: { reasoningHeading?: string; showReasoningSu
       <Show when={!props.showReasoningSummaries}>
         <TextReveal text={props.reasoningHeading} class="session-turn-thinking-heading" travel={25} duration={700} />
       </Show>
+    </div>
+  )
+}
+
+function TimelineOpenInRow(props: { files: string[] }) {
+  const sdk = useSDK()
+  const platform = usePlatform()
+  const [resolved] = createResource(
+    () => ({ files: props.files, directory: sdk().directory }),
+    (input) =>
+      openInDirectory({
+        ...input,
+        gitRoot: (dir) => platform.gitRoot?.(dir) ?? Promise.resolve(null),
+      }),
+  )
+  const directory = createMemo(() => resolved.latest ?? "")
+
+  return (
+    <div data-component="turn-open-in" class="flex items-center justify-end py-1">
+      <OpenInAppV2 directory={directory} />
     </div>
   )
 }
@@ -1208,6 +1231,16 @@ export function MessageTimeline(props: {
           <TimelineRowFrame row={diffSummaryRow}>
             <div data-slot="session-turn-message-container" class="w-full px-4 md:px-5">
               <TimelineDiffSummaryRow diffs={diffSummaryRow().diffs} />
+            </div>
+          </TimelineRowFrame>
+        )
+      }
+      case "OpenIn": {
+        const openInRow = row as Accessor<TimelineRowByTag<"OpenIn">>
+        return (
+          <TimelineRowFrame row={openInRow}>
+            <div data-slot="session-turn-message-container" class="w-full px-4 md:px-5">
+              <TimelineOpenInRow files={openInRow().files} />
             </div>
           </TimelineRowFrame>
         )

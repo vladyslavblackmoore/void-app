@@ -28,5 +28,7 @@ describe("desktop menu", () => {
 
     expect(commands).not.toContain("session.new")
     expect(commands).not.toContain("project.open")
+    expect(commands).not.toContain("fileTree.toggle")
+    expect(commands).not.toContain("review.toggle")
   })
 })

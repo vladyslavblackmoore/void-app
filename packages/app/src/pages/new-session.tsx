@@ -22,10 +22,6 @@ export default function NewSessionPage() {
   })
   useNewSessionCommands({
     restoreFocus: draft.input.restoreFocus,
-    project: {
-      empty: project.empty,
-      open: () => project.setOpen(true),
-    },
   })
   createEffect(() => {
     if (!draft.prompt.ready()) return

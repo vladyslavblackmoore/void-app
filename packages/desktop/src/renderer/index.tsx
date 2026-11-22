@@ -226,6 +226,9 @@ const createPlatform = (windowState: DesktopWindowState): Platform => {
     async revealPath(path: string) {
       return window.api.revealPath(path)
     },
+    async gitRoot(directory: string) {
+      return window.api.gitRoot(directory)
+    },
 
     storage,
     draftStore: createDraftStore({

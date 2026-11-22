@@ -178,7 +178,6 @@ export const DESKTOP_MENU: DesktopMenu[] = [
         command: "terminal.toggle",
         accelerator: { macos: "Ctrl+`" },
       },
-      { type: "item", labelKey: "desktop.menu.toggleFileTree", command: "fileTree.toggle" },
       { type: "separator" },
       { type: "item", labelKey: "desktop.menu.reload", action: "view.reload", role: "reload" },
       {

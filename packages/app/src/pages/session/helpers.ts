@@ -1,4 +1,4 @@
-import { batch, createMemo, onCleanup, onMount, type Accessor } from "solid-js"
+import { createMemo, onCleanup, onMount, type Accessor } from "solid-js"
 import { createStore } from "solid-js/store"
 import { makeEventListener } from "@solid-primitives/event-listener"
 import { same } from "@/utils/same"
@@ -23,10 +23,6 @@ type TabsInput = {
 }
 
 export const getSessionKey = (dir: string | undefined, id: string | undefined) => `${dir ?? ""}${id ? `/${id}` : ""}`
-
-export function shouldShowFileTree(input: { visible: boolean; opened: boolean }) {
-  return input.opened && input.visible
-}
 
 export const createSessionTabs = (input: TabsInput) => {
   const review = input.review ?? (() => false)
@@ -114,49 +110,6 @@ export const focusTerminalById = (id: string) => {
       : new MouseEvent("pointerdown", { bubbles: true, cancelable: true }),
   )
   return true
-}
-
-export const createOpenReviewFile = (input: {
-  showAllFiles: () => void
-  tabForPath: (path: string) => string
-  openTab: (tab: string) => void
-  setActive: (tab: string) => void
-  loadFile: (path: string) => any | Promise<void>
-}) => {
-  return (path: string) => {
-    batch(() => {
-      input.showAllFiles()
-      const maybePromise = input.loadFile(path)
-      const open = () => {
-        const tab = input.tabForPath(path)
-        input.openTab(tab)
-        input.setActive(tab)
-      }
-      if (maybePromise instanceof Promise) void maybePromise.then(open)
-      else open()
-    })
-  }
-}
-
-export const createOpenSessionFileTab = (input: {
-  normalizeTab: (tab: string) => string
-  openTab: (tab: string) => void
-  pathFromTab: (tab: string) => string | undefined
-  loadFile: (path: string) => void
-  openReviewPanel: () => void
-  setActive: (tab: string) => void
-}) => {
-  return (value: string) => {
-    const next = input.normalizeTab(value)
-    input.openTab(next)
-
-    const path = input.pathFromTab(next)
-    if (!path) return
-
-    input.loadFile(path)
-    input.openReviewPanel()
-    input.setActive(next)
-  }
 }
 
 export const getTabReorderIndex = (tabs: readonly string[], from: string, to: string) => {

@@ -32,6 +32,10 @@ export namespace TimelineRow {
     userMessageID: string
     diffs: SummaryDiff[]
   }> {}
+  export class OpenIn extends Data.TaggedClass("OpenIn")<{
+    userMessageID: string
+    files: string[]
+  }> {}
   export class Error extends Data.TaggedClass("Error")<{
     userMessageID: string
     text: string
@@ -48,6 +52,7 @@ export namespace TimelineRow {
     | AssistantPart
     | Thinking
     | DiffSummary
+    | OpenIn
     | Error
     | Retry
 
@@ -67,6 +72,8 @@ export namespace TimelineRow {
         return `thinking:${row.userMessageID}`
       case "DiffSummary":
         return `diff-summary:${row.userMessageID}`
+      case "OpenIn":
+        return `open-in:${row.userMessageID}`
       case "Error":
         return `error:${row.userMessageID}`
       case "Retry":

@@ -3,6 +3,7 @@ import type { SessionMessageInfo } from "@opencode-ai/client/promise"
 import { AssistantMessage, Part, SessionStatus, UserMessage } from "@opencode-ai/sdk/v2"
 import { groupParts, renderable, type PartGroup } from "@opencode-ai/session-ui/message-part"
 import { TimelineRow, type SummaryDiff } from "./timeline-row"
+import { changedFilePaths } from "./changed-files"
 import { uniqueSummaryDiffs } from "./summary-diffs"
 import { compareMessages } from "@/utils/session-message"
 
@@ -29,6 +30,7 @@ export type TimelineRowMap = {
   Thinking: { userMessageID: string; reasoningHeading?: string }
   Retry: { userMessageID: string }
   DiffSummary: { userMessageID: string; diffs: SummaryDiff[] }
+  OpenIn: { userMessageID: string; files: string[] }
   Error: { userMessageID: string; text: string }
 }
 
@@ -214,6 +216,11 @@ export namespace Timeline {
           diffs,
         }),
       )
+    }
+
+    const files = changedFilePaths(assistantMessages.flatMap((message) => getMessageParts(message.id)))
+    if (files.length > 0 && (status === "idle" || !isActive)) {
+      rows.push(new TimelineRow.OpenIn({ userMessageID: userMessage.id, files }))
     }
 
     if (error) {

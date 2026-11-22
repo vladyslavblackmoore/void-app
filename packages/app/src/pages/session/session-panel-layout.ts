@@ -1,6 +1,6 @@
-export function sessionPanelLayout(input: { review: boolean; terminal: boolean; files: boolean }) {
+export function sessionPanelLayout(input: { review: boolean; terminal: boolean }) {
   return {
-    visible: input.review || input.terminal || input.files,
+    visible: input.review || input.terminal,
     stacked: input.review && input.terminal,
   }
 }

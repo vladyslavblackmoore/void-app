@@ -39,7 +39,6 @@ const COMMON_COMMAND_IDS = [
   "session.previous",
   "session.next",
   "terminal.toggle",
-  "review.toggle",
 ] as const
 
 export function uniqueCommandPaletteEntries(items: CommandPaletteEntry[]) {

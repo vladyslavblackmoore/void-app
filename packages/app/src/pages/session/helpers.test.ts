@@ -3,71 +3,10 @@ import { createMemo, createRoot } from "solid-js"
 import { createStore } from "solid-js/store"
 import {
   SESSION_OPEN_FILE_TAB,
-  createOpenReviewFile,
-  createOpenSessionFileTab,
   createSessionTabs,
   focusTerminalById,
   getTabReorderIndex,
-  shouldShowFileTree,
 } from "./helpers"
-
-describe("shouldShowFileTree", () => {
-  test("does not reserve space for a disabled file tree", () => {
-    expect(shouldShowFileTree({ visible: false, opened: true })).toBe(false)
-    expect(shouldShowFileTree({ visible: true, opened: true })).toBe(true)
-  })
-})
-
-describe("createOpenReviewFile", () => {
-  test("opens and loads selected review file", () => {
-    const calls: string[] = []
-    const openReviewFile = createOpenReviewFile({
-      showAllFiles: () => calls.push("show"),
-      tabForPath: (path) => {
-        calls.push(`tab:${path}`)
-        return `file://${path}`
-      },
-      openTab: (tab) => calls.push(`open:${tab}`),
-      setActive: (tab) => calls.push(`active:${tab}`),
-      loadFile: (path) => calls.push(`load:${path}`),
-    })
-
-    openReviewFile("src/a.ts")
-
-    expect(calls).toEqual(["show", "load:src/a.ts", "tab:src/a.ts", "open:file://src/a.ts", "active:file://src/a.ts"])
-  })
-})
-
-describe("createOpenSessionFileTab", () => {
-  test("activates the opened file tab", () => {
-    const calls: string[] = []
-    const openTab = createOpenSessionFileTab({
-      normalizeTab: (value) => {
-        calls.push(`normalize:${value}`)
-        return `file://${value}`
-      },
-      openTab: (tab) => calls.push(`open:${tab}`),
-      pathFromTab: (tab) => {
-        calls.push(`path:${tab}`)
-        return tab.slice("file://".length)
-      },
-      loadFile: (path) => calls.push(`load:${path}`),
-      openReviewPanel: () => calls.push("review"),
-      setActive: (tab) => calls.push(`active:${tab}`),
-    })
-
-    openTab("src/a.ts")
-
-    expect(calls).toEqual([
-      "normalize:src/a.ts",
-      "open:file://src/a.ts",
-      "path:file://src/a.ts",
-      "load:src/a.ts",
-      "review",
-      "active:file://src/a.ts",
-    ])
-  })
-})
 
 describe("focusTerminalById", () => {
   test("focuses textarea when present", () => {

@@ -29,6 +29,7 @@ export function OpenInAppV2(props: { directory: () => string }) {
               state.openDir(state.current().id)
             }}
             disabled={state.opening()}
+            data-action="open-in-open"
             aria-label={language.t("session.header.open.ariaLabel", { app: state.current().label })}
           >
             <Show
@@ -49,6 +50,7 @@ export function OpenInAppV2(props: { directory: () => string }) {
           <MenuV2.Trigger
             as={SplitButtonV2MenuTrigger}
             disabled={state.opening()}
+            data-action="open-in-menu"
             aria-label={language.t("session.header.open.menu")}
             onPointerDown={(event) => event.stopPropagation()}
           >

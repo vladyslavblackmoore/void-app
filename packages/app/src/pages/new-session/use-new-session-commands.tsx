@@ -5,10 +5,6 @@ import { useLanguage } from "@/context/language"
 
 export function useNewSessionCommands(input: {
   restoreFocus: () => void
-  project: {
-    empty: () => boolean
-    open: () => void
-  }
 }) {
   const command = useCommand()
   const dialog = useDialog()
@@ -31,14 +27,6 @@ export function useNewSessionCommands(input: {
       category: language.t("command.category.view"),
       keybind: "ctrl+l",
       onSelect: input.restoreFocus,
-    },
-    {
-      id: "project.select",
-      title: language.t("session.new.project.search"),
-      category: language.t("command.category.project"),
-      keybind: "mod+shift+o",
-      disabled: input.project.empty(),
-      onSelect: input.project.open,
     },
   ])
 }

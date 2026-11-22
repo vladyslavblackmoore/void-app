@@ -240,6 +240,18 @@ export function registerIpcHandlers(deps: Deps) {
     return true
   })
 
+  ipcMain.handle(
+    "git-root",
+    (_event: IpcMainInvokeEvent, directory: string) =>
+      new Promise<string | null>((resolve) => {
+        if (typeof directory !== "string" || !directory) return resolve(null)
+        execFile("git", ["-C", directory, "rev-parse", "--show-toplevel"], { timeout: 3000 }, (err, stdout) => {
+          const root = err ? "" : stdout.trim()
+          resolve(root || null)
+        })
+      }),
+  )
+
   ipcMain.handle("read-clipboard-image", () => {
     const image = clipboard.readImage()
     if (image.isEmpty()) return null
