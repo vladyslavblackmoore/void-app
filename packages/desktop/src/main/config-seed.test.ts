@@ -135,6 +135,7 @@ describe("seedConfig effort variants", () => {
     expect(await models()).toEqual({
       opus: { name: "Opus", variants: efforts },
       sonnet: { name: "Sonnet", variants: efforts },
+      haiku: { name: "Haiku", variants: efforts },
     })
   })
 
@@ -211,7 +212,10 @@ describe("seedConfig memory", () => {
 
     const result = await parsed()
     expect(result.instructions).toEqual(["docs/RULES.md", ...files])
-    expect(result.permission).toEqual({ external_directory: { "/tmp/*": "allow", [`${memory}/*`]: "allow" }, bash: "ask" })
+    expect(result.permission).toEqual({
+      external_directory: { "/tmp/*": "allow", [`${memory}/*`]: "allow" },
+      bash: "ask",
+    })
   })
 
   test("is idempotent and does not restore keys the owner removed", async () => {
@@ -241,5 +245,66 @@ describe("seedConfig memory", () => {
     await seedConfig(dir, data, wrapper, { config }, memory)
 
     expect((await parsed()).instructions).toEqual(files)
+  })
+})
+
+describe("seedConfig haiku model", () => {
+  const efforts = ["low", "medium", "high", "xhigh", "max"]
+  const models = async () => parse(await read()).provider.subscription.models
+
+  test("adds haiku with the effort variants to an existing config once", async () => {
+    await writeFile(join(dir, "opencode.jsonc"), config)
+    await writeFile(join(data, "config-seeded-1"), "")
+
+    await seedConfig(dir, data, wrapper)
+
+    const haiku = (await models()).haiku
+    expect(haiku.name).toBe("Haiku")
+    expect(Object.keys(haiku.variants)).toEqual(efforts)
+    expect(haiku.variants.xhigh).toEqual({ effort: "xhigh" })
+    expect(await Bun.file(join(data, "config-seeded-3")).exists()).toBe(true)
+
+    const seeded = await read()
+    await seedConfig(dir, data, wrapper)
+    expect(await read()).toBe(seeded)
+  })
+
+  test("does not overwrite a haiku entry that exists and does not restore a removed one", async () => {
+    await writeFile(
+      join(dir, "opencode.jsonc"),
+      config.replace(
+        '"sonnet": { "name": "Sonnet" }',
+        '"sonnet": { "name": "Sonnet" }, "haiku": { "name": "Mine", "variants": { "low": { "effort": "low" } } }',
+      ),
+    )
+    await writeFile(join(data, "config-seeded-1"), "")
+
+    await seedConfig(dir, data, wrapper)
+
+    const haiku = (await models()).haiku
+    expect(haiku.name).toBe("Mine")
+    expect(Object.keys(haiku.variants)).toEqual(["low", "medium", "high", "xhigh", "max"])
+
+    await writeFile(join(dir, "opencode.jsonc"), config)
+    await seedConfig(dir, data, wrapper)
+    expect((await models()).haiku).toBeUndefined()
+  })
+
+  test("a fresh install ends with one haiku entry carrying the variants", async () => {
+    const template = await Bun.file(join(import.meta.dir, "../../resources/config/opencode.jsonc")).text()
+
+    await seedConfig(dir, data, wrapper, { config: template })
+
+    const haiku = (await models()).haiku
+    expect(haiku.name).toBe("Haiku")
+    expect(Object.keys(haiku.variants)).toEqual(efforts)
+  })
+
+  test("seeds the delegate files next to the plugin and the provider", async () => {
+    await seedConfig(dir, data, wrapper, { delegate: { plugin: "p", core: "c", mcp: "m" } })
+
+    expect(await readFile(join(dir, "plugins", "delegate.js"), "utf8")).toBe("p")
+    expect(await readFile(join(dir, "delegate", "core.mjs"), "utf8")).toBe("c")
+    expect(await readFile(join(dir, "delegate", "mcp.mjs"), "utf8")).toBe("m")
   })
 })

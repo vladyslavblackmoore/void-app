@@ -11,7 +11,8 @@
       },
       "models": {
         "opus": { "name": "Opus" },
-        "sonnet": { "name": "Sonnet" }
+        "sonnet": { "name": "Sonnet" },
+        "haiku": { "name": "Haiku" }
       }
     }
   }

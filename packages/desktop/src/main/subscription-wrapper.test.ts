@@ -16,6 +16,10 @@ type Provider = ((modelId: string, settings?: Record<string, unknown>) => Model)
 type Wrapper = {
   notConnected: string
   withCliDir: (settings?: Record<string, unknown>, env?: Record<string, string>) => Record<string, unknown>
+  delegatePlan: (
+    headers: Record<string, string>,
+    env: Record<string, string>,
+  ) => { env: Record<string, string> } | undefined
   createSubscription: (options: Record<string, unknown>, factory: unknown) => Provider
 }
 
@@ -129,6 +133,80 @@ describe("subscription wrapper effort", () => {
     const provider = wrapper.createSubscription({}, fake().factory)
 
     expect(provider.chat("sonnet").modelId).toBe("sonnet")
+  })
+})
+
+describe("subscription wrapper delegate tool", () => {
+  const headers = {
+    "x-opencode-session-id": "ses_parent",
+    "x-void-delegate-url": "http://127.0.0.1:4100/",
+    "x-void-delegate-directory": "%2Fwork%2Fmy%20project",
+  }
+
+  test("adds the delegate server with the parent id and allows its tool", async () => {
+    process.env.OPENCODE_SERVER_PASSWORD = "secret"
+    const model = fake()
+    const provider = wrapper.createSubscription({}, model.factory)
+
+    await provider("sonnet").doGenerate({ headers })
+
+    const settings = model.calls.at(-1)!.settings as {
+      mcpServers: { delegate: { type: string; command: string; args: string[]; env: Record<string, string> } }
+      allowedTools: string[]
+    }
+    expect(settings.allowedTools).toEqual(["mcp__delegate__delegate"])
+    expect(settings.mcpServers.delegate.type).toBe("stdio")
+    expect(settings.mcpServers.delegate.args[0]).toEndWith("delegate/mcp.mjs")
+    expect(settings.mcpServers.delegate.env).toMatchObject({
+      VOID_DELEGATE_URL: "http://127.0.0.1:4100/",
+      VOID_DELEGATE_PARENT: "ses_parent",
+      VOID_DELEGATE_DIRECTORY: "/work/my project",
+      VOID_DELEGATE_PASSWORD: "secret",
+    })
+  })
+
+  test("merges with the servers and tools of the defaults and of the model", async () => {
+    const model = fake()
+    const provider = wrapper.createSubscription(
+      {
+        defaultSettings: {
+          mcpServers: { hub: { command: "hub" } },
+          allowedTools: ["Read", "mcp__delegate__delegate"],
+        },
+      },
+      model.factory,
+    )
+
+    await provider("opus", { mcpServers: { extra: { command: "extra" } }, allowedTools: ["Grep"] }).doGenerate({
+      headers,
+      providerOptions: { subscription: { effort: "high" } },
+    })
+
+    const settings = model.calls.at(-1)!.settings as {
+      mcpServers: Record<string, unknown>
+      allowedTools: string[]
+      effort: string
+    }
+    expect(Object.keys(settings.mcpServers).sort()).toEqual(["delegate", "extra", "hub"])
+    expect(settings.allowedTools).toEqual(["Read", "mcp__delegate__delegate", "Grep"])
+    expect(settings.effort).toBe("high")
+  })
+
+  test("adds nothing without a session id or a server url", async () => {
+    const model = fake()
+    const provider = wrapper.createSubscription({}, model.factory)
+
+    await provider("sonnet").doGenerate({ headers: { "x-void-delegate-url": "http://127.0.0.1:4100/" } })
+    await provider("sonnet").doGenerate({ headers: { "x-opencode-session-id": "ses_parent" } })
+    await provider("sonnet").doGenerate({})
+
+    expect(model.calls.filter((call) => call.settings)).toEqual([])
+  })
+
+  test("reads the headers case-insensitively", () => {
+    const plan = wrapper.delegatePlan({ "X-OpenCode-Session-Id": "ses_parent", "X-Void-Delegate-Url": "http://h/" }, {})
+
+    expect(plan?.env).toMatchObject({ VOID_DELEGATE_PARENT: "ses_parent", VOID_DELEGATE_URL: "http://h/" })
   })
 })
 

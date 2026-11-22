@@ -15,6 +15,9 @@ import configTemplate from "../../resources/config/opencode.jsonc?raw"
 import memoryIndexTemplate from "../../resources/memory/MEMORY.md?raw"
 import memoryRulesTemplate from "../../resources/memory/RULES.md?raw"
 import memoryTasksTemplate from "../../resources/memory/tasks.md?raw"
+import delegateCore from "../../resources/delegate/core.mjs?raw"
+import delegateMcp from "../../resources/delegate/mcp.mjs?raw"
+import delegatePlugin from "../../resources/plugin/delegate.js?raw"
 import subscriptionPlugin from "../../resources/plugin/subscription-auth.js?raw"
 import subscriptionWrapper from "../../resources/provider/subscription.mjs?raw"
 import type { ServerReadyData } from "../preload/types"
@@ -377,6 +380,7 @@ const main = Effect.gen(function* () {
         {
           plugin: subscriptionPlugin,
           config: configTemplate,
+          delegate: { plugin: delegatePlugin, core: delegateCore, mcp: delegateMcp },
         },
         memoryDir(VOID_HOME),
       ).catch((error) => logger.warn("failed to seed config", error)),

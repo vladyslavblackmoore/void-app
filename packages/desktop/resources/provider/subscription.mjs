@@ -1,4 +1,7 @@
 import { spawn } from "node:child_process"
+import { existsSync } from "node:fs"
+import { dirname, join } from "node:path"
+import { fileURLToPath } from "node:url"
 import { createAuthenticationError, createClaudeCode, isAuthenticationError } from "ai-sdk-provider-claude-code"
 
 export const notConnected = "Claude subscription is not connected. Open Settings → Providers and press Connect."
@@ -109,9 +112,44 @@ async function ensureConnected(check) {
   if (!(await check())) throw createAuthenticationError({ message: notConnected })
 }
 
+const delegateServer = "delegate"
+const delegateTool = "mcp__delegate__delegate"
+const delegateScript = join(dirname(fileURLToPath(import.meta.url)), "..", "delegate", "mcp.mjs")
+
+function header(headers, name) {
+  if (!headers) return undefined
+  const found = Object.keys(headers).find((key) => key.toLowerCase() === name)
+  return found === undefined ? undefined : headers[found]
+}
+
+export function delegatePlan(headers, env = process.env, script = delegateScript) {
+  const parent = header(headers, "x-opencode-session-id")
+  const url = header(headers, "x-void-delegate-url")
+  if (!parent || !url || !existsSync(script)) return
+  const directory = header(headers, "x-void-delegate-directory")
+  const values = {
+    VOID_DELEGATE_URL: url,
+    VOID_DELEGATE_PARENT: parent,
+    ...(directory ? { VOID_DELEGATE_DIRECTORY: decodeURIComponent(directory) } : {}),
+    ...(env.OPENCODE_SERVER_PASSWORD ? { VOID_DELEGATE_PASSWORD: env.OPENCODE_SERVER_PASSWORD } : {}),
+    ...(env.OPENCODE_SERVER_USERNAME ? { VOID_DELEGATE_USER: env.OPENCODE_SERVER_USERNAME } : {}),
+    ...(process.versions.electron ? { ELECTRON_RUN_AS_NODE: "1" } : {}),
+  }
+  return { command: process.execPath, args: [script], env: values }
+}
+
+export function withDelegate(settings, plan, defaults) {
+  if (!plan) return settings
+  return {
+    ...settings,
+    mcpServers: { ...defaults?.mcpServers, ...settings?.mcpServers, [delegateServer]: { type: "stdio", ...plan } },
+    allowedTools: [...new Set([...(defaults?.allowedTools ?? []), ...(settings?.allowedTools ?? []), delegateTool])],
+  }
+}
+
 export function wrapModel(build, check, key = "subscription") {
   const model = build()
-  const call = (options) => build(options?.providerOptions?.[key]?.effort)
+  const call = (options) => build(options?.providerOptions?.[key]?.effort, delegatePlan(options?.headers))
   return new Proxy(model, {
     get(target, key) {
       if (key === "doStream")
@@ -151,7 +189,14 @@ export function createSubscription(options = {}, factory = createClaudeCode) {
   const base = factory({ defaultSettings })
   const check = statusCheck(defaultSettings.pathToClaudeCodeExecutable, defaultSettings.env ?? {})
   const model = (modelId, settings) =>
-    wrapModel((effort) => base.languageModel(modelId, effort ? { ...settings, effort } : settings), check, key)
+    wrapModel(
+      (effort, plan) => {
+        const own = effort ? { ...settings, effort } : settings
+        return base.languageModel(modelId, plan ? withDelegate(own, plan, defaultSettings) : own)
+      },
+      check,
+      key,
+    )
   const provider = (modelId, settings) => model(modelId, settings)
   return Object.assign(provider, base, { languageModel: model, chat: model, specificationVersion: "v3" })
 }

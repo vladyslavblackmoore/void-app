@@ -12,6 +12,7 @@ const defaults: Array<[string[], unknown]> = [
 
 const CONFIG_STAMP = "config-seeded-1"
 const MEMORY_STAMP = "config-seeded-2"
+const HAIKU_STAMP = "config-seeded-3"
 const MEMORY_FILES = ["MEMORY.md", "tasks.md", "RULES.md"]
 
 const efforts = ["low", "medium", "high", "xhigh", "max"]
@@ -22,7 +23,9 @@ async function writeIfChanged(target: string, content: string) {
   await writeFile(target, content)
 }
 
-export type ConfigTemplates = { plugin?: string; config?: string }
+export type DelegateTemplates = { plugin: string; core: string; mcp: string }
+
+export type ConfigTemplates = { plugin?: string; config?: string; delegate?: DelegateTemplates }
 
 const format = { formattingOptions: { insertSpaces: true, tabSize: 2 } }
 
@@ -80,12 +83,41 @@ export async function seedConfig(
   memoryDir?: string,
 ) {
   await seedMainConfig(configDir, userDataDir, wrapper, templates)
+  await seedHaiku(configDir, userDataDir)
   if (memoryDir !== undefined) await seedMemoryKeys(configDir, userDataDir, memoryDir)
+}
+
+async function seedHaiku(configDir: string, userDataDir: string) {
+  if (existsSync(join(userDataDir, HAIKU_STAMP))) return
+  const file = join(configDir, "opencode.jsonc")
+  const text = await readFile(file, "utf8").catch(() => undefined)
+  if (text === undefined) return
+  const tree = parseTree(text)
+  if (!tree || !findNodeAtLocation(tree, ["provider", "subscription"])) return
+  const modelsNode = findNodeAtLocation(tree, ["provider", "subscription", "models"])
+  if (modelsNode && modelsNode.type !== "object") return
+  const base = ["provider", "subscription", "models", "haiku"]
+  const edits: Array<[string[], unknown]> = [
+    [base, { name: "Haiku" }],
+    ...efforts.map((effort): [string[], unknown] => [[...base, "variants", effort], { effort }]),
+  ]
+  const next = edits
+    .filter(([path]) => !findNodeAtLocation(tree, path))
+    .reduce((result, [path, value]) => applyEdits(result, modify(result, path, value, format)), text)
+  if (next !== text) await writeFile(file, next)
+  await mkdir(userDataDir, { recursive: true })
+  await writeFile(join(userDataDir, HAIKU_STAMP), new Date().toISOString())
 }
 
 async function seedMainConfig(configDir: string, userDataDir: string, wrapper: string, templates: ConfigTemplates) {
   await writeIfChanged(join(configDir, "provider", "subscription.mjs"), wrapper)
-  if (templates.plugin !== undefined) await writeIfChanged(join(configDir, "plugins", "subscription-auth.js"), templates.plugin)
+  if (templates.plugin !== undefined)
+    await writeIfChanged(join(configDir, "plugins", "subscription-auth.js"), templates.plugin)
+  if (templates.delegate !== undefined) {
+    await writeIfChanged(join(configDir, "plugins", "delegate.js"), templates.delegate.plugin)
+    await writeIfChanged(join(configDir, "delegate", "core.mjs"), templates.delegate.core)
+    await writeIfChanged(join(configDir, "delegate", "mcp.mjs"), templates.delegate.mcp)
+  }
   if (templates.config !== undefined && !existsSync(join(configDir, "opencode.jsonc"))) {
     await mkdir(configDir, { recursive: true })
     await writeFile(join(configDir, "opencode.jsonc"), templates.config)
