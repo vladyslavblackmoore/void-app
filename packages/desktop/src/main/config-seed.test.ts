@@ -164,3 +164,16 @@ describe("seedConfig once", () => {
     expect(await read()).toBe(config)
   })
 })
+
+describe("seedConfig templates", () => {
+  test("writes the plugin and a config only when none exists", async () => {
+    await seedConfig(dir, data, wrapper, { plugin: "plugin", config })
+
+    expect(await readFile(join(dir, "plugins", "subscription-auth.js"), "utf8")).toBe("plugin")
+    expect(parse(await read()).provider.subscription.models.opus.name).toBe("Opus")
+
+    await writeFile(join(dir, "opencode.jsonc"), '{ "shell": "zsh" }')
+    await seedConfig(dir, data, wrapper, { config })
+    expect(await read()).toBe('{ "shell": "zsh" }')
+  })
+})

@@ -14,11 +14,20 @@ const CONFIG_STAMP = "config-seeded-1"
 
 const efforts = ["low", "medium", "high", "xhigh", "max"]
 
-export async function seedConfig(configDir: string, userDataDir: string, wrapper: string) {
-  const target = join(configDir, "provider", "subscription.mjs")
-  if ((await readFile(target, "utf8").catch(() => undefined)) !== wrapper) {
-    await mkdir(dirname(target), { recursive: true })
-    await writeFile(target, wrapper)
+async function writeIfChanged(target: string, content: string) {
+  if ((await readFile(target, "utf8").catch(() => undefined)) === content) return
+  await mkdir(dirname(target), { recursive: true })
+  await writeFile(target, content)
+}
+
+export type ConfigTemplates = { plugin?: string; config?: string }
+
+export async function seedConfig(configDir: string, userDataDir: string, wrapper: string, templates: ConfigTemplates = {}) {
+  await writeIfChanged(join(configDir, "provider", "subscription.mjs"), wrapper)
+  if (templates.plugin !== undefined) await writeIfChanged(join(configDir, "plugins", "subscription-auth.js"), templates.plugin)
+  if (templates.config !== undefined && !existsSync(join(configDir, "opencode.jsonc"))) {
+    await mkdir(configDir, { recursive: true })
+    await writeFile(join(configDir, "opencode.jsonc"), templates.config)
   }
 
   if (existsSync(join(userDataDir, CONFIG_STAMP))) return

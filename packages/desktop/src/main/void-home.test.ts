@@ -88,6 +88,10 @@ describe("void home", () => {
     expect(voidUserData(false)).toBe(join(root, "app-dev"))
   })
 
+  test("exports the subscription login dir to the core", () => {
+    expect(voidAppEnv(VOID_HOME, {}).VOID_CLI_DIR).toBe(join(root, "spaces", "home", "cli"))
+  })
+
   test("keeps the subscription login dir beside the profile dirs", () => {
     expect(voidCliDir(VOID_HOME)).toBe(join(root, "spaces", "home", "cli"))
   })

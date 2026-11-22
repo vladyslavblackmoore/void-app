@@ -15,6 +15,7 @@ type Provider = ((modelId: string, settings?: Record<string, unknown>) => Model)
 }
 type Wrapper = {
   notConnected: string
+  withCliDir: (settings?: Record<string, unknown>, env?: Record<string, string>) => Record<string, unknown>
   createSubscription: (options: Record<string, unknown>, factory: unknown) => Provider
 }
 
@@ -165,5 +166,17 @@ describe("subscription wrapper login handling", () => {
       provider("sonnet").doStream({ providerOptions: { subscription: { effort: "high" } } }),
     ).rejects.toThrow(wrapper.notConnected)
     expect(model.calls.map((call) => call.settings)).not.toContainEqual({ effort: "high" })
+  })
+})
+
+describe("subscription wrapper login directory", () => {
+  test("points the cli at the profile login directory", () => {
+    expect(wrapper.withCliDir({ a: 1 }, { VOID_CLI_DIR: "/d" })).toEqual({ a: 1, env: { CLAUDE_CONFIG_DIR: "/d" } })
+  })
+
+  test("keeps an explicit login directory and leaves settings alone without one", () => {
+    const set = { env: { CLAUDE_CONFIG_DIR: "/x" } }
+    expect(wrapper.withCliDir(set, { VOID_CLI_DIR: "/d" })).toBe(set)
+    expect(wrapper.withCliDir({ a: 1 }, {})).toEqual({ a: 1 })
   })
 })

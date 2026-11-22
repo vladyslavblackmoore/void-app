@@ -46,6 +46,7 @@ export function voidAppEnv(root: string, user: UserXdg) {
     XDG_CONFIG_HOME: join(profile, "config"),
     XDG_CACHE_HOME: join(root, "cache"),
     XDG_STATE_HOME: join(profile, "state"),
+    VOID_CLI_DIR: voidCliDir(root),
     VOID_USER_ENV: JSON.stringify(Object.fromEntries(USER_XDG.map((key) => [key, user[key] || null]))),
   }
 }

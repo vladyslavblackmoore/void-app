@@ -11,6 +11,8 @@ import { app, BrowserWindow } from "electron"
 import { Deferred, Effect, Fiber } from "effect"
 import contextMenu from "electron-context-menu"
 
+import configTemplate from "../../resources/config/opencode.jsonc?raw"
+import subscriptionPlugin from "../../resources/plugin/subscription-auth.js?raw"
 import subscriptionWrapper from "../../resources/provider/subscription.mjs?raw"
 import type { ServerReadyData } from "../preload/types"
 import { seedConfig } from "./config-seed"
@@ -357,7 +359,10 @@ const main = Effect.gen(function* () {
 
     const configDir = join(process.env.XDG_CONFIG_HOME ?? voidAppEnv(VOID_HOME, {}).XDG_CONFIG_HOME, "opencode")
     yield* Effect.promise(() =>
-      seedConfig(configDir, app.getPath("userData"), subscriptionWrapper).catch((error) => logger.warn("failed to seed config", error)),
+      seedConfig(configDir, app.getPath("userData"), subscriptionWrapper, {
+        plugin: subscriptionPlugin,
+        config: configTemplate,
+      }).catch((error) => logger.warn("failed to seed config", error)),
     )
 
     ensureLoopbackNoProxy()

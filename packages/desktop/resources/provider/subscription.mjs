@@ -139,8 +139,14 @@ export function wrapModel(build, check, key = "subscription") {
   })
 }
 
+export function withCliDir(settings = {}, env = process.env) {
+  const dir = env.VOID_CLI_DIR
+  if (!dir || settings.env?.CLAUDE_CONFIG_DIR) return settings
+  return { ...settings, env: { ...settings.env, CLAUDE_CONFIG_DIR: dir } }
+}
+
 export function createSubscription(options = {}, factory = createClaudeCode) {
-  const defaultSettings = options.defaultSettings ?? {}
+  const defaultSettings = withCliDir(options.defaultSettings)
   const key = options.name ?? "subscription"
   const base = factory({ defaultSettings })
   const check = statusCheck(defaultSettings.pathToClaudeCodeExecutable, defaultSettings.env ?? {})
