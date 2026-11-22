@@ -1,5 +1,13 @@
 import { describe, expect, test } from "bun:test"
-import { agentRunState, buildAgentTree, stripDelegationMarker, withoutRemoved } from "./agents-tree"
+import {
+  agentRowTitle,
+  agentRunState,
+  buildAgentTree,
+  stripDelegationMarker,
+  stripWorkerNote,
+  withoutRemoved,
+  withoutWorkerNote,
+} from "./agents-tree"
 
 const session = (id: string, parentID: string | undefined, created: number) => ({
   id,
@@ -92,6 +100,52 @@ describe("agentRunState", () => {
     expect(agentRunState({ type: "idle" }, false)).toBe("idle")
     expect(agentRunState(undefined, false)).toBe("idle")
     expect(agentRunState({ type: "idle" }, true)).toBe("error")
+  })
+
+  test("maps an aborted last reply to aborted and keeps running above it", () => {
+    expect(agentRunState({ type: "idle" }, true, true)).toBe("aborted")
+    expect(agentRunState(undefined, false, true)).toBe("aborted")
+    expect(agentRunState({ type: "busy" }, true, true)).toBe("running")
+  })
+})
+
+describe("agentRowTitle", () => {
+  test("drops the delegate prefix and the worker marker", () => {
+    expect(agentRowTitle("delegate: Fix the build")).toBe("Fix the build")
+    expect(agentRowTitle("delegate: [delegated worker] Fix")).toBe("Fix")
+    expect(agentRowTitle("[delegated worker] Fix")).toBe("Fix")
+  })
+
+  test("keeps other titles and handles undefined", () => {
+    expect(agentRowTitle("Plain delegate: x")).toBe("Plain delegate: x")
+    expect(agentRowTitle(undefined)).toBe("")
+  })
+})
+
+describe("stripWorkerNote", () => {
+  test("removes the whole worker note paragraph", () => {
+    const note = "[delegated worker] You are a child session. Do the task.\nDo not use delegate.\n\nFix the build"
+    expect(stripWorkerNote(note)).toBe("Fix the build")
+  })
+
+  test("removes only the marker when no paragraph break follows", () => {
+    expect(stripWorkerNote("[delegated worker] Fix")).toBe("Fix")
+  })
+
+  test("keeps text without a leading marker", () => {
+    expect(stripWorkerNote("Fix [delegated worker]\n\nnow")).toBe("Fix [delegated worker]\n\nnow")
+  })
+})
+
+describe("withoutWorkerNote", () => {
+  test("strips text parts and keeps other parts and identity", () => {
+    const text = { type: "text", text: "[delegated worker] note\n\nTask" }
+    const tool = { type: "tool", text: "" }
+    const result = withoutWorkerNote([text, tool])
+    expect(result[0]).toEqual({ type: "text", text: "Task" })
+    expect(result[1]).toBe(tool)
+    const clean = [{ type: "text", text: "Task" }]
+    expect(withoutWorkerNote(clean)).toBe(clean)
   })
 })
 

@@ -1191,5 +1191,6 @@ export const dict = {
   "settings.agents.confirm.message": "Sessions are running. Saving restarts the server and interrupts them.",
   "settings.agents.confirm.apply": "Save and interrupt",
   "settings.agents.confirm.cancel": "Cancel",
+  "session.agents.status.aborted": "Aborted",
   "session.agents.noMessages": "No messages yet.",
 }

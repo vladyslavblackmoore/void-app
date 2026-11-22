@@ -8,10 +8,11 @@ import { useSync } from "@/context/sync"
 import { useSessionLayout } from "@/pages/session/session-layout"
 import {
   AGENT_TREE_MAX_DEPTH,
+  agentRowTitle,
   agentRunState,
   buildAgentTree,
-  stripDelegationMarker,
   withoutRemoved,
+  withoutWorkerNote,
   type AgentRunState,
 } from "@/pages/session/agents-tree"
 import { sessionTitle } from "@/utils/session-title"
@@ -23,6 +24,7 @@ const stateColor: Record<AgentRunState, string> = {
   running: "var(--syntax-info)",
   idle: "var(--syntax-success)",
   error: "var(--syntax-critical)",
+  aborted: "var(--syntax-warning)",
 }
 
 function modelLabel(messages: MessageType[]) {
@@ -100,11 +102,12 @@ export function SessionAgentsTab() {
   const rowById = createMemo(() => new Map(rows().map((row) => [row.session.id, row])))
 
   const messagesOf = (id: string) => (sync().data.message[id] ?? emptyMessages) as MessageType[]
-  const titleOf = (item: Session) => stripDelegationMarker(sessionTitle(item.title)) || item.id
+  const titleOf = (item: Session) => agentRowTitle(sessionTitle(item.title)) || item.id
   const stateOf = (id: string) => {
     const last = messagesOf(id).findLast((message) => message.role === "assistant")
     const failed = last?.role === "assistant" && !!last.error
-    return agentRunState(sync().data.session_status[id], failed)
+    const aborted = failed && last?.role === "assistant" && last.error?.name === "MessageAbortedError"
+    return agentRunState(sync().data.session_status[id], failed, aborted)
   }
 
   const abort = (id: string) => void sdk().client.session.abort({ sessionID: id }).catch(() => undefined)
@@ -239,7 +242,7 @@ function AgentChat(props: { sessionID: string; title: string; onBack: () => void
           <For each={messages()}>
             {(message) => (
               <div data-slot="session-turn-message-content" data-message-id={message.id}>
-                <Message message={message} parts={sync().data.part[message.id] ?? emptyParts} />
+                <Message message={message} parts={withoutWorkerNote(sync().data.part[message.id] ?? emptyParts)} />
               </div>
             )}
           </For>

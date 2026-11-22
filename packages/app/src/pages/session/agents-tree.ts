@@ -7,6 +7,26 @@ export function stripDelegationMarker(title: string | undefined) {
   return title.replace(marker, "").trim()
 }
 
+const delegatePrefix = /^delegate:\s*/
+const workerNote = /^\s*\[delegated worker\][\s\S]*?\n\s*\n/
+
+export function agentRowTitle(title: string | undefined) {
+  if (title === undefined) return ""
+  return stripDelegationMarker(title.replace(delegatePrefix, "")) ?? ""
+}
+
+export function stripWorkerNote(text: string) {
+  if (!marker.test(text)) return text
+  const stripped = text.replace(workerNote, "")
+  return stripped === text ? stripDelegationMarker(text)! : stripped.trim()
+}
+
+export function withoutWorkerNote<T extends { type: string }>(parts: T[]): T[] {
+  const text = (part: T) => (part as T & { text?: string }).text ?? ""
+  if (!parts.some((part) => part.type === "text" && marker.test(text(part)))) return parts
+  return parts.map((part) => (part.type === "text" ? { ...part, text: stripWorkerNote(text(part)) } : part))
+}
+
 type TreeSession = {
   id: string
   parentID?: string
@@ -39,10 +59,15 @@ export function buildAgentTree<T extends TreeSession>(sessions: T[], rootID: str
   return rows
 }
 
-export type AgentRunState = "running" | "idle" | "error"
+export type AgentRunState = "running" | "idle" | "error" | "aborted"
 
-export function agentRunState(status: { type: string } | undefined, failed: boolean): AgentRunState {
+export function agentRunState(
+  status: { type: string } | undefined,
+  failed: boolean,
+  aborted = false,
+): AgentRunState {
   if (status?.type === "busy" || status?.type === "retry") return "running"
+  if (aborted) return "aborted"
   return failed ? "error" : "idle"
 }
 
