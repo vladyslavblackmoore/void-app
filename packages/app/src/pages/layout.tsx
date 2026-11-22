@@ -907,13 +907,6 @@ export default function LegacyLayout(props: ParentProps) {
         onSelect: () => layout.sidebar.toggle(),
       },
       {
-        id: "project.open",
-        title: language.t("command.project.open"),
-        category: language.t("command.category.project"),
-        keybind: "mod+o",
-        onSelect: () => chooseProject(),
-      },
-      {
         id: "project.previous",
         title: language.t("command.project.previous"),
         category: language.t("command.category.project"),

@@ -5,12 +5,9 @@ import { Dialog, DialogBody } from "@opencode-ai/ui/v2/dialog-v2"
 import { Icon } from "@opencode-ai/ui/v2/icon"
 import { KeybindV2 } from "@opencode-ai/ui/v2/keybind-v2"
 import { TextInputV2 } from "@opencode-ai/ui/v2/text-input-v2"
-import { useDialog } from "@opencode-ai/ui/context/dialog"
-import { createEffect, createMemo, createResource, createSignal, For, Match, onCleanup, Show, Switch } from "solid-js"
+import { createEffect, createMemo, createResource, createSignal, For, Match, Show, Switch } from "solid-js"
 import { commandPaletteOptions, formatKeybindParts, useCommand } from "@/context/command"
-import { useGlobal } from "@/context/global"
 import { useLanguage } from "@/context/language"
-import { ServerConnection } from "@/context/server"
 import { useTabs } from "@/context/tabs"
 import { SessionTabAvatar } from "@/pages/layout/session-tab-avatar"
 import { getRelativeTime } from "@/utils/time"
@@ -18,7 +15,6 @@ import {
   createCommandPaletteCommandEntry,
   createCommandPaletteFileEntry,
   createCommandPaletteModel,
-  createServerSessionEntries,
   uniqueCommandPaletteEntries,
   type CommandPaletteEntry,
 } from "./command-palette"
@@ -57,68 +53,6 @@ export function DialogCommandPaletteV2(props: { onOpenFile?: (path: string) => v
       highlight={palette.highlight}
       select={palette.select}
       close={palette.close}
-    />
-  )
-}
-
-export function DialogHomeCommandPaletteV2(props: {
-  server: ServerConnection.Any
-  onSelectSession: (entry: CommandPaletteEntry) => void
-}) {
-  const command = useCommand()
-  const dialog = useDialog()
-  const global = useGlobal()
-  const language = useLanguage()
-  const serverCtx = global.ensureServerCtx(props.server)
-  const state = { cleanup: undefined as (() => void) | void, committed: false }
-  const commandEntries = createMemo(() => {
-    const category = language.t("palette.group.commands")
-    return commandPaletteOptions(command.options).map((option) => createCommandPaletteCommandEntry(option, category))
-  })
-  const sessions = createServerSessionEntries({
-    server: ServerConnection.key(props.server),
-    opened: serverCtx.projects.list,
-    stored: () => serverCtx.sync.data.project,
-    load: (search, signal) => serverCtx.sdk.api.session.list({ parentID: null, search, limit: 50 }, { signal }),
-    untitled: () => language.t("command.session.new"),
-    category: () => language.t("command.category.session"),
-  })
-
-  const highlight = (item: CommandPaletteEntry | undefined) => {
-    state.cleanup?.()
-    state.cleanup = undefined
-    if (item?.type !== "command") return
-    state.cleanup = item.option?.onHighlight?.()
-  }
-  const select = (item: CommandPaletteEntry | undefined) => {
-    if (!item) return
-    state.committed = true
-    state.cleanup = undefined
-    dialog.close()
-    if (item.type === "command") {
-      item.option?.onSelect?.("palette")
-      return
-    }
-    if (item.type === "session") props.onSelectSession(item)
-  }
-  const loadItems = async (text: string) => {
-    const query = text.trim()
-    if (!query) return commandEntries().slice(0, 5)
-    return [...commandEntries().filter((entry) => matchesEntry(entry, query)), ...(await sessions(query))]
-  }
-
-  onCleanup(() => {
-    if (state.committed) return
-    state.cleanup?.()
-  })
-
-  return (
-    <CommandPaletteView
-      placeholder={language.t("palette.search.placeholder.home")}
-      loadItems={loadItems}
-      highlight={highlight}
-      select={select}
-      close={() => dialog.close()}
     />
   )
 }

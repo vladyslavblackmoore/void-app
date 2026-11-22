@@ -9,18 +9,15 @@ import {
 import { type Session } from "@opencode-ai/sdk/v2/client"
 import {
   childSessionOnPath,
-  closeHomeProject,
   compareSessionTime,
   displayName,
   effectiveWorkspaceOrder,
   errorMessage,
   hasProjectPermissions,
   homeProjectNavigation,
-  homeProjectDirectories,
   homeSessionServerStatus,
   latestRootSession,
   sortedRootSessions,
-  toggleHomeProjectSelection,
 } from "./helpers"
 import { pathKey } from "@/utils/path-key"
 import { ServerConnection } from "@/context/server"
@@ -252,51 +249,6 @@ describe("layout workspace helpers", () => {
     expect(displayName({ worktree: "/" })).toBe("/")
   })
 
-  test("scopes home project selection by server", () => {
-    expect(
-      toggleHomeProjectSelection(undefined, serverKey("https://debian.example"), "/home/luke/repos/amazon"),
-    ).toEqual({
-      server: serverKey("https://debian.example"),
-      directory: "/home/luke/repos/amazon",
-    })
-    expect(
-      toggleHomeProjectSelection(
-        { server: serverKey("https://windows.example"), directory: "/home/luke/repos/amazon" },
-        serverKey("https://debian.example"),
-        "/home/luke/repos/amazon",
-      ),
-    ).toEqual({ server: serverKey("https://debian.example"), directory: "/home/luke/repos/amazon" })
-    expect(
-      toggleHomeProjectSelection(
-        { server: serverKey("https://debian.example"), directory: "/home/luke/repos/amazon" },
-        serverKey("https://debian.example"),
-        "/home/luke/repos/amazon",
-      ),
-    ).toEqual({ server: serverKey("https://debian.example") })
-  })
-
-  test("closes a home project through its server context", () => {
-    const closed: string[] = []
-
-    expect(
-      closeHomeProject(
-        { server: serverKey("https://windows.example"), directory: "/shared" },
-        serverKey("https://debian.example"),
-        { close: (directory) => closed.push(directory) },
-        "/shared",
-      ),
-    ).toEqual({ server: serverKey("https://windows.example"), directory: "/shared" })
-    expect(closed).toEqual(["/shared"])
-    expect(
-      closeHomeProject(
-        { server: serverKey("https://debian.example"), directory: "/shared" },
-        serverKey("https://debian.example"),
-        { close: (directory) => closed.push(directory) },
-        "/shared",
-      ),
-    ).toEqual({ server: serverKey("https://debian.example") })
-  })
-
   test("defers home project navigation until its server is active", () => {
     expect(
       homeProjectNavigation(serverKey("sidecar"), serverKey("https://debian.example"), "/YW1hem9u/session"),
@@ -313,12 +265,6 @@ describe("layout workspace helpers", () => {
     ).toEqual({
       href: "/YW1hem9u/session",
     })
-  })
-
-  test("preserves picker order when adding multiple projects", () => {
-    expect(homeProjectDirectories(["/first", "/second"])).toEqual(["/first", "/second"])
-    expect(homeProjectDirectories("/only")).toEqual(["/only"])
-    expect(homeProjectDirectories(null)).toEqual([])
   })
 
   test("hides status derived from an inactive server", () => {

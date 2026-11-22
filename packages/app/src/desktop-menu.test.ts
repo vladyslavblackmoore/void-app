@@ -20,4 +20,13 @@ describe("desktop menu", () => {
     expect(windowMenu?.labelKey).toBe("desktop.menu.window")
     expect(roleItems.length).toBeGreaterThan(0)
   })
+
+  test("has no new session or open project entries", () => {
+    const commands = DESKTOP_MENU.flatMap((menu) => menu.items ?? []).flatMap((item) =>
+      item.type === "item" && item.command ? [item.command] : [],
+    )
+
+    expect(commands).not.toContain("session.new")
+    expect(commands).not.toContain("project.open")
+  })
 })

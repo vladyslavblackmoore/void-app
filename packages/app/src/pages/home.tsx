@@ -1,50 +1,22 @@
-import { ScrollView } from "@opencode-ai/ui/scroll-view"
-import { createHomeController } from "./home/home-controller"
-import { createHomeProjectsController } from "./home/home-projects-controller"
-import { HomeUtilityNav } from "./home/home-projects-view"
-import { HomeProjects } from "./home/home-projects"
-import { createHomeScrollController } from "./home/home-scroll-controller"
-import { createHomeSessionSearchController } from "./home/home-session-search-controller"
-import { createHomeSessionsController } from "./home/home-sessions-controller"
-import { HomeSessions } from "./home/home-sessions"
+import { SettingsPanel } from "@/components/settings-v2"
+import { usePlatform } from "@/context/platform"
+import { HomeNav } from "./home/home-nav"
 
 export function NewHome() {
-  const home = createHomeController()
-  const projects = createHomeProjectsController(home)
-  const sessions = createHomeSessionsController(home)
-  const search = createHomeSessionSearchController(home, sessions)
-  const scroll = createHomeScrollController(sessions.data.groups)
+  const platform = usePlatform()
   return (
     <div
       class={`
-        m-2 min-h-0 flex-1 self-stretch overflow-hidden rounded-[10px]
+        m-2 flex min-h-0 flex-1 gap-4 self-stretch overflow-hidden rounded-[10px] p-3
         bg-v2-background-bg-base shadow-[var(--v2-elevation-raised)]
       `}
     >
-      <ScrollView
-        class="h-full [container-type:size]"
-        thumbContainer={scroll.viewport.thumbTrack}
-        thumbHoverTarget={scroll.viewport.hoverTarget}
-        viewportRef={scroll.viewport.setViewport}
-        onScroll={(event) => scroll.viewport.update(event.currentTarget.scrollTop)}
-        onWheel={scroll.viewport.containOuterWheel}
-      >
-        <div
-          class={`
-            mx-auto grid min-h-full w-full max-w-[1080px] grid-rows-[auto_minmax(0,1fr)_auto] gap-4 px-3
-            lg:grid-cols-[280px_minmax(0,720px)] lg:grid-rows-1 lg:gap-8 lg:px-6
-          `}
-        >
-          <HomeProjects projects={projects} scroll={scroll} />
-          <HomeSessions sessions={sessions} search={search} scroll={scroll} />
-          <HomeUtilityNav
-            class="flex lg:hidden"
-            onOpenSettings={projects.utility.settings}
-            onOpenHelp={projects.utility.help}
-            language={projects.copy.language}
-          />
-        </div>
-      </ScrollView>
+      <aside class="flex w-[220px] shrink-0 flex-col pt-3">
+        <HomeNav class="flex" onOpenHelp={() => platform.openExternal("https://opencode.ai/desktop-feedback")} />
+      </aside>
+      <main data-component="home-panel" class="min-h-0 min-w-0 flex-1 overflow-hidden">
+        <SettingsPanel />
+      </main>
     </div>
   )
 }

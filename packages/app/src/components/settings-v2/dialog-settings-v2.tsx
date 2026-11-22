@@ -15,13 +15,13 @@ import { useLayout } from "@/context/layout"
 import { useTabs } from "@/context/tabs"
 import { useServerSync } from "@/context/server-sync"
 
-export const DialogSettings: Component<{
+export const SettingsPanel: Component<{
   sessionID?: string
   defaultValue?: string
+  onProvidersBack?: () => void
 }> = (props) => {
   const language = useLanguage()
   const platform = usePlatform()
-  const dialog = useDialog()
   const layout = useLayout()
   const tabs = useTabs()
   const serverSync = useServerSync()
@@ -38,77 +38,92 @@ export const DialogSettings: Component<{
   })
 
   const showProviders = () => {
+    if (props.onProvidersBack) return props.onProvidersBack()
+    setTab("providers")
+  }
+
+  return (
+    <TabsV2
+      orientation="vertical"
+      variant="settings"
+      value={tab()}
+      onChange={(value) => void startTransition(() => setTab(value))}
+      class="settings-v2"
+    >
+      <TabsV2.List>
+        <div class="flex flex-col justify-between h-full w-full">
+          <div class="flex flex-col gap-3 w-full">
+            <div class="flex flex-col gap-3">
+              <div class="flex flex-col gap-1.5">
+                <TabsV2.SectionTitle>{language.t("settings.section.desktop")}</TabsV2.SectionTitle>
+                <div class="flex flex-col gap-1.5 w-full">
+                  <TabsV2.Trigger value="general">
+                    <Icon name="sliders" />
+                    {language.t("settings.tab.general")}
+                  </TabsV2.Trigger>
+                  <TabsV2.Trigger value="shortcuts">
+                    <Icon name="keyboard" />
+                    {language.t("settings.tab.shortcuts")}
+                  </TabsV2.Trigger>
+                </div>
+              </div>
+
+              <div class="flex flex-col gap-1.5">
+                <TabsV2.SectionTitle>{language.t("settings.section.server")}</TabsV2.SectionTitle>
+                <div class="flex flex-col gap-1.5 w-full">
+                  <TabsV2.Trigger value="servers">
+                    <Icon name="server" />
+                    {language.t("status.popover.tab.servers")}
+                  </TabsV2.Trigger>
+                  <TabsV2.Trigger value="providers">
+                    <Icon name="providers" />
+                    {language.t("settings.providers.title")}
+                  </TabsV2.Trigger>
+                  <TabsV2.Trigger value="models">
+                    <Icon name="models" />
+                    {language.t("settings.models.title")}
+                  </TabsV2.Trigger>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="settings-v2-nav-footer">
+            <span>{language.t("app.name.desktop")}</span>
+            <span>v{platform.version}</span>
+          </div>
+        </div>
+      </TabsV2.List>
+      <TabsV2.Content value="general" class="settings-v2-panel">
+        <SettingsGeneralV2 sessionID={props.sessionID} />
+      </TabsV2.Content>
+      <TabsV2.Content value="shortcuts" class="settings-v2-panel">
+        <SettingsKeybinds v2 />
+      </TabsV2.Content>
+      <TabsV2.Content value="servers" class="settings-v2-panel">
+        <SettingsServersV2 />
+      </TabsV2.Content>
+      <TabsV2.Content value="providers" class="settings-v2-panel">
+        <SettingsProvidersV2 directory={directory} onBack={showProviders} />
+      </TabsV2.Content>
+      <TabsV2.Content value="models" class="settings-v2-panel">
+        <SettingsModelsV2 />
+      </TabsV2.Content>
+    </TabsV2>
+  )
+}
+
+export const DialogSettings: Component<{
+  sessionID?: string
+  defaultValue?: string
+}> = (props) => {
+  const dialog = useDialog()
+  const showProviders = () => {
     void dialog.show(() => <DialogSettings sessionID={props.sessionID} defaultValue="providers" />)
   }
 
   return (
     <Dialog size="x-large" variant="settings" class="settings-v2-dialog">
-      <TabsV2
-        orientation="vertical"
-        variant="settings"
-        value={tab()}
-        onChange={(value) => void startTransition(() => setTab(value))}
-        class="settings-v2"
-      >
-        <TabsV2.List>
-          <div class="flex flex-col justify-between h-full w-full">
-            <div class="flex flex-col gap-3 w-full">
-              <div class="flex flex-col gap-3">
-                <div class="flex flex-col gap-1.5">
-                  <TabsV2.SectionTitle>{language.t("settings.section.desktop")}</TabsV2.SectionTitle>
-                  <div class="flex flex-col gap-1.5 w-full">
-                    <TabsV2.Trigger value="general">
-                      <Icon name="sliders" />
-                      {language.t("settings.tab.general")}
-                    </TabsV2.Trigger>
-                    <TabsV2.Trigger value="shortcuts">
-                      <Icon name="keyboard" />
-                      {language.t("settings.tab.shortcuts")}
-                    </TabsV2.Trigger>
-                  </div>
-                </div>
-
-                <div class="flex flex-col gap-1.5">
-                  <TabsV2.SectionTitle>{language.t("settings.section.server")}</TabsV2.SectionTitle>
-                  <div class="flex flex-col gap-1.5 w-full">
-                    <TabsV2.Trigger value="servers">
-                      <Icon name="server" />
-                      {language.t("status.popover.tab.servers")}
-                    </TabsV2.Trigger>
-                    <TabsV2.Trigger value="providers">
-                      <Icon name="providers" />
-                      {language.t("settings.providers.title")}
-                    </TabsV2.Trigger>
-                    <TabsV2.Trigger value="models">
-                      <Icon name="models" />
-                      {language.t("settings.models.title")}
-                    </TabsV2.Trigger>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="settings-v2-nav-footer">
-              <span>{language.t("app.name.desktop")}</span>
-              <span>v{platform.version}</span>
-            </div>
-          </div>
-        </TabsV2.List>
-        <TabsV2.Content value="general" class="settings-v2-panel">
-          <SettingsGeneralV2 sessionID={props.sessionID} />
-        </TabsV2.Content>
-        <TabsV2.Content value="shortcuts" class="settings-v2-panel">
-          <SettingsKeybinds v2 />
-        </TabsV2.Content>
-        <TabsV2.Content value="servers" class="settings-v2-panel">
-          <SettingsServersV2 />
-        </TabsV2.Content>
-        <TabsV2.Content value="providers" class="settings-v2-panel">
-          <SettingsProvidersV2 directory={directory} onBack={showProviders} />
-        </TabsV2.Content>
-        <TabsV2.Content value="models" class="settings-v2-panel">
-          <SettingsModelsV2 />
-        </TabsV2.Content>
-      </TabsV2>
+      <SettingsPanel sessionID={props.sessionID} defaultValue={props.defaultValue} onProvidersBack={showProviders} />
     </Dialog>
   )
 }

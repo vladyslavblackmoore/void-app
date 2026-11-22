@@ -35,7 +35,6 @@ export type CommandPaletteEntry = {
 
 const ENTRY_LIMIT = 5
 const COMMON_COMMAND_IDS = [
-  "session.new",
   "workspace.new",
   "session.previous",
   "session.next",

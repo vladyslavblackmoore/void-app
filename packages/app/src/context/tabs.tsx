@@ -46,10 +46,6 @@ export const tabHref = (tab: Tab) =>
 
 export const tabKey = (tab: Tab) => (tab.type === "draft" ? `draft:${tab.draftID}` : `${tab.server}\n${tabHref(tab)}`)
 
-export function sessionHasOpenTab(tabs: Tab[], server: ServerConnection.Key, session: Session) {
-  return tabs.some((tab) => tab.type === "session" && tab.server === server && tab.sessionId === session.id)
-}
-
 export const { use: useTabs, provider: TabsProvider } = createSimpleContext({
   name: "Tabs",
   gate: false,
