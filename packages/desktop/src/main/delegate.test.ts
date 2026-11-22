@@ -31,6 +31,12 @@ let server: ReturnType<typeof Bun.serve>
 let release: (() => void) | undefined
 let hold = false
 
+const parents: Record<string, string | undefined> = {
+  ses_parent: undefined,
+  ses_d1: "ses_parent",
+  ses_d2: "ses_d1",
+}
+
 const parentMessages = [
   { info: { id: "m1", role: "user", time: { created: 1 }, model: { providerID: "old", modelID: "user" } }, parts: [] },
   { info: { id: "m2", role: "assistant", time: { created: 5 }, providerID: "openai", modelID: "gpt-5" }, parts: [] },
@@ -58,6 +64,9 @@ beforeEach(() => {
         auth: request.headers.get("authorization"),
         body: text ? JSON.parse(text) : undefined,
       })
+      const known = url.pathname.match(/^\/session\/(ses_[a-z0-9]+)$/)?.[1]
+      if (request.method === "GET" && known && known in parents)
+        return Response.json({ id: known, parentID: parents[known] })
       if (request.method === "POST" && url.pathname === "/session") return Response.json({ id: "ses_child" })
       if (url.pathname.endsWith("/abort")) {
         release?.()
@@ -107,7 +116,7 @@ describe("delegate core", () => {
     expect(bodyOf("POST", "/session/ses_child/message")).toEqual({
       model: { providerID: "openai", modelID: "gpt-5-mini" },
       agent: "explore",
-      parts: [{ type: "text", text: "do it" }],
+      parts: [{ type: "text", text: core.workerNote(1) + "do it" }],
     })
     expect(seen[0]!.auth).toBe(`Basic ${Buffer.from("opencode:secret").toString("base64")}`)
     expect(seen[0]!.search).toBe("?directory=%2Fwork%2Fproject")
@@ -119,8 +128,34 @@ describe("delegate core", () => {
 
     expect(bodyOf("POST", "/session/ses_child/message")).toEqual({
       model: { providerID: "openai", modelID: "gpt-5" },
-      parts: [{ type: "text", text: "t" }],
+      parts: [{ type: "text", text: core.workerNote(1) + "t" }],
     })
+  })
+
+  test("tells a child at the depth limit not to delegate and a shallower child that it may", () => {
+    expect(core.workerNote(1)).toContain("[delegated worker]")
+    expect(core.workerNote(1)).toContain("only if")
+    expect(core.workerNote(core.maxDepth)).toContain("[delegated worker]")
+    expect(core.workerNote(core.maxDepth)).toContain("Do not use delegate")
+  })
+
+  test("counts parent hops up to the root and lets depth 0 and 1 delegate", async () => {
+    expect(core.maxDepth).toBe(2)
+    expect(await core.sessionDepth(core.createApi(base()), "ses_parent")).toBe(0)
+    expect(await core.sessionDepth(core.createApi(base()), "ses_d1")).toBe(1)
+    expect(await core.sessionDepth(core.createApi(base()), "ses_d2")).toBe(2)
+
+    await core.runDelegate(core.createApi(base()), { task: "t", model: "a/b", parentID: "ses_d1" })
+
+    expect(bodyOf("POST", "/session")?.parentID).toBe("ses_d1")
+    expect(bodyOf("POST", "/session/ses_child/message").parts[0].text).toContain("Do not use delegate")
+  })
+
+  test("refuses at depth 2 without creating a session", async () => {
+    await expect(
+      core.runDelegate(core.createApi(base()), { task: "t", model: "a/b", parentID: "ses_d2" }),
+    ).rejects.toThrow("depth limit")
+    expect(seen.some((item) => item.method === "POST")).toBe(false)
   })
 
   test("rejects a model that is not provider/model before creating a session", async () => {
@@ -158,6 +193,17 @@ describe("delegate plugin", () => {
     expect(output.metadata).toEqual({ sessionId: "ses_child" })
     expect(bodyOf("POST", "/session")?.parentID).toBe("ses_parent")
     expect(Object.keys(hooks.tool.delegate.args)).toEqual(["task", "model", "agent"])
+  })
+
+  test("fails the tool at depth 2 and creates no session", async () => {
+    const hooks = await plugin.server({ serverUrl: server.url, directory: "/work/project" })
+    const run = hooks.tool.delegate.execute(
+      { task: "do it", model: "a/b", agent: "" },
+      { sessionID: "ses_d2", directory: "/work/project", abort: new AbortController().signal },
+    )
+
+    await expect(run).rejects.toThrow("depth limit")
+    expect(seen.some((item) => item.method === "POST")).toBe(false)
   })
 
   test("aborts the child through the tool context", async () => {
@@ -318,6 +364,25 @@ describe("delegate mcp server", () => {
 
     expect(aborted()).toBe(true)
     expect(seen.some((item) => item.path === "/session/ses_child/message")).toBe(false)
+  })
+
+  test("refuses at depth 2 as a tool error and creates no session", async () => {
+    const replies = await exchange(
+      { VOID_DELEGATE_URL: server.url.href, VOID_DELEGATE_PARENT: "ses_d2" },
+      [
+        {
+          jsonrpc: "2.0",
+          id: 4,
+          method: "tools/call",
+          params: { name: "delegate", arguments: { task: "t", model: "a/b" } },
+        },
+      ],
+      500,
+    )
+
+    expect(replies[0].result.isError).toBe(true)
+    expect(replies[0].result.content[0].text).toContain("depth limit")
+    expect(seen.some((item) => item.method === "POST")).toBe(false)
   })
 
   test("reports a failing call as a tool error", async () => {

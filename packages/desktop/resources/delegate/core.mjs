@@ -28,6 +28,7 @@ export const inputSchema = {
   required: ["task"],
 }
 
+export const maxDepth = 2
 const pollAbortMs = 1000
 const historyLimit = 20
 
@@ -73,6 +74,7 @@ export function createApi(base) {
   return {
     createSession: (body) => send(base, "POST", "/session", { body }),
     prompt: (id, body) => send(base, "POST", `/session/${id}/message`, { body }),
+    session: (id) => send(base, "GET", `/session/${id}`),
     abort: (id) => send(base, "POST", `/session/${id}/abort`),
     messages: (id) => send(base, "GET", `/session/${id}/message?limit=${historyLimit}`),
   }
@@ -118,6 +120,22 @@ function errorText(error) {
   return typeof message === "string" && message ? `${error.name}: ${message}` : (error.name ?? "error")
 }
 
+export async function sessionDepth(api, id) {
+  let current = id
+  for (let depth = 0; depth < maxDepth; depth++) {
+    const parentID = (await api.session(current))?.parentID
+    if (!parentID) return depth
+    current = parentID
+  }
+  return maxDepth
+}
+
+export function workerNote(depth) {
+  const rule =
+    depth >= maxDepth ? "Do not use delegate." : "Delegate only if the task truly splits into independent parts."
+  return `[delegated worker] You are a child session, not a manager. Do the task yourself with your own tools and finish with a concise final answer. ${rule}\n\n`
+}
+
 function title(task) {
   const line = task.split("\n", 1)[0].trim().slice(0, 60)
   return `delegate: ${line}`
@@ -127,6 +145,12 @@ export async function runDelegate(api, input, signal) {
   const task = typeof input?.task === "string" ? input.task.trim() : ""
   if (!task) throw new Error("task is required")
   const requested = parseModel(input.model)
+  const depth = await sessionDepth(api, input.parentID)
+  if (depth >= maxDepth) {
+    throw new Error(
+      `delegate depth limit reached: this session is already ${depth} levels below the main session; do the task yourself`,
+    )
+  }
   const model = requested ?? (await parentModel(api, input.parentID))
   const agent = typeof input.agent === "string" && input.agent.trim() ? input.agent.trim() : undefined
   if (signal?.aborted) return { id: undefined, text: "", error: "aborted" }
@@ -147,7 +171,7 @@ export async function runDelegate(api, input, signal) {
     const result = await api.prompt(id, {
       model,
       ...(agent ? { agent } : {}),
-      parts: [{ type: "text", text: task }],
+      parts: [{ type: "text", text: workerNote(depth + 1) + task }],
     })
     return { id, text: finalText(result?.parts), error: errorText(result?.info?.error) }
   } finally {
