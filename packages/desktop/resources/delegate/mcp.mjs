@@ -7,5 +7,13 @@ const api = createApi({
   password: env.VOID_DELEGATE_PASSWORD,
   directory: env.VOID_DELEGATE_DIRECTORY,
 })
+const handle = createMcp(api, env.VOID_DELEGATE_PARENT)
 
-serveMcp(createMcp(api, env.VOID_DELEGATE_PARENT), process.stdin, process.stdout)
+let stopping
+const stop = () => {
+  stopping ??= handle.shutdown(3000).finally(() => process.exit(0))
+  return stopping
+}
+
+serveMcp(handle, process.stdin, process.stdout, stop)
+for (const signal of ["SIGTERM", "SIGINT", "SIGHUP"]) process.on(signal, stop)

@@ -129,6 +129,7 @@ export async function runDelegate(api, input, signal) {
   const requested = parseModel(input.model)
   const model = requested ?? (await parentModel(api, input.parentID))
   const agent = typeof input.agent === "string" && input.agent.trim() ? input.agent.trim() : undefined
+  if (signal?.aborted) return { id: undefined, text: "", error: "aborted" }
   const session = await api.createSession({ parentID: input.parentID, title: title(task), permission: allowAll })
   const id = session.id
   if (signal?.aborted) {
@@ -169,12 +170,15 @@ const protocolVersion = "2024-11-05"
 
 export function createMcp(api, parentID) {
   const running = new Map()
+  const pending = new Set()
   const reply = (id, result) => ({ jsonrpc: "2.0", id, result })
   const fail = (id, code, message) => ({ jsonrpc: "2.0", id, error: { code, message } })
   const call = async (id, params) => {
     if (params?.name !== toolName) return fail(id, -32602, `unknown tool ${params?.name}`)
     const controller = new AbortController()
     running.set(id, controller)
+    const finished = Promise.withResolvers()
+    pending.add(finished.promise)
     try {
       const result = await runDelegate(api, { ...params.arguments, parentID }, controller.signal)
       return reply(id, { content: [{ type: "text", text: formatResult(result) }], isError: Boolean(result.error) })
@@ -185,9 +189,11 @@ export function createMcp(api, parentID) {
       })
     } finally {
       running.delete(id)
+      pending.delete(finished.promise)
+      finished.resolve()
     }
   }
-  return async (message) => {
+  const handle = async (message) => {
     const { id, method, params } = message ?? {}
     if (method === "notifications/cancelled") {
       running.get(params?.requestId)?.abort()
@@ -206,10 +212,19 @@ export function createMcp(api, parentID) {
     if (method === "tools/call") return call(id, params)
     return fail(id, -32601, `method not found: ${method}`)
   }
+  handle.shutdown = async (limit = 3000) => {
+    for (const controller of running.values()) controller.abort()
+    await Promise.race([Promise.allSettled([...pending]), new Promise((resolve) => setTimeout(resolve, limit))])
+  }
+  return handle
 }
 
-export function serveMcp(handle, input, output) {
+export function serveMcp(handle, input, output, onClose) {
   let buffer = ""
+  if (onClose) {
+    input.on("end", onClose)
+    input.on("close", onClose)
+  }
   input.setEncoding("utf8")
   input.on("data", (chunk) => {
     buffer += chunk

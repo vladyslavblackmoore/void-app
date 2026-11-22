@@ -262,6 +262,64 @@ describe("delegate mcp server", () => {
     expect(seen.some((item) => item.path === "/session/ses_child/abort")).toBe(true)
   })
 
+  const stopped = async (stop: "stdin" | "SIGTERM" | "SIGINT" | "SIGHUP", gap = 300) => {
+    hold = true
+    const child = spawn(process.execPath, [join(resources, "delegate/mcp.mjs")], {
+      env: { ...process.env, VOID_DELEGATE_URL: server.url.href, VOID_DELEGATE_PARENT: "ses_parent" },
+      stdio: ["pipe", "pipe", "ignore"],
+    })
+    const closed = new Promise<number | null>((resolve) => child.on("close", resolve))
+    child.stdin.write(
+      `${JSON.stringify({ jsonrpc: "2.0", id: 5, method: "tools/call", params: { name: "delegate", arguments: { task: "t", model: "a/b" } } })}\n`,
+    )
+    await Bun.sleep(gap)
+    if (stop === "stdin") child.stdin.end()
+    else child.kill(stop)
+    const code = await Promise.race([closed, Bun.sleep(6000).then(() => "timeout" as const)])
+    if (code === "timeout") child.kill("SIGKILL")
+    return code
+  }
+  const aborted = () => seen.some((item) => item.method === "POST" && item.path === "/session/ses_child/abort")
+
+  for (const stop of ["stdin", "SIGTERM", "SIGINT", "SIGHUP"] as const) {
+    test(`aborts the in-flight child and exits when ${stop === "stdin" ? "stdin closes" : `it gets ${stop}`}`, async () => {
+      expect(await stopped(stop)).not.toBe("timeout")
+      expect(aborted()).toBe(true)
+    })
+  }
+
+  test("aborts a child that was created when the stop arrives before the prompt finishes starting", async () => {
+    hold = true
+    const slow = Bun.serve({
+      port: 0,
+      async fetch(request) {
+        const url = new URL(request.url)
+        seen.push({ method: request.method, path: url.pathname, search: url.search, auth: null, body: undefined })
+        if (request.method === "POST" && url.pathname === "/session") {
+          await Bun.sleep(600)
+          return Response.json({ id: "ses_child" })
+        }
+        if (url.pathname.endsWith("/abort")) return Response.json(true)
+        return Response.json({ info: { id: "m", role: "assistant" }, parts: [] })
+      },
+    })
+    const child = spawn(process.execPath, [join(resources, "delegate/mcp.mjs")], {
+      env: { ...process.env, VOID_DELEGATE_URL: slow.url.href, VOID_DELEGATE_PARENT: "ses_parent" },
+      stdio: ["pipe", "pipe", "ignore"],
+    })
+    const closed = new Promise((resolve) => child.on("close", resolve))
+    child.stdin.write(
+      `${JSON.stringify({ jsonrpc: "2.0", id: 5, method: "tools/call", params: { name: "delegate", arguments: { task: "t", model: "a/b" } } })}\n`,
+    )
+    await Bun.sleep(150)
+    child.kill("SIGTERM")
+    await closed
+    slow.stop(true)
+
+    expect(aborted()).toBe(true)
+    expect(seen.some((item) => item.path === "/session/ses_child/message")).toBe(false)
+  })
+
   test("reports a failing call as a tool error", async () => {
     const replies = await exchange(
       { VOID_DELEGATE_URL: server.url.href, VOID_DELEGATE_PARENT: "ses_parent" },
