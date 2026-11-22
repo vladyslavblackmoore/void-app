@@ -90,8 +90,7 @@ export function parseModel(value) {
   return { providerID: text.slice(0, cut), modelID: text.slice(cut + 1) }
 }
 
-export function childDefault(config, agent) {
-  const entry = config?.agent?.[agent || childAgent]
+function agentEntryDefault(entry) {
   try {
     const model = parseModel(entry?.model)
     if (!model) return undefined
@@ -100,6 +99,11 @@ export function childDefault(config, agent) {
   } catch {
     return undefined
   }
+}
+
+export function childDefault(config, agent) {
+  const agents = config?.agent
+  return (agent ? agentEntryDefault(agents?.[agent]) : undefined) ?? agentEntryDefault(agents?.[childAgent])
 }
 
 function newest(items) {

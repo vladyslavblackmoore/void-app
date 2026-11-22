@@ -5,8 +5,10 @@ import {
   anyRunning,
   childAgentName,
   formatModelRef,
+  mergePatches,
   mainAgentName,
   parseModelRef,
+  sameDefault,
   variantNames,
 } from "./agent-defaults"
 
@@ -90,5 +92,30 @@ describe("anyRunning", () => {
     expect(anyRunning({ a: { type: "retry" } })).toBe(true)
     expect(anyRunning({ a: { type: "idle" } })).toBe(false)
     expect(anyRunning({})).toBe(false)
+  })
+})
+
+describe("mergePatches", () => {
+  test("keeps both agents and lets the later patch win for the same agent", () => {
+    const main = agentDefaultPatch("build", { providerID: "a", modelID: "b" }, undefined, false)
+    const children = agentDefaultPatch("worker", { providerID: "a", modelID: "c" }, "low", true)
+    const later = agentDefaultPatch("build", { providerID: "a", modelID: "d" }, "high", false)
+    expect(mergePatches([main, children, later])).toEqual({
+      agent: {
+        build: { model: "a/d", variant: "high" },
+        worker: { model: "a/c", variant: "low", mode: "subagent" },
+      },
+    })
+  })
+})
+
+describe("sameDefault", () => {
+  test("compares model and variant, treating empty variants as equal", () => {
+    const model = { providerID: "a", modelID: "b" }
+    expect(sameDefault({ model, variant: undefined }, { model: { ...model }, variant: undefined })).toBe(true)
+    expect(sameDefault({ model, variant: "high" }, { model, variant: undefined })).toBe(false)
+    expect(sameDefault({ model, variant: undefined }, { model: { providerID: "a", modelID: "c" } })).toBe(false)
+    expect(sameDefault(undefined, undefined)).toBe(true)
+    expect(sameDefault(undefined, { model })).toBe(false)
   })
 })

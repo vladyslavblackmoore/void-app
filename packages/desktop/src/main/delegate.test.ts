@@ -157,6 +157,18 @@ describe("delegate core", () => {
     })
   })
 
+  test("falls back to the worker default when the requested agent has no configured model", async () => {
+    config = { agent: { worker: { model: "subscription/haiku", variant: "low" }, explore: {} } }
+    await core.runDelegate(core.createApi(base()), { task: "t", model: "", agent: "explore", parentID: "ses_parent" })
+
+    expect(bodyOf("POST", "/session/ses_child/message")).toEqual({
+      model: { providerID: "subscription", modelID: "haiku" },
+      variant: "low",
+      agent: "explore",
+      parts: [{ type: "text", text: core.workerNote(1) + "t" }],
+    })
+  })
+
   test("lets an explicit model win over the config default and drops its variant", async () => {
     config = { agent: { worker: { model: "subscription/sonnet", variant: "high" } } }
     await core.runDelegate(core.createApi(base()), {
@@ -188,6 +200,9 @@ describe("delegate core", () => {
       variant: "low",
     })
     expect(core.childDefault({ agent: { worker: { model: "a/b", variant: "" } } }, undefined)).toEqual({
+      model: { providerID: "a", modelID: "b" },
+    })
+    expect(core.childDefault({ agent: { worker: { model: "a/b" } } }, "explore")).toEqual({
       model: { providerID: "a", modelID: "b" },
     })
     expect(core.childDefault({ agent: {} }, undefined)).toBeUndefined()

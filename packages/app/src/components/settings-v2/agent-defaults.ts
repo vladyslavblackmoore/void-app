@@ -49,3 +49,17 @@ export function variantNames(variants: Record<string, unknown> | undefined) {
 export function anyRunning(statuses: Record<string, { type: string } | undefined>) {
   return Object.values(statuses).some((status) => status !== undefined && status.type !== "idle")
 }
+
+type Patch = ReturnType<typeof agentDefaultPatch>
+
+export function mergePatches(patches: Patch[]): Patch {
+  return { agent: Object.assign({}, ...patches.map((patch) => patch.agent)) }
+}
+
+export function sameDefault(
+  a: { model: ModelRef; variant?: string } | undefined,
+  b: { model: ModelRef; variant?: string } | undefined,
+) {
+  if (!a || !b) return a === b
+  return formatModelRef(a.model) === formatModelRef(b.model) && (a.variant || undefined) === (b.variant || undefined)
+}
