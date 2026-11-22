@@ -1,7 +1,6 @@
 import {
   createEffect,
   createMemo,
-  createResource,
   createSignal,
   For,
   Index,
@@ -148,15 +147,27 @@ function TimelineThinkingRow(props: { reasoningHeading?: string; showReasoningSu
 function TimelineOpenInRow(props: { files: string[] }) {
   const sdk = useSDK()
   const platform = usePlatform()
-  const [resolved] = createResource(
-    () => ({ files: props.files, directory: sdk().directory }),
-    (input) =>
-      openInDirectory({
-        ...input,
-        gitRoot: (dir) => platform.gitRoot?.(dir) ?? Promise.resolve(null),
-      }),
+  const [directory, setDirectory] = createSignal("")
+  createEffect(
+    on(
+      () => [props.files, sdk().directory] as const,
+      ([files, session]) => {
+        let stale = false
+        onCleanup(() => {
+          stale = true
+        })
+        void openInDirectory({
+          files,
+          directory: session,
+          gitRoot: (dir) => platform.gitRoot?.(dir) ?? Promise.resolve(null),
+        })
+          .then((value) => {
+            if (!stale) setDirectory(value)
+          })
+          .catch(() => {})
+      },
+    ),
   )
-  const directory = createMemo(() => resolved.latest ?? "")
 
   return (
     <div data-component="turn-open-in" class="flex items-center justify-end py-1">
