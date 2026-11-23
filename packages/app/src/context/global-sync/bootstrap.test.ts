@@ -183,6 +183,54 @@ describe("bootstrapDirectory", () => {
   })
 })
 
+describe("bootstrapDirectory agents", () => {
+  test("reloads the agent list on every bootstrap so config changes reach the composer", async () => {
+    const queryClient = new QueryClient()
+    const [store, setStore] = directoryState()
+    let model = "openai/gpt-5.6-terra"
+    const agents = {
+      ...api,
+      agent: {
+        list: async () => ({
+          location: {},
+          data: [{ name: "build", mode: "primary", native: true, model, options: {}, permission: [] }],
+        }),
+      },
+    } as unknown as ServerApi
+    const run = async () => {
+      await bootstrapDirectory({
+        directory: "/project",
+        scope: ServerScope.local,
+        mcp: false,
+        global: {
+          config: {} satisfies Config,
+          path: { state: "", config: "", worktree: "/project", directory: "/project", home: "/home" },
+          project: [{ id: "project", worktree: "/project" } as Project],
+          provider,
+        },
+        sdk: {} as unknown as OpencodeClient,
+        api: agents,
+        store,
+        setStore,
+        vcsCache: { setStore() {} } as unknown as VcsCache,
+        loadSessions() {},
+        translate: (key) => key,
+        queryClient,
+        protocol: Promise.resolve("v2"),
+      })
+      await new Promise((resolve) => setTimeout(resolve, 80))
+    }
+
+    await run()
+    const first = JSON.stringify(store.agent)
+    model = "openai/gpt-5.6-sol"
+    await run()
+
+    expect(first).toContain("gpt-5.6-terra")
+    expect(JSON.stringify(store.agent)).toContain("gpt-5.6-sol")
+  })
+})
+
 describe("config queries", () => {
   test("skips legacy global config for v2 servers", async () => {
     const sdk = {

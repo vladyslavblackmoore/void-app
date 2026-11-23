@@ -2,6 +2,7 @@ import { ButtonV2 } from "@opencode-ai/ui/v2/button-v2"
 import { SelectV2 } from "@opencode-ai/ui/v2/select-v2"
 import { type Component, For, Show, createEffect, createMemo, createSignal } from "solid-js"
 import { useLanguage } from "@/context/language"
+import { useModels } from "@/context/models"
 import { useServerSync } from "@/context/server-sync"
 import { useProviders } from "@/hooks/use-providers"
 import { showToast } from "@/utils/toast"
@@ -36,6 +37,7 @@ export const SettingsAgentsV2: Component = () => {
   const language = useLanguage()
   const serverSync = useServerSync()
   const providers = useProviders(() => undefined)
+  const models = useModels()
   const [pending, setPending] = createSignal<Choices>({})
   const [optimistic, setOptimistic] = createSignal<Choices>({})
 
@@ -75,6 +77,7 @@ export const SettingsAgentsV2: Component = () => {
     if (entries.length === 0) return
     setPending({})
     setOptimistic((value) => ({ ...value, ...choices }))
+    for (const { choice } of entries) models.setVisibility(choice.model, true)
     await serverSync()
       .updateConfig(
         mergePatches(
@@ -107,16 +110,10 @@ export const SettingsAgentsV2: Component = () => {
     return option ? `${option.name} (${option.provider})` : undefined
   }
   const fallback = (target: Target) => {
+    if (target === "children") return language.t("settings.agents.children.inherit")
     const base = config().model
-    if (target === "main") {
-      const name = modelName(base) ?? base
-      return name ? language.t("settings.agents.default.label", { value: name }) : undefined
-    }
-    const main = effective("main")
-    const name = modelName(main ? formatModelRef(main.model) : base) ?? (main ? formatModelRef(main.model) : base)
-    return name
-      ? language.t("settings.agents.children.inherit.value", { value: name })
-      : language.t("settings.agents.children.inherit")
+    const name = modelName(base) ?? base
+    return name ? language.t("settings.agents.default.label", { value: name }) : undefined
   }
 
   return (
