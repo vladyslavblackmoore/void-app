@@ -107,7 +107,7 @@ export const SettingsAgentsV2: Component = () => {
 
   const modelName = (id: string | undefined) => {
     const option = options().find((item) => item.id === id)
-    return option ? `${option.name} (${option.provider})` : undefined
+    return option?.name
   }
   const fallback = (target: Target) => {
     if (target === "children") return language.t("settings.agents.children.inherit")
