@@ -1,4 +1,4 @@
-import { readFile, writeFile } from "node:fs/promises"
+import { readFile } from "node:fs/promises"
 import { join } from "node:path"
 import {
   createApi,
@@ -9,7 +9,7 @@ import {
   sessionDepth,
   toolArgs,
 } from "../delegate/core.mjs"
-import { childNote, closeStopped, memoryBlock } from "../delegate/memory.mjs"
+import { childNote, closeStopped, memoryBlock, saveTasks } from "../delegate/memory.mjs"
 
 const provider = "subscription"
 
@@ -60,7 +60,7 @@ export default {
             return {
               title: "delegate",
               output: formatResult(result),
-              metadata: { sessionId: result.id },
+              metadata: { sessionId: result.id, unconfirmed: Boolean(result.unfinished) },
             }
           },
         },
@@ -91,7 +91,7 @@ export default {
         const file = join(dir, "tasks.md")
         const text = await readText(file)
         const next = closeStopped(text, id)
-        if (next !== text) await writeFile(file, next)
+        if (next.tasks !== text) await saveTasks(dir, next)
       },
     }
   },

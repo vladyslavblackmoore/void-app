@@ -9,6 +9,7 @@ import {
   shouldAutoOpenAgents,
   stripDelegationMarker,
   stripWorkerNote,
+  unconfirmedSessionIds,
   withoutRemoved,
   withoutWorkerNote,
 } from "./agents-tree"
@@ -110,6 +111,33 @@ describe("agentRunState", () => {
     expect(agentRunState({ type: "idle" }, true, true)).toBe("aborted")
     expect(agentRunState(undefined, false, true)).toBe("aborted")
     expect(agentRunState({ type: "busy" }, true, true)).toBe("running")
+  })
+})
+
+describe("agentRunState unconfirmed", () => {
+  test("maps a finished child flagged unconfirmed to unconfirmed, never done", () => {
+    expect(agentRunState({ type: "idle" }, false, false, true)).toBe("unconfirmed")
+    expect(agentRunState(undefined, false, false, true)).toBe("unconfirmed")
+  })
+
+  test("keeps running, aborted and error above unconfirmed", () => {
+    expect(agentRunState({ type: "busy" }, false, false, true)).toBe("running")
+    expect(agentRunState({ type: "idle" }, true, true, true)).toBe("aborted")
+    expect(agentRunState({ type: "idle" }, true, false, true)).toBe("error")
+  })
+})
+
+describe("unconfirmedSessionIds", () => {
+  test("collects child ids from delegate tool outputs across the given parts", () => {
+    const done = { type: "tool", tool: "delegate", state: { status: "completed", output: "ok\n\nsession: ses_ok" } }
+    const flagged = {
+      type: "tool",
+      tool: "mcp__delegate__delegate",
+      state: { status: "completed", output: "STATUS: UNCONFIRMED - x\n\nhi\n\nsession: ses_bad" },
+    }
+    const other = { type: "tool", tool: "bash", state: { status: "completed", output: "STATUS: UNCONFIRMED - x\n\nsession: ses_no" } }
+    const text = { type: "text", text: "hello" }
+    expect([...unconfirmedSessionIds([done, flagged, other, text])]).toEqual(["ses_bad"])
   })
 })
 

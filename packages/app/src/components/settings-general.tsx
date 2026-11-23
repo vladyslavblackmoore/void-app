@@ -121,7 +121,12 @@ export const SettingsGeneral: Component = () => {
   }
   const desktop = createMemo(() => platform.platform === "desktop")
 
-  const themeOptions = createMemo<ThemeOption[]>(() => theme.ids().map((id) => ({ id, name: theme.name(id) })))
+  const themeOptions = createMemo<ThemeOption[]>(() =>
+    theme
+      .ids()
+      .map((id) => ({ id, name: theme.name(id) }))
+      .sort((a, b) => a.name.localeCompare(b.name)),
+  )
 
   const serverSync = useServerSync()
   const serverSdk = useServerSDK()

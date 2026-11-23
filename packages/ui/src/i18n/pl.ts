@@ -220,6 +220,7 @@ export const dict = {
   "ui.tool.delegate": "Delegate",
   "ui.tool.delegate.running": "Running",
   "ui.tool.delegate.done": "Done",
+  "ui.tool.delegate.unconfirmed": "Unconfirmed",
   "ui.tool.delegate.error": "Error",
   "ui.basicTool.called": "Wywołano `{{tool}}`",
   "ui.toolErrorCard.failed": "Błąd",

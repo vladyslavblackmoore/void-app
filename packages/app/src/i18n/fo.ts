@@ -1189,5 +1189,6 @@ export const dict = {
   "settings.agents.confirm.apply": "Save and interrupt",
   "settings.agents.confirm.cancel": "Cancel",
   "session.agents.status.aborted": "Aborted",
+  "session.agents.status.unconfirmed": "Unconfirmed",
   "session.agents.noMessages": "No messages yet.",
 }

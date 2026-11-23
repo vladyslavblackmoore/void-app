@@ -181,6 +181,7 @@ export function TitlebarTabStrip(props: {
 }) {
   const global = useGlobal()
   const command = useCommand()
+  const tabsContext = useTabs()
   let scrollRef!: HTMLDivElement
   let listRef!: HTMLDivElement
   let resizeFrame: number | undefined
@@ -190,6 +191,7 @@ export function TitlebarTabStrip(props: {
     const key = mainTabKey(
       props.tabs.filter((tab) => tab.type === "session").map(tabKey),
       current ? tabKey(current) : undefined,
+      tabsContext.recentKey(),
     )
     return props.tabs.filter((tab) => tabKey(tab) === key)
   })

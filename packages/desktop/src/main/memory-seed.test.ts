@@ -75,4 +75,32 @@ describe("bundled memory templates", () => {
     expect(tasks).toContain("## Done")
     expect(await read("MEMORY.md")).toContain("facts/<slug>.md")
   })
+
+  test("moves Done items beyond the limit to the archive, keeping its content below", async () => {
+    const dir = memoryDir(root)
+    await mkdir(dir, { recursive: true })
+    const items = Array.from({ length: 60 }, (_, index) => `- t${index}`).join("\n")
+    await writeFile(join(dir, "tasks.md"), `## Open\n\n## Done\n${items}\n`)
+    await writeFile(join(dir, "tasks-archive.md"), "# Tasks archive\n\n- earlier\n")
+
+    await seedMemory(root, templates)
+
+    const text = await readFile(join(dir, "tasks.md"), "utf8")
+    expect(text).toContain("- t49")
+    expect(text).not.toContain("- t50")
+    const moved = Array.from({ length: 10 }, (_, index) => `- t${index + 50}`).join("\n")
+    expect(await readFile(join(dir, "tasks-archive.md"), "utf8")).toBe(`# Tasks archive\n\n${moved}\n- earlier\n`)
+  })
+
+  test("creates the archive when there is none and does not repeat it", async () => {
+    const dir = memoryDir(root)
+    await mkdir(dir, { recursive: true })
+    const items = Array.from({ length: 51 }, (_, index) => `- t${index}`).join("\n")
+    await writeFile(join(dir, "tasks.md"), `## Open\n\n## Done\n${items}\n`)
+
+    await seedMemory(root, templates)
+    await seedMemory(root, templates)
+
+    expect(await readFile(join(dir, "tasks-archive.md"), "utf8")).toBe("# Tasks archive\n\n- t50\n")
+  })
 })
