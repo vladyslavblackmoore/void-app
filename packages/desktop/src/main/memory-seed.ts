@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs"
 import { mkdir, readFile, writeFile } from "node:fs/promises"
 import { join } from "node:path"
-import { pruneDone } from "../../resources/delegate/memory.mjs"
+import { pruneDone, saveTasks } from "../../resources/delegate/memory.mjs"
 
 export type MemoryTemplates = { index: string; tasks: string; rules: string }
 
@@ -28,5 +28,5 @@ export async function seedMemory(root: string, templates: MemoryTemplates) {
   const file = join(dir, "tasks.md")
   const text = await readFile(file, "utf8")
   const pruned = pruneDone(text)
-  if (pruned !== text) await writeFile(file, pruned)
+  if (pruned.tasks !== text) await saveTasks(dir, pruned)
 }

@@ -1,3 +1,6 @@
+import { readFile, writeFile } from "node:fs/promises"
+import { join } from "node:path"
+
 export const indexLimit = 6000
 export const rulesLimit = 4000
 export const doneKeep = 5
@@ -36,26 +39,45 @@ export function tasksDigest(text, keep = doneKeep) {
 export function pruneDone(text, limit = doneLimit) {
   const lines = text.split("\n")
   const done = lines.findIndex((line) => /^##\s+Done\b/i.test(line))
-  if (done < 0) return text
+  if (done < 0) return { tasks: text, archived: [] }
   const end = sectionEnd(lines, done)
+  const archived = []
   let count = 0
   const kept = lines.filter((line, index) => {
     if (index <= done || index >= end || !line.startsWith("- ")) return true
     count++
-    return count <= limit
+    if (count <= limit) return true
+    archived.push(line)
+    return false
   })
-  return kept.length === lines.length ? text : kept.join("\n")
+  return { tasks: archived.length === 0 ? text : kept.join("\n"), archived }
+}
+
+export function mergeArchive(existing, archived) {
+  const heading = "# Tasks archive"
+  const body = existing.trim()
+  const rest = body.startsWith(heading) ? body.slice(heading.length).trim() : body
+  return `${heading}\n\n${[...archived, ...(rest ? [rest] : [])].join("\n")}\n`
+}
+
+export async function saveTasks(dir, { tasks, archived }) {
+  if (archived.length > 0) {
+    const file = join(dir, "tasks-archive.md")
+    const existing = await readFile(file, "utf8").catch(() => "")
+    await writeFile(file, mergeArchive(existing, archived))
+  }
+  await writeFile(join(dir, "tasks.md"), tasks)
 }
 
 export function closeStopped(text, id) {
   const lines = text.split("\n")
   const open = lines.findIndex((line) => /^##\s+Open\b/i.test(line))
-  if (open < 0) return text
+  if (open < 0) return { tasks: text, archived: [] }
   const end = sectionEnd(lines, open)
   const tag = `- [${id}]`
   const section = lines.slice(open + 1, end)
   const stopped = section.filter((line) => line.startsWith(tag)).map((line) => `${line.trimEnd()} (stopped)`)
-  if (stopped.length === 0) return text
+  if (stopped.length === 0) return { tasks: text, archived: [] }
   const result = [...lines.slice(0, open + 1), ...section.filter((line) => !line.startsWith(tag)), ...lines.slice(end)]
   let done = result.findIndex((line) => /^##\s+Done\b/i.test(line))
   if (done < 0) {
