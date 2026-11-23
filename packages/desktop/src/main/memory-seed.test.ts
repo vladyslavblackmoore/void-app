@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import { mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { memoryDir, seedMemory } from "./memory-seed"
+import { memoryDir, memoryRoot, seedMemory } from "./memory-seed"
 
 const templates = {
   index: "# Memory\n",
@@ -23,6 +23,11 @@ afterEach(async () => {
 describe("seedMemory", () => {
   test("lives under the void home", () => {
     expect(memoryDir("/x/void")).toBe(join("/x/void", "memory"))
+  })
+
+  test("uses the test root instead of the void home when one is set", () => {
+    expect(memoryRoot("/real/void", "/tmp/onboarding")).toBe("/tmp/onboarding")
+    expect(memoryRoot("/real/void", undefined)).toBe("/real/void")
   })
 
   test("creates the files and folders in an empty root", async () => {

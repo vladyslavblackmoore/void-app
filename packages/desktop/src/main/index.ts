@@ -23,7 +23,7 @@ import subscriptionPlugin from "../../resources/plugin/subscription-auth.js?raw"
 import subscriptionWrapper from "../../resources/provider/subscription.mjs?raw"
 import type { ServerReadyData } from "../preload/types"
 import { seedConfig } from "./config-seed"
-import { memoryDir, seedMemory } from "./memory-seed"
+import { memoryDir, memoryRoot, seedMemory } from "./memory-seed"
 import { checkAppExists, resolveAppPath } from "./apps"
 import { CHANNEL } from "./constants"
 import { registerIpcHandlers, sendDeepLinks, sendMenuCommand } from "./ipc"
@@ -392,7 +392,7 @@ const main = Effect.gen(function* () {
 
     const configDir = join(process.env.XDG_CONFIG_HOME ?? voidAppEnv(VOID_HOME, {}).XDG_CONFIG_HOME, "opencode")
     yield* Effect.promise(() =>
-      seedMemory(VOID_HOME, {
+      seedMemory(memoryRoot(VOID_HOME, onboardingTestRoot), {
         index: memoryIndexTemplate,
         tasks: memoryTasksTemplate,
         rules: memoryRulesTemplate,
@@ -408,7 +408,7 @@ const main = Effect.gen(function* () {
           config: configTemplate,
           delegate: { plugin: delegatePlugin, core: delegateCore, mcp: delegateMcp, manager: delegateManager },
         },
-        memoryDir(VOID_HOME),
+        memoryDir(memoryRoot(VOID_HOME, onboardingTestRoot)),
       ).catch((error) => logger.warn("failed to seed config", error)),
     )
 

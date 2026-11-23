@@ -4,6 +4,10 @@ import { join } from "node:path"
 
 export type MemoryTemplates = { index: string; tasks: string; rules: string }
 
+export function memoryRoot(home: string, testRoot: string | undefined) {
+  return testRoot ?? home
+}
+
 export function memoryDir(root: string) {
   return join(root, "memory")
 }
