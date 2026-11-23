@@ -5,6 +5,7 @@ export const toolName = "delegate"
 export const serverName = "delegate"
 export const mcpToolName = `mcp__${serverName}__${toolName}`
 export const allowAll = [{ permission: "*", pattern: "*", action: "allow" }]
+export const childPermission = [...allowAll, { permission: "question", pattern: "*", action: "deny" }]
 
 export const description =
   "Run a task in a separate child session on any connected provider and model, and return the child's final answer with its session id. " +
@@ -32,6 +33,7 @@ export const maxDepth = 2
 export const childAgent = "worker"
 const pollAbortMs = 1000
 const historyLimit = 20
+const childHistoryLimit = 200
 
 function send(base, method, path, options = {}) {
   const url = new URL(path, base.url)
@@ -78,7 +80,8 @@ export function createApi(base) {
     session: (id) => send(base, "GET", `/session/${id}`),
     config: () => send(base, "GET", "/config"),
     abort: (id) => send(base, "POST", `/session/${id}/abort`),
-    messages: (id) => send(base, "GET", `/session/${id}/message?limit=${historyLimit}`),
+    remove: (id) => send(base, "DELETE", `/session/${id}`),
+    messages: (id, limit = historyLimit) => send(base, "GET", `/session/${id}/message?limit=${limit}`),
   }
 }
 
@@ -151,12 +154,40 @@ export async function sessionDepth(api, id) {
 export function workerNote(depth) {
   const rule =
     depth >= maxDepth ? "Do not use delegate." : "Delegate only if the task truly splits into independent parts."
-  return `[delegated worker] You are a child session, not a manager. Do the task yourself with your own tools and finish with a concise final answer. ${rule}\n\n`
+  return `[delegated worker] You are a child session, not a manager. Do the task yourself with your own tools. You must finish all work in this turn: do not start background work you do not wait for, and do not promise to report later, because nothing can reach you or the owner after this turn ends. Your final answer is the result. ${rule}\n\n`
 }
 
 function title(task) {
-  const line = task.split("\n", 1)[0].trim().slice(0, 60)
-  return `delegate: ${line}`
+  return task.split("\n", 1)[0].trim().slice(0, 60)
+}
+
+const backgroundLine = /(?<![&>])&(?![&>])|\b(nohup|disown|setsid)\b/
+const waitLine = /^\s*wait\b/
+const promise =
+  /\b(i'll|i will|i am going to|i'm going to)\b[^.\n]{0,40}\b(report|let you know|get back|notify you|update you|tell you)\b|\bonce\b[^.\n]{0,80}\b(finish|finishes|finished|completes|complete|done)\b[^.\n]{0,20}\bi('ll| will)\b|сообщу|доложу|дам знать|отпишусь|вернусь с результатом/i
+
+function runsInBackground(command) {
+  const lines = String(command ?? "").split("\n")
+  const last = lines.findLastIndex((line) => backgroundLine.test(line))
+  return last >= 0 && !lines.slice(last + 1).some((line) => waitLine.test(line))
+}
+
+export function unfinishedReason(parts) {
+  for (const part of parts ?? []) {
+    if (part?.type !== "tool" || !/^(bash|shell)$/i.test(part.tool ?? "")) continue
+    const input = part.state?.input
+    if (input?.run_in_background === true || runsInBackground(input?.command))
+      return "it started a background process"
+    if (part.state?.status === "running" || part.state?.status === "pending") return "a command was still running"
+  }
+  if (promise.test(finalText(parts).slice(-400))) return "its final text promises later work"
+  return undefined
+}
+
+async function dropEmpty(api, id) {
+  const items = await api.messages(id).catch(() => undefined)
+  if (!items || items.some((item) => item?.info?.role === "assistant")) return
+  await api.remove(id).catch(() => undefined)
 }
 
 export async function runDelegate(api, input, signal) {
@@ -173,7 +204,7 @@ export async function runDelegate(api, input, signal) {
   const configured = requested ? undefined : childDefault(await api.config().catch(() => undefined), agent)
   const model = requested ?? configured?.model ?? (await parentModel(api, input.parentID))
   if (signal?.aborted) return { id: undefined, text: "", error: "aborted" }
-  const session = await api.createSession({ parentID: input.parentID, title: title(task), permission: allowAll })
+  const session = await api.createSession({ parentID: input.parentID, title: title(task), permission: childPermission })
   const id = session.id
   if (signal?.aborted) {
     await api.abort(id).catch(() => undefined)
@@ -193,7 +224,16 @@ export async function runDelegate(api, input, signal) {
       ...(agent ? { agent } : {}),
       parts: [{ type: "text", text: workerNote(depth + 1) + task }],
     })
-    return { id, text: finalText(result?.parts), error: errorText(result?.info?.error) }
+    const error = errorText(result?.info?.error)
+    const steps = error ? [] : ((await api.messages(id, childHistoryLimit).catch(() => undefined)) ?? [])
+    const parts = [
+      ...steps.filter((item) => item?.info?.role === "assistant").flatMap((item) => item.parts ?? []),
+      ...(result?.parts ?? []),
+    ]
+    return { id, text: finalText(result?.parts), error, unfinished: error ? undefined : unfinishedReason(parts) }
+  } catch (error) {
+    if (!signal?.aborted) await dropEmpty(api, id)
+    throw error
   } finally {
     signal?.removeEventListener("abort", stop)
     clearInterval(timer)
@@ -202,6 +242,9 @@ export async function runDelegate(api, input, signal) {
 
 export function formatResult(result) {
   return [
+    result.unfinished
+      ? `warning: the child ended without finishing (${result.unfinished}). Its result is not confirmed and nobody will report it later. Tell the owner the work is not confirmed; rerun the task in the foreground or finish it yourself.`
+      : undefined,
     result.error ? `error: ${result.error}` : undefined,
     result.text || (result.error ? undefined : "(the child returned no text)"),
     `session: ${result.id}`,
@@ -252,7 +295,7 @@ export function createMcp(api, parentID) {
       })
     }
     if (method === "ping") return reply(id, {})
-    if (method === "tools/list") return reply(id, { tools: [{ name: toolName, description, inputSchema }] })
+    if (method === "tools/list") return reply(id, { tools: [{ name: toolName, description, inputSchema, annotations: { readOnlyHint: true } }] })
     if (method === "tools/call") return call(id, params)
     return fail(id, -32601, `method not found: ${method}`)
   }

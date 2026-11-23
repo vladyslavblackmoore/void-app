@@ -18,6 +18,7 @@ import memoryTasksTemplate from "../../resources/memory/tasks.md?raw"
 import delegateCore from "../../resources/delegate/core.mjs?raw"
 import delegateManager from "../../resources/delegate/manager.md?raw"
 import delegateMcp from "../../resources/delegate/mcp.mjs?raw"
+import delegateMemory from "../../resources/delegate/memory.mjs?raw"
 import delegatePlugin from "../../resources/plugin/delegate.js?raw"
 import subscriptionPlugin from "../../resources/plugin/subscription-auth.js?raw"
 import subscriptionWrapper from "../../resources/provider/subscription.mjs?raw"
@@ -406,7 +407,13 @@ const main = Effect.gen(function* () {
         {
           plugin: subscriptionPlugin,
           config: configTemplate,
-          delegate: { plugin: delegatePlugin, core: delegateCore, mcp: delegateMcp, manager: delegateManager },
+          delegate: {
+            plugin: delegatePlugin,
+            core: delegateCore,
+            mcp: delegateMcp,
+            manager: delegateManager,
+            memory: delegateMemory,
+          },
         },
         memoryDir(memoryRoot(VOID_HOME, onboardingTestRoot)),
       ).catch((error) => logger.warn("failed to seed config", error)),

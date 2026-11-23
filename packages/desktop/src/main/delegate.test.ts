@@ -31,6 +31,9 @@ let server: ReturnType<typeof Bun.serve>
 let release: (() => void) | undefined
 let hold = false
 let config: unknown = {}
+let childParts: unknown[] | undefined
+let promptFails = false
+let childMessages: unknown[] = []
 
 const parents: Record<string, string | undefined> = {
   ses_parent: undefined,
@@ -51,6 +54,9 @@ beforeEach(() => {
   seen = []
   hold = false
   config = {}
+  childParts = undefined
+  promptFails = false
+  childMessages = []
   release = undefined
   process.env.OPENCODE_SERVER_PASSWORD = "secret"
   delete process.env.OPENCODE_SERVER_USERNAME
@@ -77,11 +83,14 @@ beforeEach(() => {
       }
       if (request.method === "GET" && url.pathname === "/session/ses_parent/message")
         return Response.json(parentMessages)
+      if (request.method === "DELETE" && url.pathname === "/session/ses_child") return Response.json(true)
+      if (request.method === "GET" && url.pathname === "/session/ses_child/message") return Response.json(childMessages)
       if (url.pathname === "/session/ses_child/message") {
+        if (promptFails) return new Response("Model not found: a/b", { status: 500 })
         if (hold) await new Promise<void>((resolve) => (release = resolve))
         return Response.json({
           info: { id: "m9", role: "assistant" },
-          parts: [
+          parts: childParts ?? [
             { type: "text", text: "first" },
             { type: "text", text: "hidden", synthetic: true },
             { type: "tool", tool: "read" },
@@ -113,8 +122,11 @@ describe("delegate core", () => {
     expect(result).toEqual({ id: "ses_child", text: "first\nsecond", error: undefined })
     expect(bodyOf("POST", "/session")).toEqual({
       parentID: "ses_parent",
-      title: "delegate: do it",
-      permission: [{ permission: "*", pattern: "*", action: "allow" }],
+      title: "do it",
+      permission: [
+        { permission: "*", pattern: "*", action: "allow" },
+        { permission: "question", pattern: "*", action: "deny" },
+      ],
     })
     expect(bodyOf("POST", "/session/ses_child/message")).toEqual({
       model: { providerID: "openai", modelID: "gpt-5-mini" },
@@ -124,6 +136,114 @@ describe("delegate core", () => {
     expect(seen[0]!.auth).toBe(`Basic ${Buffer.from("opencode:secret").toString("base64")}`)
     expect(seen[0]!.search).toBe("?directory=%2Fwork%2Fproject")
     expect(core.formatResult(result)).toBe("first\nsecond\n\nsession: ses_child")
+  })
+
+  test("flags a child that ended with a background shell command or a promise of later work", async () => {
+    const run = () => core.runDelegate(core.createApi(base()), { task: "t", model: "a/b", parentID: "ses_parent" })
+    childParts = [
+      { type: "tool", tool: "bash", state: { status: "completed", input: { command: "sleep 150 &" } } },
+      { type: "text", text: "Started it." },
+    ]
+    expect((await run()).unfinished).toContain("background")
+    childParts = [
+      { type: "tool", tool: "Bash", state: { status: "completed", input: { command: "make", run_in_background: true } } },
+      { type: "text", text: "Done." },
+    ]
+    expect((await run()).unfinished).toContain("background")
+    childParts = [{ type: "tool", tool: "bash", state: { status: "running", input: { command: "make" } } }]
+    expect((await run()).unfinished).toContain("running")
+    childParts = [{ type: "text", text: "I will report once the sleep finishes." }]
+    expect((await run()).unfinished).toContain("promise")
+    childParts = [{ type: "text", text: "Сообщу, когда сборка закончится." }]
+    expect((await run()).unfinished).toContain("promise")
+    childParts = [{ type: "text", text: "Once it finishes, I'll write the essay." }]
+    expect((await run()).unfinished).toContain("promise")
+    childParts = [{ type: "text", text: "Отпишусь позже." }]
+    expect((await run()).unfinished).toContain("promise")
+    for (const text of [
+      "This will update the cache when X changes.",
+      "The script will write the output to out.txt.",
+      "После завершения сборки тесты прошли.",
+    ]) {
+      childParts = [{ type: "text", text }]
+      expect((await run()).unfinished).toBeUndefined()
+    }
+    for (const command of ["a &\nb &\nwait", "a && b", "nohup a &\nwait"]) {
+      childParts = [{ type: "tool", tool: "bash", state: { status: "completed", input: { command } } }]
+      expect((await run()).unfinished).toBeUndefined()
+    }
+    childParts = [
+      { type: "tool", tool: "bash", state: { status: "completed", input: { command: "wait\na &" } } },
+    ]
+    expect((await run()).unfinished).toContain("background")
+    childParts = [
+      { type: "tool", tool: "bash", state: { status: "completed", input: { command: "sleep 1 && echo a" } } },
+      { type: "text", text: "All finished: a" },
+    ]
+    expect((await run()).unfinished).toBeUndefined()
+  })
+
+  test("flags a background launch with a mid-line ampersand and sees tool parts of earlier steps", async () => {
+    const command =
+      "nohup sh -c 'sleep 150; echo done > /tmp/f2.txt' >/dev/null 2>&1 & launch_pid=$!; ps -p \"$launch_pid\""
+    childMessages = [
+      {
+        info: { id: "m1", role: "assistant" },
+        parts: [{ type: "tool", tool: "bash", state: { status: "completed", input: { command } } }],
+      },
+      { info: { id: "m2", role: "assistant" }, parts: [{ type: "text", text: "Launched." }] },
+    ]
+    childParts = [{ type: "text", text: "Launched." }]
+    const result = await core.runDelegate(core.createApi(base()), { task: "t", model: "a/b", parentID: "ses_parent" })
+    expect(result.unfinished).toContain("background")
+    childMessages = []
+    for (const command of ["a 2>&1 | b", "a >&2", "a &> out", "a && b"]) {
+      childParts = [{ type: "tool", tool: "bash", state: { status: "completed", input: { command } } }]
+      const done = await core.runDelegate(core.createApi(base()), { task: "t", model: "a/b", parentID: "ses_parent" })
+      expect(done.unfinished).toBeUndefined()
+    }
+  })
+
+  test("formatResult tells Main that an unfinished child is not confirmed", () => {
+    const text = core.formatResult({ id: "ses_child", text: "Started.", unfinished: "a promise of later work" })
+    expect(text).toContain("ended without finishing")
+    expect(text).toContain("not confirmed")
+    expect(text).toContain("nobody will report it later")
+    expect(text).toContain("session: ses_child")
+    expect(core.formatResult({ id: "ses_child", text: "ok" })).toBe("ok\n\nsession: ses_child")
+  })
+
+  test("tells the child to finish everything in one turn", () => {
+    const note = core.workerNote(1)
+    expect(note).toContain("finish all work in this turn")
+    expect(note).toContain("background")
+    expect(note).toContain("report later")
+  })
+
+  test("titles the child with the first task line, trimmed to 60 characters", async () => {
+    await core.runDelegate(core.createApi(base()), {
+      task: `  ${"x".repeat(80)}\nsecond`,
+      model: "a/b",
+      parentID: "ses_parent",
+    })
+    expect(bodyOf("POST", "/session").title).toBe("x".repeat(60))
+  })
+
+  test("deletes the child session when the prompt fails before the child produced anything", async () => {
+    promptFails = true
+    await expect(
+      core.runDelegate(core.createApi(base()), { task: "t", model: "a/nope", parentID: "ses_parent" }),
+    ).rejects.toThrow("Model not found")
+    expect(seen.some((item) => item.method === "DELETE" && item.path === "/session/ses_child")).toBe(true)
+  })
+
+  test("keeps the child session when the prompt fails after the child already answered", async () => {
+    promptFails = true
+    childMessages = [{ info: { id: "m1", role: "assistant" }, parts: [] }]
+    await expect(
+      core.runDelegate(core.createApi(base()), { task: "t", model: "a/b", parentID: "ses_parent" }),
+    ).rejects.toThrow()
+    expect(seen.some((item) => item.method === "DELETE")).toBe(false)
   })
 
   test("defaults the model to the newest assistant message of the parent and omits an empty agent", async () => {
@@ -360,6 +480,7 @@ describe("delegate mcp server", () => {
     expect(replies.map((reply) => reply.id).sort()).toEqual([1, 2, 3])
     expect(replies.find((reply) => reply.id === 1).result.protocolVersion).toBe("2025-03-26")
     expect(replies.find((reply) => reply.id === 2).result.tools[0].name).toBe("delegate")
+    expect(replies.find((reply) => reply.id === 2).result.tools[0].annotations).toEqual({ readOnlyHint: true })
     expect(replies.find((reply) => reply.id === 3).result).toEqual({
       content: [{ type: "text", text: "first\nsecond\n\nsession: ses_child" }],
       isError: false,
