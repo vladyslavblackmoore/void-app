@@ -36,6 +36,7 @@ import { useFileComponent } from "@opencode-ai/ui/context/file"
 import { useDialog } from "@opencode-ai/ui/context/dialog"
 import { type UiI18n, useI18n } from "@opencode-ai/ui/context/i18n"
 import { BasicTool, GenericTool } from "./basic-tool"
+import { delegateTaskLabel, isDelegateTool } from "./delegate-label"
 import { Accordion } from "@opencode-ai/ui/accordion"
 import { StickyAccordionHeader } from "@opencode-ai/ui/sticky-accordion-header"
 import { Collapsible } from "@opencode-ai/ui/collapsible"
@@ -562,6 +563,14 @@ export function getToolInfo(
       return {
         icon: "brain",
         title: input.name || i18n.t("ui.tool.skill"),
+      }
+    case "delegate":
+    case "delegate_delegate":
+    case "mcp__delegate__delegate":
+      return {
+        icon: "task",
+        title: i18n.t("ui.tool.delegate"),
+        subtitle: delegateTaskLabel(input),
       }
     default:
       return {
@@ -1557,6 +1566,7 @@ PART_MAPPING["tool"] = function ToolPartDisplay(props) {
     return sessionLink(taskId(), data.sessionHref)
   })
   const taskSubtitle = createMemo(() => {
+    if (isDelegateTool(part().tool)) return delegateTaskLabel(input()) || undefined
     if (part().tool !== "task") return undefined
     const value = input().description
     if (typeof value === "string" && value) return value
@@ -1588,7 +1598,11 @@ PART_MAPPING["tool"] = function ToolPartDisplay(props) {
                   tool={part().tool}
                   error={error()}
                   title={
-                    part().tool === "websearch" ? webSearchProviderLabel(partMetadata().provider, i18n) : undefined
+                    part().tool === "websearch"
+                      ? webSearchProviderLabel(partMetadata().provider, i18n)
+                      : isDelegateTool(part().tool)
+                        ? i18n.t("ui.tool.delegate")
+                        : undefined
                   }
                   defaultOpen={props.defaultOpen}
                   open={controlledOpen()}
@@ -1812,6 +1826,36 @@ ToolRegistry.register({
     )
   },
 })
+
+function DelegateTool(props: ToolProps) {
+  const i18n = useI18n()
+  const status = () => {
+    if (props.status === "pending" || props.status === "running") return i18n.t("ui.tool.delegate.running")
+    if (props.status === "error") return i18n.t("ui.tool.delegate.error")
+    return i18n.t("ui.tool.delegate.done")
+  }
+  return (
+    <BasicTool
+      {...props}
+      icon="task"
+      trigger={{
+        title: i18n.t("ui.tool.delegate"),
+        subtitle: delegateTaskLabel(props.input),
+        args: [status()],
+      }}
+    >
+      <Show when={props.output}>
+        <div data-component="tool-output" data-scrollable>
+          <Markdown text={props.output!} />
+        </div>
+      </Show>
+    </BasicTool>
+  )
+}
+
+ToolRegistry.register({ name: "delegate", render: DelegateTool })
+ToolRegistry.register({ name: "delegate_delegate", render: DelegateTool })
+ToolRegistry.register({ name: "mcp__delegate__delegate", render: DelegateTool })
 
 ToolRegistry.register({
   name: "list",

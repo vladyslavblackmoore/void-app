@@ -270,6 +270,20 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
               tabsStoreActions.removeSessions(detail)
             })
 
+            const newSessionTarget = () => {
+              const current = currentTab()
+              const candidates = [current, ...tabsStore.filter((item) => item !== current)]
+              for (const tab of candidates) {
+                if (!tab) continue
+                const directory = tab.type === "draft" ? tab.directory : tabs.info[tabKey(tab)]?.directory
+                if (directory) return { server: tab.server, directory }
+              }
+            }
+            const startNewSession = () => {
+              const target = newSessionTarget()
+              if (target) void tabs.newDraft(target)
+            }
+
             const toggleHome = () => tabs.toggleHome({ home: layout.route().type === "home", current: currentTab() })
 
             command.register("titlebar-home", () => [
@@ -349,6 +363,22 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
                   }}
                   onReorder={(keys) => tabsStoreActions.reorder(keys)}
                 />
+                <TooltipV2
+                  placement="bottom"
+                  value={language.t("command.session.new")}
+                  class="shrink-0"
+                >
+                  <IconButtonV2
+                    type="button"
+                    variant="ghost-muted"
+                    size="large"
+                    class="!w-9 shrink-0"
+                    icon={<IconV2 name="plus" />}
+                    disabled={!newSessionTarget()}
+                    onClick={startNewSession}
+                    aria-label={language.t("command.session.new")}
+                  />
+                </TooltipV2>
                 <div class="flex-1" />
                 <TitlebarV2Right state={v2RightState()} />
               </div>

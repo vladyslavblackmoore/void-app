@@ -1,3 +1,5 @@
+import { shortLabel } from "@opencode-ai/session-ui/delegate-label"
+
 export const AGENT_TREE_MAX_DEPTH = 2
 
 const marker = /^\s*(?:\[delegated worker\]\s*)+/
@@ -7,12 +9,56 @@ export function stripDelegationMarker(title: string | undefined) {
   return title.replace(marker, "").trim()
 }
 
-const delegatePrefix = /^delegate:\s*/
 const workerNote = /^\s*\[delegated worker\][\s\S]*?\n\s*\n/
+
+export { shortLabel }
+
+const leadingNoise = /^(?:\s+|delegate:|\[delegated worker\])+/
+
+export function cleanAgentTitle(title: string) {
+  return title.replace(leadingNoise, "").trim()
+}
 
 export function agentRowTitle(title: string | undefined) {
   if (title === undefined) return ""
-  return stripDelegationMarker(title.replace(delegatePrefix, "")) ?? ""
+  return shortLabel(cleanAgentTitle(title))
+}
+
+export function agentFullTitle(title: string | undefined) {
+  if (title === undefined) return ""
+  return cleanAgentTitle(title).replace(/\s+/g, " ")
+}
+
+export type AgentTurn = { id: string; created: number; label: string }
+
+export type AgentGroup<T extends TreeSession> = { turnID: string; label: string; rows: AgentRow<T>[] }
+
+export function groupAgentRowsByTurn<T extends TreeSession>(rows: AgentRow<T>[], turns: AgentTurn[]) {
+  const ordered = turns.slice().sort((a, b) => a.created - b.created)
+  const groups: AgentGroup<T>[] = []
+  const index = new Map<string, AgentGroup<T>>()
+  let current: AgentGroup<T> | undefined
+  for (const row of rows) {
+    if (row.depth > 1 && current) {
+      current.rows.push(row)
+      continue
+    }
+    const turn = ordered.findLast((item) => item.created <= row.session.time.created) ?? ordered[0]
+    const key = turn?.id ?? ""
+    let group = index.get(key)
+    if (!group) {
+      group = { turnID: key, label: turn?.label ?? "", rows: [] }
+      index.set(key, group)
+      groups.push(group)
+    }
+    group.rows.push(row)
+    current = group
+  }
+  return groups.sort((a, b) => {
+    const left = ordered.findIndex((item) => item.id === a.turnID)
+    const right = ordered.findIndex((item) => item.id === b.turnID)
+    return left - right
+  })
 }
 
 export function stripWorkerNote(text: string) {
@@ -74,4 +120,12 @@ export function agentRunState(
 export function withoutRemoved<T extends { id: string }>(sessions: T[], removed: ReadonlySet<string>) {
   if (removed.size === 0) return sessions
   return sessions.filter((item) => !removed.has(item.id))
+}
+
+export function shouldAutoOpenAgents(
+  sessions: readonly { parentID?: string; time: { created: number; archived?: number } }[],
+  rootID: string,
+  since: number,
+) {
+  return sessions.some((item) => item.parentID === rootID && !item.time.archived && item.time.created >= since)
 }

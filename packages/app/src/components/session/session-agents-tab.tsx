@@ -8,9 +8,13 @@ import { useSync } from "@/context/sync"
 import { useSessionLayout } from "@/pages/session/session-layout"
 import {
   AGENT_TREE_MAX_DEPTH,
+  agentFullTitle,
   agentRowTitle,
   agentRunState,
   buildAgentTree,
+  groupAgentRowsByTurn,
+  shortLabel,
+  type AgentTurn,
   withoutRemoved,
   withoutWorkerNote,
   type AgentRunState,
@@ -98,11 +102,26 @@ export function SessionAgentsTab() {
     return buildAgentTree(sessions(), id)
   })
 
-  const rowIds = createMemo(() => rows().map((row) => row.session.id))
-  const rowById = createMemo(() => new Map(rows().map((row) => [row.session.id, row])))
+  const turns = createMemo<AgentTurn[]>(() => {
+    const id = rootID()
+    if (!id) return []
+    return ((sync().data.message[id] ?? emptyMessages) as MessageType[])
+      .filter((message) => message.role === "user")
+      .map((message) => {
+        const text = (sync().data.part[message.id] ?? emptyParts).find(
+          (part): part is Extract<Part, { type: "text" }> => part.type === "text" && !part.synthetic,
+        )
+        return { id: message.id, created: message.time.created, label: shortLabel(text?.text, 48) }
+      })
+  })
+  const groups = createMemo(() => groupAgentRowsByTurn(rows(), turns()))
+  const sameIds = (a: string[], b: string[]) => a.length === b.length && a.every((id, index) => id === b[index])
+  const groupIds = createMemo(() => groups().map((group) => group.turnID), [] as string[], { equals: sameIds })
+  const groupById = createMemo(() => new Map(groups().map((group) => [group.turnID, group])))
 
   const messagesOf = (id: string) => (sync().data.message[id] ?? emptyMessages) as MessageType[]
   const titleOf = (item: Session) => agentRowTitle(sessionTitle(item.title)) || item.id
+  const fullTitleOf = (item: Session) => agentFullTitle(sessionTitle(item.title)) || item.id
   const stateOf = (id: string) => {
     const last = messagesOf(id).findLast((message) => message.role === "assistant")
     const failed = last?.role === "assistant" && !!last.error
@@ -122,20 +141,46 @@ export function SessionAgentsTab() {
               when={rows().length > 0}
               fallback={<div class="px-3 py-4 text-12-regular text-text-weak">{language.t("session.agents.empty")}</div>}
             >
-              <For each={rowIds()}>
-                {(id) => (
-                  <Show when={rowById().get(id)}>
-                    {(row) => (
-                      <AgentRow
-                        session={row().session}
-                        depth={row().depth}
-                        title={titleOf(row().session)}
-                        state={stateOf(id)}
-                        model={modelLabel(messagesOf(id))}
-                        onOpen={() => setSelected(id)}
-                        onAbort={() => abort(id)}
-                      />
-                    )}
+              <For each={groupIds()}>
+                {(turnID) => (
+                  <Show when={groupById().get(turnID)}>
+                    {(group) => {
+                      const rowIds = createMemo(() => group().rows.map((row) => row.session.id), [] as string[], {
+                        equals: sameIds,
+                      })
+                      const rowById = createMemo(() => new Map(group().rows.map((row) => [row.session.id, row])))
+                      return (
+                        <div data-agent-group data-turn-id={turnID} class="flex flex-col gap-1">
+                          <Show when={group().label}>
+                            <div
+                              data-agent-group-header
+                              class="px-2 pt-2 truncate text-11-medium uppercase text-text-weak"
+                              title={group().label}
+                            >
+                              {group().label}
+                            </div>
+                          </Show>
+                          <For each={rowIds()}>
+                            {(id) => (
+                              <Show when={rowById().get(id)}>
+                                {(row) => (
+                                  <AgentRow
+                                    session={row().session}
+                                    depth={row().depth}
+                                    title={titleOf(row().session)}
+                                    fullTitle={fullTitleOf(row().session)}
+                                    state={stateOf(id)}
+                                    model={modelLabel(messagesOf(id))}
+                                    onOpen={() => setSelected(id)}
+                                    onAbort={() => abort(id)}
+                                  />
+                                )}
+                              </Show>
+                            )}
+                          </For>
+                        </div>
+                      )
+                    }}
                   </Show>
                 )}
               </For>
@@ -159,6 +204,7 @@ function AgentRow(props: {
   session: Session
   depth: number
   title: string
+  fullTitle: string
   state: AgentRunState
   model: string
   onOpen: () => void
@@ -192,7 +238,9 @@ function AgentRow(props: {
           title={language.t(`session.agents.status.${props.state}`)}
         />
         <span class="min-w-0 flex-1 flex flex-col">
-          <span class="truncate text-13-medium text-text-strong">{props.title}</span>
+          <span class="truncate text-13-medium text-text-strong" title={props.fullTitle}>
+            {props.title}
+          </span>
           <span class="truncate text-12-regular text-text-weak">
             {language.t(`session.agents.status.${props.state}`)}
             <Show when={props.model}>{` · ${props.model}`}</Show>

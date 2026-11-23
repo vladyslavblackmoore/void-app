@@ -1,8 +1,12 @@
 import { describe, expect, test } from "bun:test"
 import {
+  agentFullTitle,
   agentRowTitle,
   agentRunState,
   buildAgentTree,
+  groupAgentRowsByTurn,
+  shortLabel,
+  shouldAutoOpenAgents,
   stripDelegationMarker,
   stripWorkerNote,
   withoutRemoved,
@@ -114,6 +118,8 @@ describe("agentRowTitle", () => {
     expect(agentRowTitle("delegate: Fix the build")).toBe("Fix the build")
     expect(agentRowTitle("delegate: [delegated worker] Fix")).toBe("Fix")
     expect(agentRowTitle("[delegated worker] Fix")).toBe("Fix")
+    expect(agentRowTitle("[delegated worker] delegate: x")).toBe("x")
+    expect(agentRowTitle("delegate: [delegated worker] delegate: x")).toBe("x")
   })
 
   test("keeps other titles and handles undefined", () => {
@@ -154,5 +160,64 @@ describe("withoutRemoved", () => {
     const list = [{ id: "a" }, { id: "b" }]
     expect(withoutRemoved(list, new Set(["b"]))).toEqual([{ id: "a" }])
     expect(withoutRemoved(list, new Set())).toBe(list)
+  })
+})
+
+describe("shortLabel", () => {
+  test("replaces absolute paths with their basename", () => {
+    expect(shortLabel("Fix /Users/someone/project/src/app.ts now")).toBe("Fix app.ts now")
+    expect(shortLabel("Check ~/work/repo/ please")).toBe("Check repo please")
+    expect(shortLabel("Use and/or logic")).toBe("Use and/or logic")
+  })
+
+  test("collapses whitespace to a single line", () => {
+    expect(shortLabel("one\n\ntwo   three")).toBe("one two three")
+  })
+
+  test("truncates with an ellipsis", () => {
+    const label = shortLabel("x".repeat(100))
+    expect(label.length).toBe(60)
+    expect(label.endsWith("…")).toBe(true)
+  })
+
+  test("row title strips the prefix and shortens", () => {
+    expect(agentRowTitle("delegate: Read /Users/a/b/notes.md")).toBe("Read notes.md")
+    expect(agentFullTitle("delegate: Read\n/Users/a/b/notes.md")).toBe("Read /Users/a/b/notes.md")
+  })
+})
+
+describe("groupAgentRowsByTurn", () => {
+  const turns = [
+    { id: "u2", created: 200, label: "second" },
+    { id: "u1", created: 100, label: "first" },
+  ]
+
+  test("assigns children to the latest turn started before them", () => {
+    const rows = [
+      { session: session("a", "m", 110), depth: 1 },
+      { session: session("a1", "a", 115), depth: 2 },
+      { session: session("b", "m", 210), depth: 1 },
+      { session: session("c", "m", 120), depth: 1 },
+    ]
+    const groups = groupAgentRowsByTurn(rows, turns)
+    expect(groups.map((group) => group.turnID)).toEqual(["u1", "u2"])
+    expect(groups[0].rows.map((row) => row.session.id)).toEqual(["a", "a1", "c"])
+    expect(groups[1].rows.map((row) => row.session.id)).toEqual(["b"])
+    expect(groups[0].label).toBe("first")
+  })
+
+  test("falls back to the first turn and to an unlabeled group", () => {
+    const early = groupAgentRowsByTurn([{ session: session("a", "m", 1), depth: 1 }], turns)
+    expect(early[0].turnID).toBe("u1")
+    const none = groupAgentRowsByTurn([{ session: session("a", "m", 1), depth: 1 }], [])
+    expect(none[0]).toMatchObject({ turnID: "", label: "" })
+  })
+})
+
+describe("shouldAutoOpenAgents", () => {
+  test("opens only for new live children of the root", () => {
+    const list = [session("a", "m", 50), session("b", "other", 150), { ...session("c", "m", 150), time: { created: 150, archived: 1 } }]
+    expect(shouldAutoOpenAgents(list, "m", 100)).toBe(false)
+    expect(shouldAutoOpenAgents([...list, session("d", "m", 120)], "m", 100)).toBe(true)
   })
 })
