@@ -335,6 +335,17 @@ describe("seedConfig haiku model", () => {
       expect(await read()).toContain("// providers the app shows")
     })
 
+    test("removes the entries from a config without the subscription provider", async () => {
+      await writeFile(
+        join(dir, "opencode.jsonc"),
+        `{ "instructions": ["${manager()}", "${memory}/tasks.md", "keep.md"] }\n`,
+      )
+
+      await seedConfig(dir, data, wrapper, { delegate }, memory)
+
+      expect(await instructions()).toEqual(["keep.md"])
+    })
+
     test("drops the instructions key when nothing else is left", async () => {
       await writeFile(
         join(dir, "opencode.jsonc"),

@@ -60,7 +60,7 @@ export default {
             return {
               title: "delegate",
               output: formatResult(result),
-              metadata: { sessionId: result.id },
+              metadata: { sessionId: result.id, unconfirmed: Boolean(result.unfinished) },
             }
           },
         },

@@ -211,6 +211,7 @@ export const dict = {
   "ui.tool.delegate": "Delegate",
   "ui.tool.delegate.running": "Running",
   "ui.tool.delegate.done": "Done",
+  "ui.tool.delegate.unconfirmed": "Unconfirmed",
   "ui.tool.delegate.error": "Error",
   "ui.basicTool.called": "`{{tool}}` を呼び出しました",
   "ui.toolErrorCard.failed": "失敗",

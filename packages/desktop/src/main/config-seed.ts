@@ -108,8 +108,6 @@ async function seedInjection(configDir: string, userDataDir: string, memoryDir?:
   const file = join(configDir, "opencode.jsonc")
   const text = await readFile(file, "utf8").catch(() => undefined)
   if (text === undefined) return
-  const tree = parseTree(text)
-  if (!tree || !findNodeAtLocation(tree, ["provider", "subscription"])) return
   const entries = [
     managerFile(configDir),
     ...(memoryDir === undefined ? [] : MEMORY_FILES.map((name) => join(memoryDir, name))),

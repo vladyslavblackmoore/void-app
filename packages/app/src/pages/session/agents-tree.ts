@@ -1,4 +1,4 @@
-import { shortLabel } from "@opencode-ai/session-ui/delegate-label"
+import { isDelegateTool, shortLabel, unconfirmedSessionId } from "@opencode-ai/session-ui/delegate-label"
 
 export const AGENT_TREE_MAX_DEPTH = 2
 
@@ -105,16 +105,30 @@ export function buildAgentTree<T extends TreeSession>(sessions: T[], rootID: str
   return rows
 }
 
-export type AgentRunState = "running" | "idle" | "error" | "aborted"
+export type AgentRunState = "running" | "idle" | "error" | "aborted" | "unconfirmed"
+
+export function unconfirmedSessionIds(parts: readonly unknown[]) {
+  const ids = new Set<string>()
+  for (const item of parts) {
+    const part = item as { type?: string; tool?: string; state?: { output?: unknown } }
+    if (part?.type !== "tool" || !part.tool || !isDelegateTool(part.tool)) continue
+    const output = part.state?.output
+    const id = unconfirmedSessionId(typeof output === "string" ? output : undefined)
+    if (id) ids.add(id)
+  }
+  return ids
+}
 
 export function agentRunState(
   status: { type: string } | undefined,
   failed: boolean,
   aborted = false,
+  unconfirmed = false,
 ): AgentRunState {
   if (status?.type === "busy" || status?.type === "retry") return "running"
   if (aborted) return "aborted"
-  return failed ? "error" : "idle"
+  if (failed) return "error"
+  return unconfirmed ? "unconfirmed" : "idle"
 }
 
 export function withoutRemoved<T extends { id: string }>(sessions: T[], removed: ReadonlySet<string>) {

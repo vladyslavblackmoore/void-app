@@ -1,6 +1,7 @@
 export const indexLimit = 6000
 export const rulesLimit = 4000
 export const doneKeep = 5
+export const doneLimit = 50
 
 export const childNote =
   "You are a child session, not a manager. Finish in this turn: leave no background work running and never say you will report later or check back.\nMemory in your context is read-only for you: do not write tasks.md or the journal.\n\n"
@@ -13,21 +14,37 @@ export function capMemory(text, limit, path) {
   return `${line > 0 ? cut.slice(0, line) : cut}\n[truncated: read the full file at ${path}]`
 }
 
+function sectionEnd(lines, start) {
+  const next = lines.findIndex((line, index) => index > start && /^##\s/.test(line))
+  return next < 0 ? lines.length : next
+}
+
 export function tasksDigest(text, keep = doneKeep) {
   const lines = text.split("\n")
   const done = lines.findIndex((line) => /^##\s+Done\b/i.test(line))
   if (done < 0) return text.trim()
-  const items = lines.slice(done + 1).filter((line) => line.startsWith("- "))
-  const shown = items.slice(Math.max(0, items.length - keep))
+  const end = sectionEnd(lines, done)
+  const items = lines.slice(done + 1, end).filter((line) => line.startsWith("- "))
+  const shown = items.slice(0, keep)
   const omitted = items.length - shown.length
-  return [...lines.slice(0, done + 1), ...(omitted > 0 ? [`(${omitted} older done items omitted)`] : []), ...shown]
+  const after = end < lines.length ? ["", ...lines.slice(end)] : []
+  return [...lines.slice(0, done + 1), ...(omitted > 0 ? [`(${omitted} older done items omitted)`] : []), ...shown, ...after]
     .join("\n")
     .trim()
 }
 
-function sectionEnd(lines, start) {
-  const next = lines.findIndex((line, index) => index > start && /^##\s/.test(line))
-  return next < 0 ? lines.length : next
+export function pruneDone(text, limit = doneLimit) {
+  const lines = text.split("\n")
+  const done = lines.findIndex((line) => /^##\s+Done\b/i.test(line))
+  if (done < 0) return text
+  const end = sectionEnd(lines, done)
+  let count = 0
+  const kept = lines.filter((line, index) => {
+    if (index <= done || index >= end || !line.startsWith("- ")) return true
+    count++
+    return count <= limit
+  })
+  return kept.length === lines.length ? text : kept.join("\n")
 }
 
 export function closeStopped(text, id) {
@@ -45,11 +62,8 @@ export function closeStopped(text, id) {
     result.push("", "## Done")
     done = result.length - 1
   }
-  let last = done
-  const doneEnd = sectionEnd(result, done)
-  for (let index = done + 1; index < doneEnd; index++) if (result[index].trim()) last = index
-  result.splice(last + 1, 0, ...stopped)
-  return result.join("\n")
+  result.splice(done + 1, 0, ...stopped)
+  return pruneDone(result.join("\n"))
 }
 
 export function memoryBlock(files, dir, top) {

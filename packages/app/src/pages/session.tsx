@@ -1683,6 +1683,12 @@ export default function Page() {
         </Show>
       </div>
 
+      <Show when={!isDesktop() && !!params.id && view().reviewPanel.opened()}>
+        <Suspense>
+          <SessionSidePanel reviewSnap={ui.reviewSnap} size={size} overlay />
+        </Suspense>
+      </Show>
+
       <Show when={!newSessionDesign()}>
         <TerminalPanel />
       </Show>

@@ -162,14 +162,17 @@ function title(task) {
 }
 
 const backgroundLine = /(?<![&>])&(?![&>])|\b(nohup|disown|setsid)\b/
-const waitLine = /^\s*wait\b/
+const waitLine = /^\s*wait\b|&\s*wait\b/
+const quoted = /'[^'\n]*'|"[^"\n]*"/g
+const maxResultChars = 20000
 const promise =
   /\b(i'll|i will|i am going to|i'm going to)\b[^.\n]{0,40}\b(report|let you know|get back|notify you|update you|tell you)\b|\bonce\b[^.\n]{0,80}\b(finish|finishes|finished|completes|complete|done)\b[^.\n]{0,20}\bi('ll| will)\b|сообщу|доложу|дам знать|отпишусь|вернусь с результатом/i
 
 function runsInBackground(command) {
   const lines = String(command ?? "").split("\n")
-  const last = lines.findLastIndex((line) => backgroundLine.test(line))
-  return last >= 0 && !lines.slice(last + 1).some((line) => waitLine.test(line))
+  const bare = lines.map((line) => line.replace(quoted, "''"))
+  const last = bare.findLastIndex((line) => backgroundLine.test(line) && !waitLine.test(line))
+  return last >= 0 && !bare.slice(last + 1).some((line) => waitLine.test(line))
 }
 
 export function unfinishedReason(parts) {
@@ -186,8 +189,9 @@ export function unfinishedReason(parts) {
 
 async function dropEmpty(api, id) {
   const items = await api.messages(id).catch(() => undefined)
-  if (!items || items.some((item) => item?.info?.role === "assistant")) return
+  if (!items || items.some((item) => item?.info?.role === "assistant")) return false
   await api.remove(id).catch(() => undefined)
+  return true
 }
 
 export async function runDelegate(api, input, signal) {
@@ -232,7 +236,11 @@ export async function runDelegate(api, input, signal) {
     ]
     return { id, text: finalText(result?.parts), error, unfinished: error ? undefined : unfinishedReason(parts) }
   } catch (error) {
-    if (!signal?.aborted) await dropEmpty(api, id)
+    if (!signal?.aborted && (await dropEmpty(api, id)) && requested) {
+      throw new Error(
+        `Model ${requested.providerID}/${requested.modelID} is not available. Leave model empty to use the default for children, or choose another model.`,
+      )
+    }
     throw error
   } finally {
     signal?.removeEventListener("abort", stop)
@@ -240,13 +248,18 @@ export async function runDelegate(api, input, signal) {
   }
 }
 
+function capText(text, id) {
+  if (text.length <= maxResultChars) return text
+  return `${text.slice(0, maxResultChars)}\n\n[truncated: ${text.length - maxResultChars} more characters. Read session ${id} for the full output.]`
+}
+
 export function formatResult(result) {
   return [
     result.unfinished
-      ? `warning: the child ended without finishing (${result.unfinished}). Its result is not confirmed and nobody will report it later. Tell the owner the work is not confirmed; rerun the task in the foreground or finish it yourself.`
+      ? `STATUS: UNCONFIRMED - ${result.unfinished}\nThe child ended without finishing. Its result is not confirmed and nobody will report it later. Do not say the work is done or launched. The task stays Open in tasks.md, and your reply to the owner must say it is not confirmed. Rerun it in the foreground or finish it yourself.`
       : undefined,
     result.error ? `error: ${result.error}` : undefined,
-    result.text || (result.error ? undefined : "(the child returned no text)"),
+    capText(result.text || (result.error ? "" : "(the child returned no text)"), result.id) || undefined,
     `session: ${result.id}`,
   ]
     .filter((line) => line !== undefined)

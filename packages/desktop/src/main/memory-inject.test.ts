@@ -26,15 +26,25 @@ describe("tasksDigest", () => {
   const done = Array.from({ length: 8 }, (_, index) => `- [ses_${index}] task ${index}`)
   const text = ["# Tasks", "", "## Open", "- [ses_a] open one", "- [ses_b] open two", "", "## Done", ...done].join("\n")
 
-  test("keeps the whole Open section and the last five Done items", () => {
+  test("keeps the whole Open section and the five newest Done items at the top", () => {
     const result = memory.tasksDigest(text)
 
     expect(result).toContain("- [ses_a] open one")
     expect(result).toContain("- [ses_b] open two")
-    expect(result).not.toContain("task 2")
-    expect(result).toContain("task 3")
-    expect(result).toContain("task 7")
+    expect(result).toContain("task 0")
+    expect(result).toContain("task 4")
+    expect(result).not.toContain("task 5")
+    expect(result).not.toContain("task 7")
     expect(result).toContain("(3 older done items omitted)")
+  })
+
+  test("keeps sections that follow Done", () => {
+    const result = memory.tasksDigest("## Done\n- a\n- b\n- c\n\n## Notes\n- keep me", 2)
+
+    expect(result).toContain("- a")
+    expect(result).toContain("- b")
+    expect(result).not.toContain("- c")
+    expect(result).toContain("## Notes\n- keep me")
   })
 
   test("keeps every Done item when there are few", () => {
@@ -51,7 +61,7 @@ describe("closeStopped", () => {
 
   test("moves the entries of the session to Done marked stopped", () => {
     expect(memory.closeStopped(text, "ses_a")).toBe(
-      "# Tasks\n\n## Open\n- [ses_b] second\n\n## Done\n- [ses_c] old\n- [ses_a] first (stopped)\n- [ses_a] third (stopped)\n",
+      "# Tasks\n\n## Open\n- [ses_b] second\n\n## Done\n- [ses_a] first (stopped)\n- [ses_a] third (stopped)\n- [ses_c] old\n",
     )
   })
 
@@ -59,10 +69,37 @@ describe("closeStopped", () => {
     expect(memory.closeStopped(text, "ses_z")).toBe(text)
   })
 
+  test("inserts at the top of Done and keeps the sections after it", () => {
+    const input = "## Open\n- [ses_a] x\n\n## Done\n- old\n\n## Notes\n- n\n"
+
+    expect(memory.closeStopped(input, "ses_a")).toBe("## Open\n\n## Done\n- [ses_a] x (stopped)\n- old\n\n## Notes\n- n\n")
+  })
+
+  test("drops the oldest Done items beyond the limit", () => {
+    const old = Array.from({ length: memory.doneLimit }, (_, index) => `- old ${index}`).join("\n")
+    const result = memory.closeStopped(`## Open\n- [ses_a] x\n\n## Done\n${old}\n\n## Notes\n- n`, "ses_a")
+
+    expect(result).toContain("- [ses_a] x (stopped)")
+    expect(result).toContain(`- old ${memory.doneLimit - 2}`)
+    expect(result).not.toContain(`- old ${memory.doneLimit - 1}`)
+    expect(result).toContain("## Notes\n- n")
+  })
+
   test("creates a Done section when it is missing", () => {
     expect(memory.closeStopped("## Open\n- [ses_a] first\n", "ses_a")).toBe(
       "## Open\n\n\n## Done\n- [ses_a] first (stopped)",
     )
+  })
+})
+
+describe("pruneDone", () => {
+  test("keeps the first items and the other lines", () => {
+    expect(memory.pruneDone("## Done\n- a\n- b\n- c\n\n## Notes\n- n", 2)).toBe("## Done\n- a\n- b\n\n## Notes\n- n")
+  })
+
+  test("returns the text unchanged within the limit or without Done", () => {
+    expect(memory.pruneDone("## Done\n- a\n", 2)).toBe("## Done\n- a\n")
+    expect(memory.pruneDone("## Open\n- a\n", 0)).toBe("## Open\n- a\n")
   })
 })
 

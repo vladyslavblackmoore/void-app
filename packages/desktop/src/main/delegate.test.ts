@@ -11,7 +11,7 @@ type Hooks = {
       execute: (
         args: { task: string; model: string; agent: string },
         ctx: { sessionID: string; directory: string; abort: AbortSignal },
-      ) => Promise<{ title: string; output: string; metadata: { sessionId: string } }>
+      ) => Promise<{ title: string; output: string; metadata: { sessionId: string; unconfirmed: boolean } }>
     }
   }
   "chat.headers": (
@@ -204,13 +204,33 @@ describe("delegate core", () => {
     }
   })
 
-  test("formatResult tells Main that an unfinished child is not confirmed", () => {
+  test("formatResult leads with a structured UNCONFIRMED status for an unfinished child", () => {
     const text = core.formatResult({ id: "ses_child", text: "Started.", unfinished: "a promise of later work" })
-    expect(text).toContain("ended without finishing")
+    expect(text.split("\n")[0]).toBe("STATUS: UNCONFIRMED - a promise of later work")
     expect(text).toContain("not confirmed")
     expect(text).toContain("nobody will report it later")
-    expect(text).toContain("session: ses_child")
+    expect(text).toContain("stays Open")
+    expect(text).toContain("Started.")
+    expect(text.endsWith("session: ses_child")).toBe(true)
     expect(core.formatResult({ id: "ses_child", text: "ok" })).toBe("ok\n\nsession: ses_child")
+  })
+
+  test("formatResult caps long child text and names the session to read more", () => {
+    const text = core.formatResult({ id: "ses_child", text: "x".repeat(50000) })
+    expect(text.length).toBeLessThan(21000)
+    expect(text).toContain("truncated")
+    expect(text).toContain("ses_child")
+    expect(text.endsWith("session: ses_child")).toBe(true)
+  })
+
+  test("a trailing ampersand in a quote, a URL or before wait is not a background launch", async () => {
+    const run = () => core.runDelegate(core.createApi(base()), { task: "t", model: "a/b", parentID: "ses_parent" })
+    for (const command of ["curl 'https://x.test/a?b=1&c=2'", 'echo "a & b"', "git log --grep='a & b'", "a & wait"]) {
+      childParts = [{ type: "tool", tool: "bash", state: { status: "completed", input: { command } } }]
+      expect((await run()).unfinished).toBeUndefined()
+    }
+    childParts = [{ type: "tool", tool: "bash", state: { status: "completed", input: { command: "sleep 9 &" } } }]
+    expect((await run()).unfinished).toContain("background")
   })
 
   test("tells the child to finish everything in one turn", () => {
@@ -232,9 +252,20 @@ describe("delegate core", () => {
   test("deletes the child session when the prompt fails before the child produced anything", async () => {
     promptFails = true
     await expect(
-      core.runDelegate(core.createApi(base()), { task: "t", model: "a/nope", parentID: "ses_parent" }),
+      core.runDelegate(core.createApi(base()), { task: "t", model: "", parentID: "ses_parent" }),
     ).rejects.toThrow("Model not found")
     expect(seen.some((item) => item.method === "DELETE" && item.path === "/session/ses_child")).toBe(true)
+  })
+
+  test("reports an unavailable model without the raw server error when an explicit model fails before any reply", async () => {
+    promptFails = true
+    const failure = await core
+      .runDelegate(core.createApi(base()), { task: "t", model: "openai/no-such-model", parentID: "ses_parent" })
+      .catch((error: Error) => error)
+    expect(failure).toBeInstanceOf(Error)
+    expect((failure as Error).message).toBe(
+      "Model openai/no-such-model is not available. Leave model empty to use the default for children, or choose another model.",
+    )
   })
 
   test("keeps the child session when the prompt fails after the child already answered", async () => {
@@ -387,7 +418,7 @@ describe("delegate plugin", () => {
     )
 
     expect(output.output).toBe("first\nsecond\n\nsession: ses_child")
-    expect(output.metadata).toEqual({ sessionId: "ses_child" })
+    expect(output.metadata).toEqual({ sessionId: "ses_child", unconfirmed: false })
     expect(bodyOf("POST", "/session")?.parentID).toBe("ses_parent")
     expect(Object.keys(hooks.tool.delegate.args)).toEqual(["task", "model", "agent"])
   })

@@ -27,9 +27,14 @@ describe("mainTabKey", () => {
     expect(mainTabKey(["a", "b", "c"], "b")).toBe("b")
   })
 
-  test("falls back to the first tab", () => {
-    expect(mainTabKey(["a", "b"], "x")).toBe("a")
-    expect(mainTabKey(["a", "b"], undefined)).toBe("a")
+  test("falls back to the last used tab", () => {
+    expect(mainTabKey(["a", "b", "c"], undefined, "b")).toBe("b")
+    expect(mainTabKey(["a", "b", "c"], "x", "b")).toBe("b")
+  })
+
+  test("falls back to the newest tab when nothing was used", () => {
+    expect(mainTabKey(["a", "b"], "x")).toBe("b")
+    expect(mainTabKey(["a", "b"], undefined, "gone")).toBe("b")
   })
 
   test("returns nothing without tabs", () => {

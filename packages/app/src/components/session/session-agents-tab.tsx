@@ -15,6 +15,7 @@ import {
   groupAgentRowsByTurn,
   shortLabel,
   type AgentTurn,
+  unconfirmedSessionIds,
   withoutRemoved,
   withoutWorkerNote,
   type AgentRunState,
@@ -29,6 +30,7 @@ const stateColor: Record<AgentRunState, string> = {
   idle: "var(--syntax-success)",
   error: "var(--syntax-critical)",
   aborted: "var(--syntax-warning)",
+  unconfirmed: "var(--syntax-warning)",
 }
 
 function modelLabel(messages: MessageType[]) {
@@ -126,8 +128,20 @@ export function SessionAgentsTab() {
     const last = messagesOf(id).findLast((message) => message.role === "assistant")
     const failed = last?.role === "assistant" && !!last.error
     const aborted = failed && last?.role === "assistant" && last.error?.name === "MessageAbortedError"
-    return agentRunState(sync().data.session_status[id], failed, aborted)
+    return agentRunState(sync().data.session_status[id], failed, aborted, unconfirmed().has(id))
   }
+
+  const unconfirmed = createMemo(() => {
+    const parents = new Set<string>()
+    const root = rootID()
+    if (root) parents.add(root)
+    for (const row of rows()) parents.add(row.session.id)
+    const parts: Part[] = []
+    for (const parent of parents) {
+      for (const message of messagesOf(parent)) parts.push(...(sync().data.part[message.id] ?? emptyParts))
+    }
+    return unconfirmedSessionIds(parts)
+  })
 
   const abort = (id: string) => void sdk().client.session.abort({ sessionID: id }).catch(() => undefined)
 

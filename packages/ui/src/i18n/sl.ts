@@ -162,6 +162,7 @@ export const dict: Record<string, string> = {
   "ui.tool.delegate": "Delegate",
   "ui.tool.delegate.running": "Running",
   "ui.tool.delegate.done": "Done",
+  "ui.tool.delegate.unconfirmed": "Unconfirmed",
   "ui.tool.delegate.error": "Error",
   "ui.basicTool.called": "Imenuje se `{{tool}}`",
   "ui.toolErrorCard.failed": "Ni uspelo",

@@ -376,6 +376,6 @@ export const { use: useTabs, provider: TabsProvider } = createSimpleContext({
       },
     }
 
-    return { ...actions, store, info, ready, recentReady }
+    return { ...actions, recentKey, store, info, ready, recentReady }
   },
 })

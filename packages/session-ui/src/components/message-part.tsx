@@ -36,7 +36,7 @@ import { useFileComponent } from "@opencode-ai/ui/context/file"
 import { useDialog } from "@opencode-ai/ui/context/dialog"
 import { type UiI18n, useI18n } from "@opencode-ai/ui/context/i18n"
 import { BasicTool, GenericTool } from "./basic-tool"
-import { delegateTaskLabel, isDelegateTool } from "./delegate-label"
+import { delegateTaskLabel, isDelegateTool, unconfirmedSessionId } from "./delegate-label"
 import { Accordion } from "@opencode-ai/ui/accordion"
 import { StickyAccordionHeader } from "@opencode-ai/ui/sticky-accordion-header"
 import { Collapsible } from "@opencode-ai/ui/collapsible"
@@ -1832,6 +1832,7 @@ function DelegateTool(props: ToolProps) {
   const status = () => {
     if (props.status === "pending" || props.status === "running") return i18n.t("ui.tool.delegate.running")
     if (props.status === "error") return i18n.t("ui.tool.delegate.error")
+    if (unconfirmedSessionId(props.output) !== undefined) return i18n.t("ui.tool.delegate.unconfirmed")
     return i18n.t("ui.tool.delegate.done")
   }
   return (

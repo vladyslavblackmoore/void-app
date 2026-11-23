@@ -24,3 +24,11 @@ export function delegateTaskLabel(input: Record<string, unknown> | undefined) {
 export function isDelegateTool(tool: string) {
   return tool === "delegate" || tool === "delegate_delegate" || tool === "mcp__delegate__delegate"
 }
+
+const unconfirmedHead = /^STATUS: UNCONFIRMED\b/
+const sessionLine = /^session: (\S+)\s*$/m
+
+export function unconfirmedSessionId(output: string | undefined) {
+  if (typeof output !== "string" || !unconfirmedHead.test(output)) return undefined
+  return sessionLine.exec(output)?.[1] ?? ""
+}

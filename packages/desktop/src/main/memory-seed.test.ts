@@ -75,4 +75,17 @@ describe("bundled memory templates", () => {
     expect(tasks).toContain("## Done")
     expect(await read("MEMORY.md")).toContain("facts/<slug>.md")
   })
+
+  test("prunes Done in an existing tasks file", async () => {
+    const dir = memoryDir(root)
+    await mkdir(dir, { recursive: true })
+    const items = Array.from({ length: 60 }, (_, index) => `- t${index}`).join("\n")
+    await writeFile(join(dir, "tasks.md"), `## Open\n\n## Done\n${items}\n`)
+
+    await seedMemory(root, templates)
+
+    const text = await readFile(join(dir, "tasks.md"), "utf8")
+    expect(text).toContain("- t49")
+    expect(text).not.toContain("- t50")
+  })
 })

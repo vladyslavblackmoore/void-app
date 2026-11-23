@@ -191,6 +191,7 @@ export const dict: Record<Keys, string> = {
   "ui.tool.delegate": "Delegate",
   "ui.tool.delegate.running": "Running",
   "ui.tool.delegate.done": "Done",
+  "ui.tool.delegate.unconfirmed": "Unconfirmed",
   "ui.tool.delegate.error": "Error",
   "ui.basicTool.called": "Kjørte `{{tool}}`",
   "ui.toolErrorCard.failed": "Mislyktes",

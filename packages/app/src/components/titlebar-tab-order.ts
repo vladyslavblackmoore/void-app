@@ -11,7 +11,8 @@ export function mergeVisibleTabOrder(all: string[], current: string[], next: str
   return all.map((key) => (visible.has(key) ? (reordered.next().value ?? key) : key))
 }
 
-export function mainTabKey(order: string[], current: string | undefined) {
+export function mainTabKey(order: string[], current: string | undefined, recent?: string) {
   if (current && order.includes(current)) return current
-  return order[0]
+  if (recent && order.includes(recent)) return recent
+  return order[order.length - 1]
 }

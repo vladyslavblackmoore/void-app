@@ -155,6 +155,7 @@ export const dict: Record<string, string> = {
   "ui.tool.delegate": "Delegate",
   "ui.tool.delegate.running": "Running",
   "ui.tool.delegate.done": "Done",
+  "ui.tool.delegate.unconfirmed": "Unconfirmed",
   "ui.tool.delegate.error": "Error",
   "ui.basicTool.called": "বলা হয় `{{tool}}`",
   "ui.toolErrorCard.failed": "ব্যর্থ হয়েছে",
