@@ -1,4 +1,4 @@
-import { Show, createMemo, createSignal } from "solid-js"
+import { Show, createEffect, createMemo, createSignal } from "solid-js"
 import { createMediaQuery } from "@solid-primitives/media"
 import { Tabs } from "@opencode-ai/ui/tabs"
 import { SessionContextTab } from "@/components/session"
@@ -6,6 +6,7 @@ import { SessionAgentsTab } from "@/components/session/session-agents-tab"
 import { useLanguage } from "@/context/language"
 import { useSettings } from "@/context/settings"
 import { type Sizing } from "@/pages/session/helpers"
+import { agentsPanelRequest } from "@/pages/session/agents-panel-request"
 import { useSessionLayout } from "@/pages/session/session-layout"
 
 export function SessionSidePanel(props: { reviewSnap: boolean; size: Sizing; stacked?: boolean }) {
@@ -16,6 +17,9 @@ export function SessionSidePanel(props: { reviewSnap: boolean; size: Sizing; sta
   const isDesktop = createMediaQuery("(min-width: 768px)")
   const [tab, setTab] = createSignal("context")
   const open = createMemo(() => isDesktop() && view().reviewPanel.opened())
+  createEffect(() => {
+    if (params.id && agentsPanelRequest() === params.id) setTab("agents")
+  })
 
   return (
     <Show when={isDesktop() && !(settings.general.newLayoutDesigns() && !params.id)}>

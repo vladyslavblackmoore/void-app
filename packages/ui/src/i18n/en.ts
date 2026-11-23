@@ -166,6 +166,10 @@ export const dict: Record<string, string> = {
   "ui.tool.agent": "{{type}} Agent",
   "ui.tool.agent.default": "Agent",
   "ui.tool.skill": "Skill",
+  "ui.tool.delegate": "Delegate",
+  "ui.tool.delegate.running": "Running",
+  "ui.tool.delegate.done": "Done",
+  "ui.tool.delegate.error": "Error",
 
   "ui.basicTool.called": "Called `{{tool}}`",
   "ui.toolErrorCard.failed": "Failed",

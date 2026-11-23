@@ -1,4 +1,7 @@
-import type { FilePart, UserMessage } from "@opencode-ai/sdk/v2"
+import type { FilePart, Part, UserMessage } from "@opencode-ai/sdk/v2"
+import { setAgentsPanelRequest } from "@/pages/session/agents-panel-request"
+import { shouldAutoOpenAgents } from "@/pages/session/agents-tree"
+import { fallbackSessionTitle, isDefaultSessionTitle } from "@/utils/session-title"
 import { getFilename } from "@opencode-ai/core/util/path"
 import { useDialog } from "@opencode-ai/ui/context/dialog"
 import { useMutation } from "@tanstack/solid-query"
@@ -493,6 +496,36 @@ export default function Page() {
 
   const info = createMemo(() => (params.id ? sync().session.get(params.id) : undefined))
   const isChildSession = createMemo(() => !!info()?.parentID)
+  const autoOpened = new Set<string>()
+  const [agentsSince, setAgentsSince] = createSignal(Date.now())
+  createEffect(on(() => params.id, () => setAgentsSince(Date.now())))
+  createEffect(() => {
+    const id = params.id
+    if (!id || autoOpened.has(id)) return
+    if (!shouldAutoOpenAgents(sync().data.session, id, agentsSince())) return
+    autoOpened.add(id)
+    setAgentsPanelRequest(id)
+    view().reviewPanel.open()
+  })
+  const renamed = new Set<string>()
+  createEffect(() => {
+    const current = info()
+    if (!current || current.parentID || renamed.has(current.id)) return
+    if (!isDefaultSessionTitle(current.title)) return
+    const list = sync().data.message[current.id] ?? []
+    const first = list.find((message) => message.role === "user")
+    const done = list.some((message) => message.role === "assistant" && typeof message.time.completed === "number")
+    if (!first || !done) return
+    const text = (sync().data.part[first.id] ?? []).find(
+      (part): part is Extract<Part, { type: "text" }> => part.type === "text" && !part.synthetic,
+    )?.text
+    const title = fallbackSessionTitle(text)
+    if (!title) return
+    renamed.add(current.id)
+    void sdk()
+      .client.session.update({ sessionID: current.id, title })
+      .catch(() => undefined)
+  })
   const tabState = createSessionTabs({
     tabs,
     pathFromTab: file.pathFromTab,
