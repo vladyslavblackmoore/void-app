@@ -184,7 +184,7 @@ describe("seedConfig memory", () => {
   const files = ["MEMORY.md", "tasks.md", "RULES.md"].map((name) => `${memory}/${name}`)
   const parsed = async () => parse(await read())
 
-  test("adds the memory instructions, permission and directory to an already stamped config", async () => {
+  test("adds the memory permission and directory to an already stamped config", async () => {
     await writeFile(join(dir, "opencode.jsonc"), config)
     await seedConfig(dir, data, wrapper)
     await rm(join(data, "config-seeded-2"), { force: true })
@@ -192,14 +192,14 @@ describe("seedConfig memory", () => {
     await seedConfig(dir, data, wrapper, {}, memory)
 
     const result = await parsed()
-    expect(result.instructions).toEqual(files)
+    expect(result.instructions).toBeUndefined()
     expect(result.permission.external_directory).toEqual({ [`${memory}/*`]: "allow" })
     expect(result.provider.subscription.options.defaultSettings.additionalDirectories).toEqual([memory])
     expect(result.mcp).toEqual({ hub: { type: "local", command: ["hub"] } })
     expect(await read()).toContain("// providers the app shows")
   })
 
-  test("merges into existing instructions and permission without duplicates", async () => {
+  test("merges into existing permission without duplicates and drops the memory instructions", async () => {
     await writeFile(
       join(dir, "opencode.jsonc"),
       config.replace(
@@ -211,7 +211,7 @@ describe("seedConfig memory", () => {
     await seedConfig(dir, data, wrapper, {}, memory)
 
     const result = await parsed()
-    expect(result.instructions).toEqual(["docs/RULES.md", ...files])
+    expect(result.instructions).toEqual(["docs/RULES.md"])
     expect(result.permission).toEqual({
       external_directory: { "/tmp/*": "allow", [`${memory}/*`]: "allow" },
       bash: "ask",
@@ -244,7 +244,7 @@ describe("seedConfig memory", () => {
   test("a fresh install gets the memory keys from the template", async () => {
     await seedConfig(dir, data, wrapper, { config }, memory)
 
-    expect((await parsed()).instructions).toEqual(files)
+    expect((await parsed()).instructions).toBeUndefined()
   })
 })
 
@@ -308,42 +308,69 @@ describe("seedConfig haiku model", () => {
     expect(await readFile(join(dir, "delegate", "mcp.mjs"), "utf8")).toBe("m")
   })
 
-  describe("manager rules", () => {
-    const delegate = { plugin: "p", core: "c", mcp: "m", manager: "rules" }
-    const file = () => join(dir, "delegate", "manager.md")
+  describe("injection migration", () => {
+    const delegate = { plugin: "p", core: "c", mcp: "m", manager: "rules", memory: "mem" }
+    const memory = "/home/u/void/memory"
+    const manager = () => join(dir, "delegate", "manager.md")
+    const instructions = async () => parse(await read()).instructions
 
-    test("writes the rules file and adds it to the instructions of an existing config", async () => {
-      await writeFile(join(dir, "opencode.jsonc"), config.replace('"mcp"', '"instructions": ["docs/RULES.md"], "mcp"'))
+    test("writes the rules, the memory module and the memory path next to the plugin", async () => {
+      await seedConfig(dir, data, wrapper, { delegate }, memory)
 
-      await seedConfig(dir, data, wrapper, { delegate })
-
-      expect(await readFile(file(), "utf8")).toBe("rules")
-      expect(parse(await read()).instructions).toEqual(["docs/RULES.md", file()])
+      expect(await readFile(manager(), "utf8")).toBe("rules")
+      expect(await readFile(join(dir, "delegate", "memory.mjs"), "utf8")).toBe("mem")
+      expect(JSON.parse(await readFile(join(dir, "delegate", "paths.json"), "utf8"))).toEqual({ memoryDir: memory })
     })
 
-    test("a fresh install gets the instructions entry from the template config", async () => {
-      await seedConfig(dir, data, wrapper, { config, delegate })
+    test("removes the manager and memory entries and keeps the others", async () => {
+      const entries = [manager(), "docs/RULES.md", `${memory}/MEMORY.md`, `${memory}/tasks.md`, `${memory}/RULES.md`]
+      await writeFile(
+        join(dir, "opencode.jsonc"),
+        config.replace('"mcp"', `"instructions": ${JSON.stringify(entries)}, "mcp"`),
+      )
 
-      expect(parse(await read()).instructions).toEqual([file()])
+      await seedConfig(dir, data, wrapper, { delegate }, memory)
+
+      expect(await instructions()).toEqual(["docs/RULES.md"])
+      expect(await read()).toContain("// providers the app shows")
     })
 
-    test("refreshes a changed rules file and does not restore an entry the owner removed", async () => {
+    test("drops the instructions key when nothing else is left", async () => {
+      await writeFile(
+        join(dir, "opencode.jsonc"),
+        config.replace('"mcp"', `"instructions": ["${manager()}", "${memory}/tasks.md"], "mcp"`),
+      )
+
+      await seedConfig(dir, data, wrapper, { delegate }, memory)
+
+      expect(await instructions()).toBeUndefined()
+    })
+
+    test("runs once and does not touch entries the owner adds later", async () => {
       await writeFile(join(dir, "opencode.jsonc"), config)
-      await seedConfig(dir, data, wrapper, { delegate })
-      await writeFile(join(dir, "opencode.jsonc"), config)
+      await seedConfig(dir, data, wrapper, { delegate }, memory)
+      const added = config.replace('"mcp"', `"instructions": ["${manager()}"], "mcp"`)
+      await writeFile(join(dir, "opencode.jsonc"), added)
 
-      await seedConfig(dir, data, wrapper, { delegate: { ...delegate, manager: "new rules" } })
+      await seedConfig(dir, data, wrapper, { delegate }, memory)
 
-      expect(await readFile(file(), "utf8")).toBe("new rules")
-      expect(await read()).toBe(config)
+      expect(await read()).toBe(added)
     })
 
-    test("leaves the config alone when no rules template is given", async () => {
+    test("leaves a config without instructions unchanged", async () => {
       await writeFile(join(dir, "opencode.jsonc"), config)
 
       await seedConfig(dir, data, wrapper, { delegate: { plugin: "p", core: "c", mcp: "m" } })
 
-      expect(parse(await read()).instructions).toBeUndefined()
+      expect(await instructions()).toBeUndefined()
+    })
+
+    test("refreshes a changed rules file", async () => {
+      await seedConfig(dir, data, wrapper, { delegate }, memory)
+
+      await seedConfig(dir, data, wrapper, { delegate: { ...delegate, manager: "new rules" } }, memory)
+
+      expect(await readFile(manager(), "utf8")).toBe("new rules")
     })
   })
 })

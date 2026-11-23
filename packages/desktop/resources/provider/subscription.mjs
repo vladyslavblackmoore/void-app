@@ -147,6 +147,17 @@ export function withDelegate(settings, plan, defaults) {
   }
 }
 
+const blockedTools = ["AskUserQuestion", "Agent", "Task"]
+
+export function withDisallowed(settings, defaults) {
+  return {
+    ...settings,
+    disallowedTools: [
+      ...new Set([...(defaults?.disallowedTools ?? []), ...(settings?.disallowedTools ?? []), ...blockedTools]),
+    ],
+  }
+}
+
 export function wrapModel(build, check, key = "subscription") {
   const model = build()
   const call = (options) => build(options?.providerOptions?.[key]?.effort, delegatePlan(options?.headers))
@@ -192,7 +203,7 @@ export function createSubscription(options = {}, factory = createClaudeCode) {
     wrapModel(
       (effort, plan) => {
         const own = effort ? { ...settings, effort } : settings
-        return base.languageModel(modelId, plan ? withDelegate(own, plan, defaultSettings) : own)
+        return base.languageModel(modelId, withDisallowed(plan ? withDelegate(own, plan, defaultSettings) : own, defaultSettings))
       },
       check,
       key,
